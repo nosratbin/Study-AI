@@ -1,0 +1,143 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* dark: utilities apply only inside a .dark ancestor (the app is light-only for now), not via the OS setting. */
+@custom-variant dark (&:is(.dark *));
+
+/* LEARN AI design tokens — keep in sync with docs/DESIGN_SYSTEM.md */
+@theme {
+  --color-brand-50: #fff7ed;
+  --color-brand-100: #ffedd5;
+  --color-brand-200: #fed7aa;
+  --color-brand-500: #f97316;
+  --color-brand-600: #ea580c;
+  --color-brand-700: #c2410c;
+
+  --color-ink: #172033;
+  --color-muted: #64748b;
+  --color-surface: #f8fafc;
+  --color-line: #e2e8f0;
+  --color-success: #16a34a;
+  --color-success-50: #f0fdf4;
+  --color-danger: #dc2626;
+  --color-danger-50: #fef2f2;
+
+  --font-sans: var(--font-inter), var(--font-bengali), ui-sans-serif, system-ui, sans-serif;
+
+  --radius-card: 1rem;
+  --shadow-card: 0 1px 2px rgb(23 32 51 / 0.04), 0 4px 16px rgb(23 32 51 / 0.04);
+
+  --animate-fade-up: fade-up 0.35s ease-out both;
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+  }
+}
+
+/* shadcn / VengeanceUI theme variables, mapped to the LEARN AI palette.
+   shadcn's "muted" background is exposed as muted-bg, because "muted" is our secondary text colour. */
+:root {
+  --background: #ffffff;
+  --foreground: #172033;
+  --card: #ffffff;
+  --card-foreground: #172033;
+  --popover: #ffffff;
+  --popover-foreground: #172033;
+  --primary: #f97316;
+  --primary-foreground: #ffffff;
+  --secondary: #fff7ed;
+  --secondary-foreground: #c2410c;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --accent: #ffedd5;
+  --accent-foreground: #172033;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #f97316;
+  --chart-1: #f97316;
+  --chart-2: #16a34a;
+  --chart-3: #0ea5e9;
+  --chart-4: #a855f7;
+  --chart-5: #eab308;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #172033;
+  --sidebar-primary: #f97316;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #fff7ed;
+  --sidebar-accent-foreground: #c2410c;
+  --sidebar-border: #e2e8f0;
+  --sidebar-ring: #f97316;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted-bg: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Lesson / markdown-ish content */
+.prose-learn h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.75rem; }
+.prose-learn p, .prose-learn ul, .prose-learn ol { margin-bottom: 0.75rem; line-height: 1.7; }
+.prose-learn ul { list-style: disc; padding-left: 1.25rem; }
+.prose-learn ol { list-style: decimal; padding-left: 1.25rem; }
+.prose-learn pre { background: #0f172a; color: #e2e8f0; padding: 1rem; border-radius: 0.75rem; overflow-x: auto; font-size: 0.875rem; }
