@@ -168,6 +168,13 @@ function StaffPlaceholder({ role }: { role: string }) {
     <Card className="p-8">
       <EmptyState icon={<Wrench className="size-8" />} title={`The ${role} dashboard is not built yet`}>
         Teacher and admin tools are planned for Phase 5. You are signed in with the {role} role.
+        {role === "admin" && (
+          <span className="mt-4 block">
+            <Link href="/admin/opportunities" className="font-medium text-brand-600 underline-offset-2 hover:underline">
+              Review and verify opportunities
+            </Link>
+          </span>
+        )}
       </EmptyState>
     </Card>
   );

@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Bot, CheckCircle2, Clock, ExternalLink } from "lucide-react";
 import { Alert, Badge, Button, ButtonLink, Card, LoadError, Spinner } from "@/components/ui";
 import { Markdown } from "@/components/learning/markdown";
+import { SaveLessonToDocs } from "@/components/google/google-actions";
 import { api, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useApi } from "@/lib/use-api";
@@ -101,6 +102,8 @@ export default function LessonPage() {
           </a>
         )}
       </div>
+
+      <SaveLessonToDocs lessonId={lesson.id} />
 
       {msg && <Alert>{msg}</Alert>}
 

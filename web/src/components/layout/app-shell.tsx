@@ -17,19 +17,24 @@ import {
   Map,
   Medal,
   Settings,
+  ShieldCheck,
   Trophy,
   BookOpen,
   User as UserIcon,
+  Cloud,
   type LucideIcon,
 } from "lucide-react";
 import { Logo, Spinner } from "@/components/ui";
 import { useAuth } from "@/lib/auth";
+import type { Role } from "@/lib/types";
 
 interface NavItem {
   href: string;
   label: string;
   icon: LucideIcon;
   available: boolean;
+  /** Only shown to these roles (default: everyone). The backend enforces access either way. */
+  roles?: Role[];
 }
 
 // `available` flips to true as each phase ships. Unavailable items render as disabled, never as dead links.
@@ -40,7 +45,9 @@ const NAV: NavItem[] = [
   { href: "/assessment", label: "Assessment", icon: ClipboardCheck, available: true },
   { href: "/roadmap", label: "Roadmap", icon: Map, available: true },
   { href: "/projects", label: "Project Lab", icon: FlaskConical, available: false },
-  { href: "/opportunities-hub", label: "Opportunities", icon: Trophy, available: false },
+  { href: "/opportunities-hub", label: "Opportunities", icon: Trophy, available: true, roles: ["student"] },
+  { href: "/google", label: "Google Workspace", icon: Cloud, available: true },
+  { href: "/admin/opportunities", label: "Verify opportunities", icon: ShieldCheck, available: true, roles: ["admin"] },
   { href: "/career", label: "Career Navigator", icon: Briefcase, available: false },
   { href: "/planner", label: "Study Planner", icon: CalendarDays, available: false },
   { href: "/mindcare", label: "MindCare", icon: HeartHandshake, available: false },
@@ -54,7 +61,7 @@ const BOTTOM: NavItem[] = [
   { href: "/dashboard", label: "Home", icon: Home, available: true },
   { href: "/learn", label: "Learn", icon: BookOpen, available: true },
   { href: "/tutor", label: "AI Tutor", icon: Bot, available: true },
-  { href: "/opportunities-hub", label: "Opportunities", icon: Trophy, available: false },
+  { href: "/opportunities-hub", label: "Opportunities", icon: Trophy, available: true, roles: ["student"] },
   { href: "/settings", label: "Profile", icon: UserIcon, available: true },
 ];
 
@@ -94,7 +101,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
         <nav className="flex-1 overflow-y-auto px-3" aria-label="App">
           <ul className="space-y-0.5">
-            {NAV.map((item) => (
+            {NAV.filter((item) => !item.roles || (user && item.roles.includes(user.role))).map((item) => (
               <li key={item.href}>
                 <NavLink item={item} active={isActive(pathname, item.href)} />
               </li>
@@ -131,7 +138,8 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white pb-[env(safe-area-inset-bottom)] lg:hidden" aria-label="Bottom">
         <ul className="grid grid-cols-5">
-          {BOTTOM.map(({ href, label, icon: Icon, available }) => {
+          {BOTTOM.map(({ href, label, icon: Icon, available: ready, roles }) => {
+            const available = ready && (!roles || (!!user && roles.includes(user.role)));
             const active = isActive(pathname, href);
             const inner = (
               <>

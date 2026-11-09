@@ -7,10 +7,10 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
 from app.core.config import get_settings
-from app.core.deps import ACCESS_COOKIE, REFRESH_COOKIE, CurrentUser, DbSession
+from app.core.deps import ACCESS_COOKIE, REFRESH_COOKIE, CurrentUser, DbSession, _extract_access_token
 from app.core.errors import ApiError
 from app.core.rate_limit import rate_limit
-from app.core.security import create_token, decode_token, hash_password, verify_password
+from app.core.security import create_token, decode_token, hash_password, is_revoked, revoke, verify_password
 from app.models import Role, StudentProfile, User
 from app.schemas.auth import AuthOut, GoogleIn, LoginIn, RefreshIn, RegisterIn, UserOut
 from app.services.firebase import verify_firebase_id_token
@@ -34,10 +34,12 @@ def _is_native(request: Request) -> bool:
     return request.headers.get("X-Client-Type", "").lower() == "mobile"
 
 
-def issue_session(request: Request, response: Response, user: User, native: bool | None = None) -> AuthOut:
+def issue_session(request: Request, response: Response, user: User, native: bool | None = None, sid: str | None = None) -> AuthOut:
+    """New sign-in when sid is None; a refresh passes the existing session id through."""
     s = get_settings()
-    access = create_token(user.id, user.role, user.token_version, "access")
-    refresh = create_token(user.id, user.role, user.token_version, "refresh")
+    sid = sid or uuid.uuid4().hex
+    access = create_token(user.id, user.role, user.token_version, "access", sid)
+    refresh = create_token(user.id, user.role, user.token_version, "refresh", sid)
     if _is_native(request) if native is None else native:
         return AuthOut(user=user_out(user), access_token=access, refresh_token=refresh)
     common = {"httponly": True, "secure": s.cookie_secure, "samesite": "lax"}
@@ -69,11 +71,11 @@ def register(body: RegisterIn, request: Request, response: Response, db: DbSessi
 @router.post("/login", response_model=AuthOut, dependencies=[auth_limit])
 def login(body: LoginIn, request: Request, response: Response, db: DbSession):
     user = db.scalar(select(User).where(User.email == body.email.lower()))
-    ok = verify_password(body.password, user.password_hash if user else _DUMMY_HASH)
+    # Same error and the same bcrypt cost for an unknown email, a wrong password and a Google-only
+    # account, so the response does not reveal whether an email is registered.
+    ok = verify_password(body.password, (user.password_hash if user else None) or _DUMMY_HASH) and bool(user and user.password_hash)
     if not user or not ok:
-        if user and not user.password_hash:
-            raise ApiError(401, "use_google", "This account uses Google Sign-In. Continue with Google.")
-        raise ApiError(401, "invalid_credentials", "Email or password is incorrect.")
+        raise ApiError(401, "invalid_credentials", "Email or password is incorrect. If you signed up with Google, use Continue with Google.")
     if not user.is_active:
         raise ApiError(403, "account_disabled", "This account has been disabled. Contact support.")
     user.last_login_at = datetime.now(UTC)
@@ -131,9 +133,9 @@ def refresh(request: Request, response: Response, db: DbSession, body: RefreshIn
     except (jwt.PyJWTError, ValueError, KeyError):
         user = None
         payload = {}
-    if not user or not user.is_active or payload.get("ver") != user.token_version:
+    if not user or not user.is_active or payload.get("ver") != user.token_version or is_revoked(db, payload):
         raise ApiError(401, "invalid_token", "Your session has expired. Please sign in again.")
-    return issue_session(request, response, user, native=from_body)
+    return issue_session(request, response, user, native=from_body, sid=payload.get("sid"))
 
 
 def _cleared() -> Response:
@@ -144,7 +146,22 @@ def _cleared() -> Response:
 
 
 @router.post("/logout", status_code=204, response_class=Response)
-def logout():
+def logout(request: Request, db: DbSession, body: RefreshIn | None = None):
+    """Revoke this sign-in session server-side (not just the cookies): the presented tokens and every
+    token refreshed from the same sign-in stop working. Native clients should send refresh_token in
+    the body; the access token alone is enough to revoke the session, since both carry the same sid."""
+    refresh_token = (body.refresh_token if body and body.refresh_token else None) or request.cookies.get(REFRESH_COOKIE)
+    try:
+        for token, kind in ((refresh_token, "refresh"), (_extract_access_token(request), "access")):
+            if not token:
+                continue
+            try:
+                revoke(db, decode_token(token, kind))
+            except jwt.PyJWTError:
+                pass  # expired or invalid: nothing to revoke
+        db.commit()
+    except IntegrityError:  # a concurrent logout committed the same revocation first
+        db.rollback()
     return _cleared()
 
 

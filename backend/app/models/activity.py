@@ -187,6 +187,8 @@ class GoogleConnection(IdMixin, TimestampMixin, Base):
 
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), unique=True)
     google_sub: Mapped[str] = mapped_column(String(64))
+    google_email: Mapped[str | None] = mapped_column(String(320))
+    drive_folder_id: Mapped[str | None] = mapped_column(String(128))  # the "LEARN AI" folder this app created
     scopes: Mapped[list[str]] = mapped_column(JSON, default=list)
     refresh_token_enc: Mapped[str | None] = mapped_column(Text)  # Fernet-encrypted
     access_token_enc: Mapped[str | None] = mapped_column(Text)

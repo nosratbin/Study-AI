@@ -8,7 +8,8 @@ from app.core.config import get_settings
 
 
 def _make_engine(url: str):
-    kwargs: dict = {"pool_pre_ping": True}
+    # hide_parameters: SQL errors in logs show placeholders, never bound values (emails, tokens, notes).
+    kwargs: dict = {"pool_pre_ping": True, "hide_parameters": True}
     if url.startswith("sqlite"):
         kwargs["connect_args"] = {"check_same_thread": False}
     else:

@@ -22,7 +22,7 @@ def health(db: DbSession):
         "status": "ok" if db_ok else "degraded",
         "database": "ok" if db_ok else "unreachable",
         "database_engine": db.get_bind().dialect.name,
-        "integrations": {"google_signin": s.firebase_enabled, "gemini": s.ai_enabled, "google_workspace": False},
+        "integrations": {"google_signin": s.firebase_enabled, "gemini": s.ai_enabled, "google_workspace": s.google_enabled},
     }
 
 

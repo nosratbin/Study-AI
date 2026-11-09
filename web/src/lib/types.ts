@@ -263,3 +263,124 @@ export interface Quiz {
 export function levelLabel(level: EducationLevel | null | undefined) {
   return LEVELS.find((l) => l.value === level)?.label ?? "Any level";
 }
+
+/* ---------- Phase 3: Opportunity Hub ---------- */
+
+export type OpportunityCategory =
+  | "gov_scholarship" | "private_scholarship" | "merit_scholarship" | "financial_assistance" | "stipend"
+  | "national_competition" | "international_competition" | "hackathon" | "ai_olympiad"
+  | "cultural" | "sports" | "research" | "internship" | "study_abroad";
+
+export const CATEGORY_OPTIONS: { value: OpportunityCategory; label: string }[] = [
+  { value: "gov_scholarship", label: "Government scholarship" },
+  { value: "private_scholarship", label: "Private scholarship" },
+  { value: "merit_scholarship", label: "Merit scholarship" },
+  { value: "financial_assistance", label: "Financial assistance" },
+  { value: "stipend", label: "Stipend" },
+  { value: "national_competition", label: "National competition" },
+  { value: "international_competition", label: "International competition" },
+  { value: "hackathon", label: "Hackathon" },
+  { value: "ai_olympiad", label: "AI Olympiad" },
+  { value: "cultural", label: "Cultural competition" },
+  { value: "sports", label: "Sports competition" },
+  { value: "research", label: "Research opportunity" },
+  { value: "internship", label: "Internship" },
+  { value: "study_abroad", label: "Study abroad" },
+];
+
+export type ApplicationStatus = "planned" | "applied" | "accepted" | "rejected";
+export type VerificationStatus = "unverified" | "verified" | "rejected";
+
+export const APPLICATION_LABELS: Record<ApplicationStatus, string> = {
+  planned: "Planning to apply",
+  applied: "Applied",
+  accepted: "Accepted",
+  rejected: "Not selected",
+};
+
+export interface TrackedApplicationInfo {
+  status: ApplicationStatus;
+  notes: string | null;
+  applied_at: string | null;
+  updated_at: string;
+}
+
+export interface Opportunity {
+  id: string;
+  title: string;
+  description: string;
+  category: OpportunityCategory;
+  category_label: string;
+  provider: string;
+  eligibility: string;
+  education_levels: EducationLevel[];
+  deadline: string | null;
+  days_left: number | null;
+  is_closed: boolean;
+  required_documents: string[];
+  official_url: string;
+  verified_at: string | null;
+  saved: boolean;
+  application: TrackedApplicationInfo | null;
+}
+
+export interface OpportunityMatch {
+  opportunity: Opportunity;
+  score: number;
+  reasons: string[];
+}
+
+export interface TrackedApplication {
+  opportunity: Opportunity;
+  application: TrackedApplicationInfo;
+}
+
+export interface AdminOpportunity {
+  id: string;
+  title: string;
+  description: string;
+  category: OpportunityCategory;
+  category_label: string;
+  provider: string;
+  eligibility: string;
+  education_levels: EducationLevel[];
+  deadline: string | null;
+  required_documents: string[];
+  official_url: string;
+  verification_status: VerificationStatus;
+  verified_by_name: string | null;
+  verified_at: string | null;
+  source_note: string | null;
+  saved_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+/* ---------- Phase 3: Google Workspace ---------- */
+
+export type GoogleFeature = "drive" | "calendar";
+
+export interface GoogleStatus {
+  configured: boolean;
+  connected: boolean;
+  email: string | null;
+  features: Record<GoogleFeature, boolean>;
+}
+
+export interface GoogleDoc {
+  id: string;
+  name: string;
+  web_view_link: string | null;
+}
+
+export interface GoogleEvent {
+  id: string;
+  html_link: string | null;
+}
+
+/** Bangladesh time, e.g. "31 Dec 2026, 11:59 PM". */
+export function formatDeadline(iso: string): string {
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit", hour12: true, timeZone: "Asia/Dhaka",
+  }).format(new Date(iso));
+}

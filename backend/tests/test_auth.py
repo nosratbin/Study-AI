@@ -78,6 +78,83 @@ def test_refresh_and_logout(client):
     assert client.get("/api/auth/me").status_code == 401
 
 
+def test_logout_revokes_copied_cookie_tokens(client):
+    """A token copied before logout must stop working, not just disappear from the browser."""
+    register(client)
+    access, refresh = client.cookies.get("la_access"), client.cookies.get("la_refresh")
+    assert client.post("/api/auth/logout").status_code == 204
+    client.cookies.clear()
+    assert client.get("/api/auth/me", headers={"Authorization": f"Bearer {access}"}).status_code == 401
+    assert client.post("/api/auth/refresh", json={"refresh_token": refresh}).status_code == 401
+
+
+def test_mobile_logout_revokes_body_refresh_token(client):
+    tokens = register(client, mobile=True).json()
+    h = {"Authorization": f"Bearer {tokens['access_token']}"}
+    assert client.post("/api/auth/logout", json={"refresh_token": tokens["refresh_token"]}, headers=h).status_code == 204
+    assert client.post("/api/auth/refresh", json={"refresh_token": tokens["refresh_token"]}).status_code == 401
+    assert client.get("/api/auth/me", headers=h).status_code == 401
+
+
+def test_logout_revokes_pairs_an_attacker_refreshed_earlier(client):
+    """Stolen refresh token, refreshed before the victim logs out: the attacker's new pair must die too."""
+    victim = register(client, mobile=True).json()
+    client.cookies.clear()
+    stolen = client.post("/api/auth/refresh", json={"refresh_token": victim["refresh_token"]}).json()
+    assert client.get("/api/auth/me", headers={"Authorization": f"Bearer {stolen['access_token']}"}).status_code == 200
+    h = {"Authorization": f"Bearer {victim['access_token']}"}
+    assert client.post("/api/auth/logout", json={"refresh_token": victim["refresh_token"]}, headers=h).status_code == 204
+    assert client.get("/api/auth/me", headers={"Authorization": f"Bearer {stolen['access_token']}"}).status_code == 401
+    assert client.post("/api/auth/refresh", json={"refresh_token": stolen["refresh_token"]}).status_code == 401
+
+
+def test_logout_with_access_token_only_revokes_the_session(client):
+    tokens = register(client, mobile=True).json()
+    client.cookies.clear()
+    h = {"Authorization": f"Bearer {tokens['access_token']}"}
+    assert client.post("/api/auth/logout", headers=h).status_code == 204
+    assert client.post("/api/auth/refresh", json={"refresh_token": tokens["refresh_token"]}).status_code == 401
+
+
+def test_logout_is_idempotent_and_other_sessions_survive(client):
+    first = register(client, mobile=True).json()
+    client.cookies.clear()
+    second = client.post("/api/auth/login", json={"email": "ayesha@example.com", "password": "secret123"},
+                         headers={"X-Client-Type": "mobile"}).json()
+    h = {"Authorization": f"Bearer {first['access_token']}"}
+    for _ in range(2):
+        assert client.post("/api/auth/logout", json={"refresh_token": first["refresh_token"]}, headers=h).status_code == 204
+    assert client.get("/api/auth/me", headers={"Authorization": f"Bearer {second['access_token']}"}).status_code == 200
+
+
+def test_token_without_jti_is_rejected(client, db_session):
+    import jwt
+
+    from app.core.config import get_settings
+
+    register(client)
+    client.cookies.clear()
+    user = db_session.query(User).one()
+    s = get_settings()
+    token = jwt.encode({"sub": str(user.id), "typ": "access", "ver": user.token_version, "exp": 4102444800},
+                       s.jwt_secret, algorithm=s.jwt_algorithm)
+    assert client.get("/api/auth/me", headers={"Authorization": f"Bearer {token}"}).status_code == 401
+
+
+def test_login_errors_do_not_reveal_registered_emails(client, db_session):
+    register(client)
+    client.cookies.clear()
+    unknown = client.post("/api/auth/login", json={"email": "nobody@example.com", "password": "secret123"})
+    wrong = client.post("/api/auth/login", json={"email": "ayesha@example.com", "password": "wrong-pass1"})
+    user = db_session.query(User).one()
+    user.password_hash = None  # Google-only account
+    db_session.commit()
+    google_only = client.post("/api/auth/login", json={"email": "ayesha@example.com", "password": "secret123"})
+    bodies = [{k: v for k, v in r.json()["error"].items() if k != "request_id"} for r in (unknown, wrong, google_only)]
+    assert {r.status_code for r in (unknown, wrong, google_only)} == {401}
+    assert bodies[0] == bodies[1] == bodies[2]
+
+
 def test_refresh_token_cannot_be_used_as_access(client):
     tokens = register(client, mobile=True).json()
     r = client.get("/api/auth/me", headers={"Authorization": f"Bearer {tokens['refresh_token']}"})
@@ -167,7 +244,7 @@ def test_google_link_revokes_preexisting_password_and_sessions(client, db_sessio
     client.cookies.clear()
     # The attacker's password and tokens no longer work.
     r = client.post("/api/auth/login", json={"email": "ayesha@example.com", "password": "secret123"})
-    assert r.status_code == 401 and r.json()["error"]["code"] == "use_google"
+    assert r.status_code == 401 and r.json()["error"]["code"] == "invalid_credentials"
     assert client.get("/api/auth/me", headers={"Authorization": f"Bearer {attacker['access_token']}"}).status_code == 401
     assert client.post("/api/auth/refresh", json={"refresh_token": attacker["refresh_token"]}).status_code == 401
 

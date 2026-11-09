@@ -7,7 +7,7 @@ from fastapi import Depends, Request
 from sqlalchemy.orm import Session
 
 from app.core.errors import ApiError
-from app.core.security import decode_token
+from app.core.security import decode_token, is_revoked
 from app.db.session import get_db
 from app.models import Role, User
 
@@ -34,7 +34,7 @@ def get_current_user(request: Request, db: DbSession) -> User:
     except (jwt.PyJWTError, ValueError, KeyError):
         raise ApiError(401, "invalid_token", "Your session has expired. Please sign in again.")
     user = db.get(User, user_id)
-    if not user or not user.is_active or payload.get("ver") != user.token_version:
+    if not user or not user.is_active or payload.get("ver") != user.token_version or is_revoked(db, payload):
         raise ApiError(401, "invalid_token", "Your session has expired. Please sign in again.")
     request.state.user_id = str(user.id)
     return user

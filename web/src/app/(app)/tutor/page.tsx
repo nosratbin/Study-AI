@@ -193,12 +193,11 @@ export default function TutorPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div role="tablist" aria-label="Tutor mode" className="flex rounded-xl bg-surface p-1">
+          <div role="group" aria-label="Tutor mode" className="flex rounded-xl bg-surface p-1">
             {([["chat", "Chat", MessagesSquare], ["quiz", "Practice quiz", ListChecks]] as const).map(([value, label, Icon]) => (
               <button
                 key={value}
-                role="tab"
-                aria-selected={mode === value}
+                aria-pressed={mode === value}
                 onClick={() => setMode(value)}
                 className={clsx("inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium", mode === value ? "bg-white text-brand-700 shadow-sm" : "text-muted hover:text-ink")}
               >
@@ -312,21 +311,22 @@ export default function TutorPage() {
                 </Button>
               </div>
               <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-                <div className="flex items-center gap-1.5" role="radiogroup" aria-label="Reply language">
+                <fieldset className="flex items-center gap-1.5">
+                  <legend className="sr-only">Reply language</legend>
                   <Languages className="size-4 text-muted" aria-hidden />
                   {LANGS.map((l) => (
-                    <button
+                    <label
                       key={l.value}
-                      type="button"
-                      role="radio"
-                      aria-checked={language === l.value}
-                      onClick={() => setLanguage(l.value)}
-                      className={clsx("rounded-full px-2.5 py-0.5 text-xs font-medium", language === l.value ? "bg-brand-500 text-white" : "bg-surface text-muted hover:text-ink")}
+                      className={clsx(
+                        "relative cursor-pointer rounded-full px-2.5 py-0.5 text-xs font-medium has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-500/40",
+                        language === l.value ? "bg-brand-500 text-white" : "bg-surface text-muted hover:text-ink",
+                      )}
                     >
+                      <input type="radio" name="tutor-language" value={l.value} className="sr-only" checked={language === l.value} onChange={() => setLanguage(l.value)} />
                       {l.label}
-                    </button>
+                    </label>
                   ))}
-                </div>
+                </fieldset>
                 <p className="inline-flex items-center gap-1 text-xs text-muted">
                   <Info className="size-3.5" aria-hidden /> AI can make mistakes. Check important facts with your teacher or lesson.
                 </p>

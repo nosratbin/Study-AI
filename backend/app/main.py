@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import ai, assessments, auth, courses, public, students
+from app.api.routes import admin, ai, assessments, auth, courses, google, opportunities, public, students
 from app.core.config import get_settings
 from app.core.errors import install_error_handlers
 from app.core.logging import configure_logging, install_request_logging
@@ -28,7 +28,8 @@ def create_app() -> FastAPI:
     install_request_logging(app)
     install_error_handlers(app)
 
-    for r in (public.router, auth.router, students.router, courses.router, assessments.router, ai.router):
+    for r in (public.router, auth.router, students.router, courses.router, assessments.router, ai.router,
+              opportunities.router, google.router, admin.router):
         app.include_router(r, prefix=s.api_prefix)
     return app
 

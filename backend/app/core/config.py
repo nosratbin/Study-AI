@@ -53,6 +53,20 @@ class Settings(BaseSettings):
     ai_history_messages: int = 12      # prior turns sent as context
     rag_top_k: int = 4
 
+    # Google Workspace (Drive, Docs, Calendar): a separate server-side OAuth 2.0 web client, not Firebase.
+    google_oauth_client_id: str = ""
+    google_oauth_client_secret: str = ""
+    # Must be registered on the OAuth client. Goes through the web app's /api proxy so cookies are same-origin.
+    google_oauth_redirect_uri: str = "http://localhost:3000/api/google/callback"
+    # Fernet key that encrypts Google tokens at rest. Generate: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+    google_token_key: str = ""
+    # Where the browser lands after the OAuth callback.
+    web_app_url: str = "http://localhost:3000"
+
+    @property
+    def google_enabled(self) -> bool:
+        return bool(self.google_oauth_client_id and self.google_oauth_client_secret and self.google_token_key)
+
     @property
     def ai_enabled(self) -> bool:
         return bool(self.gemini_api_key)

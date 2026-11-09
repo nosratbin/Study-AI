@@ -120,22 +120,24 @@ function Onboarding() {
           {formError && <Alert>{formError}</Alert>}
 
           {step === 0 && (
-            <fieldset className="space-y-4">
+            <fieldset className="space-y-4" aria-describedby={errors.education_level ? "level-error" : undefined}>
               <legend className="text-xl font-bold tracking-tight">Hi {user?.full_name.split(" ")[0]}, what&apos;s your education level?</legend>
               <p className="text-sm text-muted">This shapes your courses, AI Tutor explanations and projects. You can change it later.</p>
-              <div className="grid gap-3 sm:grid-cols-3" role="radiogroup">
+              {/* Native radios: arrow keys move between options, and screen readers announce "1 of 3, selected". */}
+              <div className="grid gap-3 sm:grid-cols-3">
                 {LEVELS.map((l) => (
-                  <button type="button" role="radio" aria-checked={form.education_level === l.value} key={l.value}
-                    onClick={() => set("education_level", l.value)}
-                    className={clsx("rounded-xl border-2 p-4 text-left transition-colors",
+                  <label key={l.value}
+                    className={clsx("relative cursor-pointer rounded-xl border-2 p-4 text-left transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-500/40",
                       form.education_level === l.value ? "border-brand-500 bg-brand-50" : "border-line hover:border-brand-200")}>
-                    <p className="font-semibold">{l.label}</p>
-                    <p className="text-xs font-medium text-brand-600">{l.tag}</p>
-                    <p className="mt-2 text-xs text-muted">{l.blurb}</p>
-                  </button>
+                    <input type="radio" name="education_level" value={l.value} className="sr-only"
+                      checked={form.education_level === l.value} onChange={() => set("education_level", l.value)} />
+                    <span className="block font-semibold">{l.label}</span>
+                    <span className="block text-xs font-medium text-brand-600">{l.tag}</span>
+                    <span className="mt-2 block text-xs text-muted">{l.blurb}</span>
+                  </label>
                 ))}
               </div>
-              {errors.education_level && <p className="text-sm text-danger" role="alert">{errors.education_level}</p>}
+              {errors.education_level && <p id="level-error" className="text-sm text-danger" role="alert">{errors.education_level}</p>}
             </fieldset>
           )}
 

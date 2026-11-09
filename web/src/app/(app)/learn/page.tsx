@@ -28,12 +28,11 @@ export default function LearnPage() {
     <div className="space-y-6 animate-fade-up">
       <PageHeader title="Learning Center" subtitle="Structured AI courses for your level. Every lesson has an AI tutor one click away." />
 
-      <div role="tablist" aria-label="Filter courses by level" className="flex gap-1 overflow-x-auto rounded-xl bg-surface p-1 sm:inline-flex">
+      <div role="group" aria-label="Filter courses by level" className="flex gap-1 overflow-x-auto rounded-xl bg-surface p-1 sm:inline-flex">
         {tabs.map((t) => (
           <button
             key={t.value}
-            role="tab"
-            aria-selected={tab === t.value}
+            aria-pressed={tab === t.value}
             onClick={() => setPicked(t.value)}
             className={clsx(
               "whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-colors",
