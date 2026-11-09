@@ -2,7 +2,9 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { BookOpen, CalendarClock, CheckCircle2, ClipboardCheck, PlayCircle, RefreshCw, Trophy, Wrench } from "lucide-react";
-import { Alert, Badge, Button, Card, EmptyState, Progress, Spinner } from "@/components/ui";
+import Link from "next/link";
+import { Alert, Badge, Button, ButtonLink, Card, EmptyState, Spinner } from "@/components/ui";
+import { CourseCard } from "@/components/learning/course-card";
 import { api, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { LEVELS, type Dashboard } from "@/lib/types";
@@ -87,19 +89,23 @@ function StudentDashboard() {
           <Card as="section" className="p-5 sm:p-6">
             <h2 className="font-semibold">Continue learning</h2>
             {data.continue_learning ? (
-              <div className="mt-4 flex items-center gap-4 rounded-xl bg-brand-50 p-4">
+              <Link href={`/lessons/${data.continue_learning.lesson_id}`} className="mt-4 flex items-center gap-4 rounded-xl bg-brand-50 p-4 transition-colors hover:bg-brand-100">
                 <PlayCircle className="size-10 shrink-0 text-brand-500" aria-hidden />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm text-muted">{data.continue_learning.course_title}</p>
                   <p className="truncate font-semibold">{data.continue_learning.lesson_title}</p>
                   <p className="text-xs text-muted">{data.continue_learning.duration_min} min</p>
                 </div>
-                <Badge>Lessons open in Phase 2</Badge>
-              </div>
+                <span className="hidden text-sm font-semibold text-brand-600 sm:inline">Continue →</span>
+              </Link>
             ) : (
-              <EmptyState icon={<BookOpen className="size-7" />} title="No lessons yet">
-                Courses for your level will appear here.
-              </EmptyState>
+              <div className="mt-4 flex flex-col items-start gap-3 rounded-xl border border-dashed border-line p-5 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-muted">Pick a course to start, or take the placement test to find your level.</p>
+                <div className="flex gap-2">
+                  <ButtonLink href="/learn" size="sm">Browse courses</ButtonLink>
+                  <ButtonLink href="/assessment" size="sm" variant="secondary">Placement test</ButtonLink>
+                </div>
+              </div>
             )}
           </Card>
 
@@ -110,20 +116,7 @@ function StudentDashboard() {
             {data.recommended_courses.length ? (
               <div className="grid gap-4 sm:grid-cols-2">
                 {data.recommended_courses.map((c) => (
-                  <Card key={c.id} as="article" className="flex flex-col p-5">
-                    <div className="flex items-start justify-between gap-2">
-                      <h3 className="font-semibold leading-snug">{c.title}</h3>
-                      {c.is_demo && <Badge>Demo</Badge>}
-                    </div>
-                    <p className="mt-1.5 line-clamp-2 flex-1 text-sm text-muted">{c.description}</p>
-                    <div className="mt-4 space-y-1.5">
-                      <div className="flex justify-between text-xs text-muted">
-                        <span>{c.completed_lessons}/{c.lesson_count} lessons · {c.estimated_hours}h</span>
-                        <span className="font-medium text-ink">{c.percent}%</span>
-                      </div>
-                      <Progress value={c.percent} label={`${c.title} progress`} />
-                    </div>
-                  </Card>
+                  <CourseCard key={c.id} course={c} />
                 ))}
               </div>
             ) : (

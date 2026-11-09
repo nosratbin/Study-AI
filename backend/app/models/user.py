@@ -56,3 +56,12 @@ class TeacherProfile(IdMixin, TimestampMixin, Base):
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
 
     user: Mapped[User] = relationship(back_populates="teacher_profile")
+
+
+class RevokedToken(Base):
+    """JWT ids revoked before expiry (logout). Rows can be pruned once `expires_at` has passed."""
+
+    __tablename__ = "revoked_tokens"
+
+    jti: Mapped[str] = mapped_column(String(64), primary_key=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)

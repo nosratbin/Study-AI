@@ -48,6 +48,7 @@ export default function TutorPage() {
   const [showHistory, setShowHistory] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const pendingSeq = useRef(0);
 
   const lesson = lessonParam ? lessonCtx.data : null;
   const configured = status.data?.configured ?? true;
@@ -102,7 +103,8 @@ export default function TutorPage() {
     setError(null);
     setSending(true);
     setInput("");
-    const pending: ChatMessage = { id: `pending-${Date.now()}`, role: "user", content: message, sources: [], created_at: new Date().toISOString() };
+    pendingSeq.current += 1;
+    const pending: ChatMessage = { id: `pending-${pendingSeq.current}`, role: "user", content: message, sources: [], created_at: "" };
     setMessages((m) => [...m, pending]);
     try {
       const res = await api<ChatResponse>("/ai/chat", {

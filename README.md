@@ -2,7 +2,7 @@
 
 National AI education & student development platform for Bangladesh — MVP for the AI Builders Congress, Daffodil International University.
 
-> **Status: Phase 1 complete** (setup, design system, auth, database schema, onboarding, student dashboard, public site).
+> **Status: Phase 2 complete**: courses and lessons, AI Tutor (Gemini + RAG), skill assessments and the learning roadmap, on top of Phase 1 (auth, onboarding, dashboard, public site).
 > See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for architecture, schema, screen map and milestones.
 
 | Part | Stack | Folder |
@@ -10,7 +10,8 @@ National AI education & student development platform for Bangladesh — MVP for 
 | API | Python 3.12+ · FastAPI · SQLAlchemy 2 · Alembic | `backend/` |
 | Web | Next.js 16 · TypeScript · Tailwind CSS 4 | `web/` |
 | Android | Expo · React Native (Phase 5) | `mobile/` |
-| Database | PostgreSQL (hosted, e.g. Neon/Supabase) · pgvector (Phase 2) | — |
+| Database | PostgreSQL (hosted, e.g. Neon/Supabase) · pgvector | — |
+| AI | Gemini (`gemini-2.5-flash`, `gemini-embedding-001`) · RAG over lesson content | — |
 | Auth | Backend JWT (httpOnly cookies on web, bearer on mobile) · Google via Firebase Auth | — |
 
 ## Prerequisites
@@ -28,10 +29,13 @@ python -m venv .venv
 pip install -r requirements-dev.txt
 cp .env.example .env              # set DATABASE_URL, JWT_SECRET, FIREBASE_PROJECT_ID
 alembic upgrade head              # create tables
-python -m app.seed                # demo courses (labelled "Demo")
+python -m app.seed                # demo courses + assessments (labelled "Demo")
 python -m app.seed --demo-users   # optional: demo admin/teacher/student, password printed once
-uvicorn app.main:app --reload --port 8000
+python -m app.services.rag       # embed lessons for the AI Tutor (needs GEMINI_API_KEY; re-run after content changes)
+uvicorn app.main:app --reload --port 8000 --proxy-headers --forwarded-allow-ips=127.0.0.1
 ```
+
+`--proxy-headers` makes per-client rate limits see the real client IP behind the Next.js proxy instead of the proxy's address. Set `--forwarded-allow-ips` to your proxy's address in production.
 
 API docs: http://localhost:8000/api/docs · Health: http://localhost:8000/api/health
 
@@ -54,6 +58,18 @@ The browser only ever calls `/api/*` on the web origin; Next.js proxies it to `B
 4. Add your deployed domain under Authentication → Settings → Authorized domains.
 
 Until configured, the Google button is shown disabled with an explanation and `/api/auth/google` returns `503 google_signin_not_configured`.
+
+## Enabling the AI Tutor
+
+1. Create a key at https://aistudio.google.com/apikey and set `GEMINI_API_KEY` in `backend/.env`.
+2. Restart the API, then run `python -m app.services.rag` to embed lesson content (unchanged lessons are skipped on re-runs).
+3. `/api/health` reports `"gemini": true` once configured.
+
+Practice quizzes from the tutor are AI-generated and never stored or scored. Official scores come only from stored answer keys in Skill Assessment.
+
+## UI components
+
+`web/src/components/ui` holds the LEARN AI design system. `web/src/components/vengeance` holds every VengeanceUI component, vendored and excluded from lint. Its shadcn theme variables are mapped to the brand palette in `globals.css`. The shadcn "muted" background is `bg-muted-bg`, because `muted` is the LEARN AI secondary text colour.
 
 ## Tests
 

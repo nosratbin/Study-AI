@@ -14,7 +14,8 @@ Backend (run from `backend/`, venv at `backend/.venv`):
 .venv/Scripts/alembic upgrade head                               # apply migrations to DATABASE_URL
 .venv/Scripts/alembic revision --autogenerate -m "msg"           # new migration
 DATABASE_URL="postgresql://u:p@h/x" .venv/Scripts/alembic upgrade head --sql   # check Postgres DDL offline
-.venv/Scripts/python -m app.seed [--demo-users]                  # demo courses / accounts
+.venv/Scripts/python -m app.seed [--demo-users]                  # demo courses, assessments / accounts
+.venv/Scripts/python -m app.services.rag                         # embed lessons into knowledge_chunks (needs GEMINI_API_KEY)
 ```
 
 Web (run from `web/`, pnpm):
@@ -43,6 +44,9 @@ pnpm vitest run src/lib/validation.test.ts -t "name"             # single test
   - `next.config.ts` rewrites `/api/*` to `BACKEND_URL`, so the browser only calls same-origin `/api` through `src/lib/api.ts`, which auto-refreshes on a 401.
   - Authenticated pages are client components behind `RequireAuth`/`AppShell` (`src/components/layout/app-shell.tsx`). Route groups: `(public)`, `(auth)`, `(setup)` (onboarding), `(app)`.
   - Design tokens are in `src/app/globals.css` `@theme` (brand orange `#F97316`). Shared UI is in `src/components/ui/index.tsx`. The spec is in `docs/DESIGN_SYSTEM.md`.
+  - `src/components/vengeance/` is the vendored VengeanceUI registry (all components, lint-ignored). Its shadcn vars map to the brand in `globals.css`. Use `bg-muted-bg` for shadcn's muted background, because `text-muted` is our secondary text colour. `dark:` only applies under a `.dark` ancestor.
+  - `(app)/layout.tsx` wraps everything in `<Suspense>`, because with `cacheComponents` the `usePathname`/`useParams`/`useSearchParams` hooks suspend on dynamic routes and the build fails without a boundary.
+- **AI**: `app/services/llm.py` (Gemini REST; tests override `get_llm` with `tests/fakes.py:FakeLLM`), `rag.py` (chunk, embed, pgvector cosine retrieve), `tutor.py` (prompts). Tutor quizzes are practice-only, never stored.
 - **Module availability**: unreleased modules show as disabled nav items. Flip `available` in `NAV`/`BOTTOM` (`app-shell.tsx`) and `MODULES`/`CURRENT_PHASE` (`backend/app/services/dashboard.py`) when a phase ships.
 - **Client and server validation**: they are mirrored. `web/src/lib/validation.ts` (zod) must match the backend Pydantic schemas: password rules and the minor rule `currentYear - birth_year <= 18`.
 
