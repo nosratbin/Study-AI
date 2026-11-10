@@ -66,7 +66,8 @@ def test_dashboard_uses_level_and_progress(client, db_session):
     assert d["continue_learning"] is not None
     assert any(m["key"] == "dashboard" and m["available"] for m in d["modules"])
     assert any(m["key"] == "ai_tutor" and m["available"] for m in d["modules"])
-    assert any(m["key"] == "project_lab" and not m["available"] for m in d["modules"])
+    assert any(m["key"] == "project_lab" and m["available"] for m in d["modules"])
+    assert any(m["key"] == "notifications" and not m["available"] for m in d["modules"])
 
     # Complete the first lesson of the suggested course.
     user = db_session.query(User).one()

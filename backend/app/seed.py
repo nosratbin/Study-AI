@@ -1,6 +1,6 @@
 """Seed demo learning content (and optionally demo accounts).
 
-    python -m app.seed                  # demo courses, lessons and assessments (idempotent)
+    python -m app.seed                  # demo courses, lessons, assessments and project challenges (idempotent)
     python -m app.seed --demo-users     # also create demo admin/teacher/student
 
 All seeded courses are flagged is_demo=True and shown with a "Demo" label.
@@ -21,6 +21,7 @@ from app.core.security import hash_password
 from app.db.session import SessionLocal
 from app.models import Course, EducationLevel, Lesson, Role, StudentProfile, TeacherProfile, User
 from app.seed_assessments import seed_assessments
+from app.seed_challenges import seed_challenges
 
 L = EducationLevel
 
@@ -141,6 +142,7 @@ def main() -> None:
     with SessionLocal() as db:
         print(f"courses created: {seed_courses(db)}")
         print(f"assessments created: {seed_assessments(db)}")
+        print(f"project challenges created: {seed_challenges(db)}")
         if args.demo_users:
             seed_demo_users(db)
 

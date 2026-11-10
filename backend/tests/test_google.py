@@ -30,6 +30,9 @@ class FakeGoogle:
         self.token_status = 200
         self.scope = f"openid email {DRIVE}"
         self.api_401_once = False
+        self.events: dict[str, dict] = {}  # event id -> body (Calendar keeps deleted ids as "cancelled")
+        self.calendars: set[str] = set()
+        self.docs: list[dict] = []
 
     def __call__(self, req: httpx.Request) -> httpx.Response:
         self.requests.append(req)
@@ -48,14 +51,37 @@ class FakeGoogle:
             self.api_401_once = False
             return httpx.Response(401)
         if url.startswith(g.DRIVE_UPLOAD):
-            return httpx.Response(200, json={"id": "doc-1", "name": "Doc", "webViewLink": "https://docs.google.com/document/d/doc-1"})
+            doc_id = f"doc-{len(self.docs) + 1}"
+            body = req.content.decode()
+            self.docs.append({"id": doc_id, "lesson": body.split('"learnai_lesson": "')[1][:36] if "learnai_lesson" in body else None})
+            return httpx.Response(200, json={"id": doc_id, "name": "Doc", "webViewLink": f"https://docs.google.com/document/d/{doc_id}"})
         if url.startswith(g.DRIVE_FILES) and req.method == "POST":
             return httpx.Response(200, json={"id": "folder-1"})
+        if url.startswith(g.DRIVE_FILES) and "q" in req.url.params:
+            q = req.url.params["q"]
+            hits = [d for d in self.docs if d["lesson"] and d["lesson"] in q]
+            return httpx.Response(200, json={"files": [{"id": d["id"], "name": "Doc", "webViewLink": f"https://docs.google.com/document/d/{d['id']}"}
+                                                       for d in hits[-1:]]})
         if url.startswith(g.DRIVE_FILES):
             return httpx.Response(200, json={"id": "folder-1", "trashed": False})
-        if url.startswith(g.CALENDAR_EVENTS):
-            return httpx.Response(200, json={"id": "ev-1", "htmlLink": "https://calendar.google.com/event?eid=ev-1"})
+        if url.startswith(f"{g.CALENDAR_API}/calendars") and req.url.path.endswith("/calendars"):
+            cal = f"cal-{len(self.calendars) + 1}@group.calendar.google.com"
+            self.calendars.add(cal)
+            return httpx.Response(200, json={"id": cal})
+        if url.startswith(f"{g.CALENDAR_API}/calendars/"):
+            cal = req.url.path.split("/calendars/")[1].split("/")[0]
+            if cal not in self.calendars:
+                return httpx.Response(404)
+            body = json.loads(req.content)
+            eid = body.get("id") or req.url.path.rsplit("/", 1)[-1]
+            if req.method == "POST" and eid in self.events:
+                return httpx.Response(409, json={"error": {"message": "The requested identifier already exists."}})
+            self.events[eid] = body
+            return httpx.Response(200, json={"id": eid, "htmlLink": f"https://calendar.google.com/event?eid={eid}"})
         return httpx.Response(404)
+
+    def last_event(self) -> httpx.Request:
+        return [r for r in self.requests if "/events" in r.url.path][-1]
 
     def last(self, prefix: str) -> httpx.Request:
         return [r for r in self.requests if str(r.url).startswith(prefix)][-1]
@@ -199,8 +225,8 @@ def test_calendar_deadline_for_verified_opportunity_only(client, db_session, goo
     connected(client, db_session, scopes=(CAL,))
     o = _opportunity(db_session)
     r = client.post("/api/google/calendar/opportunity", json={"opportunity_id": str(o.id)})
-    assert r.status_code == 201 and r.json()["id"] == "ev-1"
-    ev = json.loads(google.last(g.CALENDAR_EVENTS).content)
+    assert r.status_code == 201 and r.json()["created"] is True
+    ev = json.loads(google.last_event().content)
     assert "date" in ev["start"] and ev["summary"] == "Deadline: Test Award"
     assert [x["minutes"] for x in ev["reminders"]["overrides"]] == [10080, 1440]
     hidden = _opportunity(db_session, status=VerificationStatus.unverified)
@@ -212,7 +238,7 @@ def test_custom_reminder_validation(client, db_session, google):
     start = (datetime.now(UTC) + timedelta(days=2)).isoformat()
     r = client.post("/api/google/calendar/reminder", json={"title": "Physics exam", "kind": "exam", "starts_at": start})
     assert r.status_code == 201
-    ev = json.loads(google.last(g.CALENDAR_EVENTS).content)
+    ev = json.loads(google.last_event().content)
     assert ev["summary"] == "Exam: Physics exam" and ev["start"]["timeZone"] == "Asia/Dhaka"
     past = (datetime.now(UTC) - timedelta(days=1)).isoformat()
     assert client.post("/api/google/calendar/reminder", json={"title": "Old", "starts_at": past}).status_code == 422
@@ -222,7 +248,7 @@ def test_expired_access_token_is_refreshed(client, db_session, google):
     connected(client, db_session, scopes=(CAL,), expires_in=0)
     start = (datetime.now(UTC) + timedelta(days=1)).isoformat()
     assert client.post("/api/google/calendar/reminder", json={"title": "Study", "starts_at": start}).status_code == 201
-    assert google.last(g.CALENDAR_EVENTS).headers["Authorization"] == "Bearer at-refreshed"
+    assert google.last_event().headers["Authorization"] == "Bearer at-refreshed"
     assert g.decrypt(db_session.query(GoogleConnection).one().access_token_enc) == "at-refreshed"
 
 
@@ -286,3 +312,70 @@ def test_disconnect_revokes_at_google_and_deletes_tokens(client, db_session, goo
     assert client.post("/api/google/disconnect").status_code == 204
     assert parse_qs(google.last(g.REVOKE_URL).content.decode())["token"] == ["rt-1"]
     assert db_session.query(GoogleConnection).count() == 0
+
+
+# ---------- hardening: sanitized Docs, idempotent saves, scoped calendar ----------
+
+
+def test_lesson_html_is_sanitized_for_docs():
+    out = g.lesson_body_html(
+        "# T\n\n<script>alert(1)</script>\n\n<iframe src='https://x'></iframe>\n\n"
+        "[bad](javascript:alert(1)) [ok](https://example.org) <img src='https://tracker.example/x.png'>\n\n"
+        "<p onclick='x()' style='color:red'>hi</p>\n\n| a | b |\n|---|---|\n| 1 | 2 |\n\n```\ncode()\n```"
+    )
+    low = out.lower()
+    for bad in ("<script", "<iframe", "javascript:", "<img", "onclick", "style="):
+        assert bad not in low, bad
+    assert '<a href="https://example.org"' in out and "<table>" in out and "<pre><code>" in out
+
+
+def test_calendar_scope_is_app_created_only():
+    assert CAL == "https://www.googleapis.com/auth/calendar.app.created"
+
+
+def test_saving_a_lesson_twice_returns_the_existing_doc(client, db_session, google):
+    connected(client, db_session)
+    lesson = _lesson(db_session)
+    first = client.post("/api/google/drive/lesson", json={"lesson_id": str(lesson.id)})
+    assert first.status_code == 201 and first.json()["existing"] is False
+    assert '"appProperties": {"learnai_lesson": "' + str(lesson.id) + '"}' in google.last(g.DRIVE_UPLOAD).content.decode()
+    again = client.post("/api/google/drive/lesson", json={"lesson_id": str(lesson.id)})
+    assert again.status_code == 200 and again.json()["existing"] is True and again.json()["id"] == first.json()["id"]
+    copy = client.post("/api/google/drive/lesson", json={"lesson_id": str(lesson.id), "new_copy": True})
+    assert copy.status_code == 201 and copy.json()["id"] != first.json()["id"]
+    assert len(google.docs) == 2
+
+
+def test_deadline_is_one_event_per_student_and_opportunity(client, db_session, google):
+    connected(client, db_session, scopes=(CAL,))
+    o = _opportunity(db_session)
+    a = client.post("/api/google/calendar/opportunity", json={"opportunity_id": str(o.id)})
+    b = client.post("/api/google/calendar/opportunity", json={"opportunity_id": str(o.id)})
+    assert a.status_code == 201 and b.status_code == 200 and b.json()["created"] is False
+    assert a.json()["id"] == b.json()["id"] and len(google.events) == 1
+    assert json.loads(google.last_event().content)["status"] == "confirmed"  # restores it if the student deleted it
+    eid = a.json()["id"]
+    assert set(eid) <= set("0123456789abcdefghijklmnopqrstuv") and 5 <= len(eid) <= 1024
+    # The app made its own calendar; nothing touches the student's primary calendar.
+    assert db_session.query(GoogleConnection).one().calendar_id == "cal-1@group.calendar.google.com"
+    assert not any("/calendars/primary" in r.url.path for r in google.requests)
+
+
+def test_reminder_retry_with_same_request_id_does_not_duplicate(client, db_session, google):
+    connected(client, db_session, scopes=(CAL,))
+    body = {"title": "Study", "starts_at": (datetime.now(UTC) + timedelta(days=1)).isoformat(),
+            "request_id": "2f1b8a9e-7c55-4c1e-9d43-0a5d2b3c4e5f"}
+    assert client.post("/api/google/calendar/reminder", json=body).status_code == 201
+    assert client.post("/api/google/calendar/reminder", json=body).status_code == 200
+    assert client.post("/api/google/calendar/reminder", json={**body, "request_id": "3f1b8a9e-7c55-4c1e-9d43-0a5d2b3c4e5f"}).status_code == 201
+    assert len(google.events) == 2
+
+
+def test_deleted_learn_ai_calendar_is_recreated(client, db_session, google):
+    connected(client, db_session, scopes=(CAL,))
+    conn = db_session.query(GoogleConnection).one()
+    conn.calendar_id = "gone@group.calendar.google.com"  # the student deleted it in Google Calendar
+    db_session.commit()
+    start = (datetime.now(UTC) + timedelta(days=1)).isoformat()
+    assert client.post("/api/google/calendar/reminder", json={"title": "Study", "starts_at": start}).status_code == 201
+    assert db_session.query(GoogleConnection).one().calendar_id == "cal-1@group.calendar.google.com"

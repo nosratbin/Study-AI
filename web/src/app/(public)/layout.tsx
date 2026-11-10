@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { PublicNav } from "@/components/layout/public-nav";
 import { Logo } from "@/components/ui";
@@ -5,7 +6,10 @@ import { Logo } from "@/components/ui";
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <PublicNav />
+      {/* PublicNav reads usePathname(); dynamic public routes (/p/[token], /certificates/[code]) need a boundary to prerender. */}
+      <Suspense fallback={<div className="h-16 border-b border-line bg-white" aria-hidden />}>
+        <PublicNav />
+      </Suspense>
       <main className="flex-1">{children}</main>
       <footer className="border-t border-line bg-white">
         <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-3 sm:px-6">

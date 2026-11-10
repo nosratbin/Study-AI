@@ -44,7 +44,9 @@ class Settings(BaseSettings):
 
     # AI (Gemini). Key stays server-side only.
     gemini_api_key: str = ""
-    gemini_model: str = "gemini-2.5-flash"
+    gemini_model: str = "gemini-3.5-flash"
+    # Comma-separated models tried in order when the primary is overloaded (429/503) or retired (404).
+    gemini_fallback_models: str = "gemini-flash-latest,gemini-3.1-flash-lite"
     gemini_embedding_model: str = "gemini-embedding-001"
     embedding_dim: int = 768
     ai_timeout_seconds: float = 45.0
@@ -62,6 +64,10 @@ class Settings(BaseSettings):
     google_token_key: str = ""
     # Where the browser lands after the OAuth callback.
     web_app_url: str = "http://localhost:3000"
+
+    # Fernet key for sensitive student text at rest (MindCare journal notes, support requests).
+    # Required in production. Changing it makes existing journal notes unreadable.
+    data_encryption_key: str = ""
 
     @property
     def google_enabled(self) -> bool:
@@ -99,6 +105,15 @@ class Settings(BaseSettings):
                 raise RuntimeError("Production requires PostgreSQL (DATABASE_URL)")
             if not self.cookie_secure:
                 raise RuntimeError("Production requires COOKIE_SECURE=true (HTTPS-only auth cookies)")
+            if not self.data_encryption_key:
+                raise RuntimeError("Production requires DATA_ENCRYPTION_KEY (encrypts MindCare notes)")
+        if self.data_encryption_key:
+            from cryptography.fernet import Fernet
+
+            try:
+                Fernet(self.data_encryption_key.encode())
+            except ValueError as e:
+                raise RuntimeError("DATA_ENCRYPTION_KEY is not a valid Fernet key (see the command in .env.example)") from e
         if not self.jwt_secret:
             if self.environment == "production":
                 raise RuntimeError("JWT_SECRET missing")

@@ -31,7 +31,7 @@ const FEATURES: { key: GoogleFeature; title: string; icon: typeof FolderOpen; ac
     key: "calendar",
     title: "Google Calendar",
     icon: CalendarDays,
-    access: "Add reminders for classes, exams and scholarship or competition deadlines. We only create events; we don't read your schedule.",
+    access: "Add reminders for classes, exams and deadlines to a separate \"LEARN AI\" calendar we create. We can't see or change your other calendars or events.",
   },
 ];
 
@@ -186,6 +186,8 @@ function ReminderForm() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [event, setEvent] = useState<GoogleEvent | null>(null);
+  // One id per reminder: a double submit or a retry after a network error updates it instead of duplicating it.
+  const [requestId, setRequestId] = useState(() => crypto.randomUUID());
   const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) => setForm((f) => ({ ...f, [k]: v }));
 
   async function submit(e: React.FormEvent) {
@@ -205,9 +207,11 @@ function ReminderForm() {
         body: {
           title: form.title.trim(), kind: form.kind, starts_at: `${form.date}T${form.time}:00+06:00`, // Bangladesh time
           duration_min: Number(form.duration_min), remind_minutes: Number(form.remind_minutes), notes: form.notes.trim() || null,
+          request_id: requestId,
         },
       });
       setEvent(ev);
+      setRequestId(crypto.randomUUID()); // the next reminder is a new event
       setForm((f) => ({ ...f, title: "", notes: "" }));
     } catch (err) {
       if (err instanceof ApiError) {

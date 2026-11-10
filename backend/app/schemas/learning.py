@@ -55,6 +55,7 @@ class ProgressOut(BaseModel):
     status: ProgressStatus
     course_percent: int
     next_lesson_id: str | None
+    certificate_code: str | None = None  # set once every lesson in the course is completed
 
 
 # ---------- Roadmap ----------

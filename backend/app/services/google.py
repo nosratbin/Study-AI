@@ -14,10 +14,11 @@ import json
 import secrets
 import uuid
 from datetime import UTC, date, datetime, timedelta, timezone
-from urllib.parse import urlencode
+from urllib.parse import quote, urlencode
 
 import httpx
 import markdown as md
+import nh3
 from cryptography.fernet import Fernet, InvalidToken
 from sqlalchemy.orm import Session
 
@@ -30,14 +31,17 @@ TOKEN_URL = "https://oauth2.googleapis.com/token"
 REVOKE_URL = "https://oauth2.googleapis.com/revoke"
 DRIVE_FILES = "https://www.googleapis.com/drive/v3/files"
 DRIVE_UPLOAD = "https://www.googleapis.com/upload/drive/v3/files"
-CALENDAR_EVENTS = "https://www.googleapis.com/calendar/v3/calendars/primary/events"
+CALENDAR_API = "https://www.googleapis.com/calendar/v3"
 
 FEATURE_SCOPES = {
     "drive": "https://www.googleapis.com/auth/drive.file",
-    "calendar": "https://www.googleapis.com/auth/calendar.events",
+    # Only calendars this app creates (a "LEARN AI" calendar): no access to the student's own calendars or events.
+    "calendar": "https://www.googleapis.com/auth/calendar.app.created",
 }
 BASE_SCOPES = ["openid", "email"]
 FOLDER_NAME = "LEARN AI"
+CALENDAR_NAME = "LEARN AI"
+LESSON_PROP = "learnai_lesson"  # Drive appProperties key: which lesson a Doc was saved from
 DHAKA = timezone(timedelta(hours=6), "Asia/Dhaka")  # Bangladesh has no DST
 
 
@@ -237,6 +241,8 @@ class GoogleApi:
                 raise self._reconnect()
             if r.status_code == 404:
                 raise ApiError(404, "google_not_found", "That Google file no longer exists.")
+            if r.status_code == 409:
+                raise ApiError(409, "google_conflict", "That item already exists in Google.")
             if r.status_code == 403 and "insufficient" in r.text.lower():
                 raise ApiError(409, "google_scope_missing", "Give LEARN AI permission for this Google feature first.")
             if r.status_code >= 400:
@@ -261,10 +267,20 @@ class GoogleApi:
         self.db.commit()
         return f["id"]
 
-    def create_doc(self, title: str, body_html: str) -> dict:
+    def find_lesson_doc(self, lesson_id: uuid.UUID) -> dict | None:
+        """The newest non-trashed Doc this app saved for a lesson. drive.file only lists files the app created."""
+        q = f"appProperties has {{ key='{LESSON_PROP}' and value='{lesson_id}' }} and trashed = false"
+        r = self.request("GET", DRIVE_FILES, params={"q": q, "fields": "files(id,name,webViewLink)", "pageSize": 1,
+                                                     "orderBy": "createdTime desc", "spaces": "drive"})
+        files = r.get("files") or []
+        return files[0] if files else None
+
+    def create_doc(self, title: str, body_html: str, lesson_id: uuid.UUID | None = None) -> dict:
         folder = self.folder_id()
         boundary = f"learnai-{secrets.token_hex(8)}"
-        meta = {"name": title[:200], "mimeType": "application/vnd.google-apps.document", "parents": [folder]}
+        meta: dict = {"name": title[:200], "mimeType": "application/vnd.google-apps.document", "parents": [folder]}
+        if lesson_id:
+            meta["appProperties"] = {LESSON_PROP: str(lesson_id)}
         payload = (
             f"--{boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n{json.dumps(meta)}\r\n"
             f"--{boundary}\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n{body_html}\r\n--{boundary}--\r\n"
@@ -274,16 +290,66 @@ class GoogleApi:
 
     # ----- Calendar -----
 
-    def create_event(self, event: dict) -> dict:
-        return self.request("POST", CALENDAR_EVENTS, params={"fields": "id,htmlLink"}, json=event)
+    def calendar_id(self) -> str:
+        if self.conn.calendar_id:
+            return self.conn.calendar_id
+        c = self.request("POST", f"{CALENDAR_API}/calendars", params={"fields": "id"}, json={
+            "summary": CALENDAR_NAME, "timeZone": "Asia/Dhaka",
+            "description": "Deadlines and study reminders added from LEARN AI. You can hide or delete this calendar any time.",
+        })
+        self.conn.calendar_id = c["id"]
+        self.db.commit()
+        return c["id"]
+
+    def put_event(self, event_id: str, event: dict) -> tuple[dict, bool]:
+        """Create the event with a client-chosen id, or update it if that id already exists.
+
+        Google keeps a deleted event's id reserved (status "cancelled"), so a repeat request updates the
+        existing event and marks it confirmed instead of creating a duplicate. Returns (event, created).
+        """
+        fields = {"fields": "id,htmlLink"}
+        for attempt in range(2):
+            events = f"{CALENDAR_API}/calendars/{quote(self.calendar_id(), safe='')}/events"
+            try:
+                try:
+                    return self.request("POST", events, params=fields, json={**event, "id": event_id}), True
+                except ApiError as e:
+                    if e.code != "google_conflict":
+                        raise
+                return self.request("PUT", f"{events}/{event_id}", params=fields, json={**event, "status": "confirmed"}), False
+            except ApiError as e:
+                if e.code != "google_not_found" or attempt:
+                    raise
+                self.conn.calendar_id = None  # the student deleted the LEARN AI calendar: make a new one
+                self.db.commit()
+        raise ApiError(502, "google_api_error", "Google could not complete the request. Please try again.")  # unreachable
+
+
+def event_id(*parts: object) -> str:
+    """Deterministic Calendar event id (base32hex: a-v, 0-9) so retries and repeats never duplicate events."""
+    digest = hashlib.sha256("|".join(map(str, parts)).encode()).digest()
+    return base64.b32hexencode(digest).decode().rstrip("=").lower()
 
 
 # ---------- content builders ----------
 
 
+# What a lesson may contain once exported to Google Docs. Anything else (script, iframe, style, event
+# handlers, javascript:/data: links, images that would phone home) is dropped by nh3 (ammonia).
+DOC_TAGS = {"h1", "h2", "h3", "h4", "h5", "h6", "p", "br", "hr", "strong", "b", "em", "i", "u", "s", "del",
+            "code", "pre", "blockquote", "ul", "ol", "li", "a", "table", "thead", "tbody", "tr", "th", "td"}
+DOC_ATTRS = {"a": {"href"}, "th": {"align"}, "td": {"align"}, "ol": {"start"}}
+
+
+def lesson_body_html(content_md: str) -> str:
+    raw = md.markdown(content_md, extensions=["fenced_code", "tables", "sane_lists"])
+    return nh3.clean(raw, tags=DOC_TAGS, attributes=DOC_ATTRS, url_schemes={"http", "https", "mailto"},
+                     link_rel="noopener noreferrer")
+
+
 def lesson_doc_html(*, title: str, course_title: str, level: str, content_md: str, lesson_url: str, notes: str | None) -> str:
-    # Lesson markdown is staff-authored; student notes are escaped.
-    body = md.markdown(content_md, extensions=["fenced_code", "tables", "sane_lists"])
+    # Lesson markdown is sanitized to an allowlist (defence in depth: it is staff-authored); student notes are escaped.
+    body = lesson_body_html(content_md)
     saved = datetime.now(DHAKA).strftime("%d %b %Y")
     parts = [
         f"<h1>{html.escape(title)}</h1>",

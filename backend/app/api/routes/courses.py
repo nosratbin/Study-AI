@@ -15,6 +15,7 @@ from app.models.enums import EducationLevel, ProgressStatus
 from app.schemas.learning import CourseDetail, LessonOut, LessonSummary, ProgressIn, ProgressOut, RoadmapOut
 from app.schemas.student import CourseCard
 from app.services.learning import course_card, course_percent, lesson_counts, load_progress
+from app.services.passport import issue_certificate_if_complete
 from app.services.roadmap import build_roadmap
 
 router = APIRouter(tags=["learning"])
@@ -102,6 +103,7 @@ def update_progress(body: ProgressIn, user: StudentUser, db: DbSession):
             row.status, row.percent, row.completed_at = ProgressStatus.completed, 100, datetime.now(UTC)
     elif row.status == ProgressStatus.not_started:
         row.status, row.percent = ProgressStatus.in_progress, 0
+    cert = issue_certificate_if_complete(db, user.id, lesson.course) if row.status == ProgressStatus.completed else None
     db.commit()
 
     ordered = list(lesson.course.lessons)
@@ -110,6 +112,7 @@ def update_progress(body: ProgressIn, user: StudentUser, db: DbSession):
         lesson_id=str(lesson.id), course_id=str(lesson.course_id), status=row.status,
         course_percent=course_percent(db, user.id, lesson.course_id),
         next_lesson_id=str(ordered[i + 1].id) if i + 1 < len(ordered) else None,
+        certificate_code=cert.certificate_code if cert else None,
     )
 
 

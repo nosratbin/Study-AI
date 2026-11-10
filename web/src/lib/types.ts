@@ -371,11 +371,15 @@ export interface GoogleDoc {
   id: string;
   name: string;
   web_view_link: string | null;
+  /** True when the Doc saved earlier for this lesson was returned instead of a new one. */
+  existing: boolean;
 }
 
 export interface GoogleEvent {
   id: string;
   html_link: string | null;
+  /** False when an existing event was updated (same deadline or a retried reminder). */
+  created: boolean;
 }
 
 /** Bangladesh time, e.g. "31 Dec 2026, 11:59 PM". */
@@ -383,4 +387,258 @@ export function formatDeadline(iso: string): string {
   return new Intl.DateTimeFormat("en-GB", {
     day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit", hour12: true, timeZone: "Asia/Dhaka",
   }).format(new Date(iso));
+}
+
+/* ---------- Phase 4: Project Lab, Skill Passport, MindCare, Study Planner ---------- */
+
+export type ProjectStatus = "draft" | "submitted" | "reviewed";
+
+export interface Challenge {
+  id: string;
+  slug: string;
+  title: string;
+  level: EducationLevel;
+  summary: string;
+  skills: string[];
+  estimated_hours: number;
+  starter_url: string | null;
+  is_demo: boolean;
+}
+
+export interface ChallengeDetail extends Challenge {
+  brief_md: string;
+}
+
+export interface Project {
+  id: string;
+  title: string;
+  description: string;
+  level: EducationLevel | null;
+  challenge: Challenge | null;
+  repo_url: string | null;
+  colab_url: string | null;
+  documentation: string | null;
+  status: ProjectStatus;
+  is_public: boolean;
+  feedback: string | null;
+  score: number | null;
+  reviewer_name: string | null;
+  submitted_at: string | null;
+  reviewed_at: string | null;
+  updated_at: string;
+  owner_name: string | null;
+}
+
+export interface AIFeedback {
+  strengths: string[];
+  improvements: string[];
+  next_steps: string[];
+  disclaimer: string;
+}
+
+export const PROJECT_STATUS: Record<ProjectStatus, { label: string; tone: "brand" | "success" | "neutral" }> = {
+  draft: { label: "Draft", tone: "neutral" },
+  submitted: { label: "Waiting for review", tone: "brand" },
+  reviewed: { label: "Reviewed", tone: "success" },
+};
+
+export type SkillKind =
+  | "course" | "skill" | "certificate" | "project" | "award" | "scholarship"
+  | "competition" | "sport" | "cultural" | "leadership" | "volunteering";
+
+export const SKILL_KINDS: { value: SkillKind; label: string }[] = [
+  { value: "award", label: "Award" },
+  { value: "competition", label: "Competition" },
+  { value: "certificate", label: "Certificate (outside LEARN AI)" },
+  { value: "scholarship", label: "Scholarship" },
+  { value: "skill", label: "Skill" },
+  { value: "project", label: "Project (outside LEARN AI)" },
+  { value: "volunteering", label: "Volunteering" },
+  { value: "leadership", label: "Leadership" },
+  { value: "sport", label: "Sport" },
+  { value: "cultural", label: "Cultural activity" },
+  { value: "course", label: "Course (outside LEARN AI)" },
+];
+
+export interface SkillRecord {
+  id: string;
+  kind: SkillKind;
+  title: string;
+  description: string | null;
+  evidence_url: string | null;
+  issued_by: string | null;
+  achieved_on: string | null;
+  verification_status: VerificationStatus;
+  verified_at: string | null;
+  is_public: boolean;
+}
+
+export interface AdminSkillRecord extends SkillRecord {
+  owner_name: string;
+  review_note: string | null;
+}
+
+export interface CompletedCourse {
+  course_id: string;
+  title: string;
+  level: EducationLevel;
+  category: string | null;
+  completed_lessons: number;
+  total_lessons: number;
+  certificate_code: string | null;
+  issued_at: string | null;
+  /** Seeded demo course: its certificate is labelled "Demo". */
+  is_demo: boolean;
+}
+
+export interface PassportProject {
+  id: string;
+  title: string;
+  description: string;
+  status: ProjectStatus;
+  repo_url: string | null;
+  colab_url: string | null;
+  reviewed: boolean;
+  is_public: boolean;
+}
+
+export interface ShareState {
+  enabled: boolean;
+  token: string | null;
+  shared_at: string | null;
+}
+
+export interface Passport {
+  full_name: string;
+  education_level: EducationLevel | null;
+  institution: string | null;
+  is_minor: boolean;
+  courses: CompletedCourse[];
+  in_progress_courses: CompletedCourse[];
+  assessments: { title: string; score: number; max_score: number; recommended_level: EducationLevel | null; completed_at: string | null }[];
+  projects: PassportProject[];
+  records: SkillRecord[];
+  skills: string[];
+  share: ShareState;
+}
+
+export interface PublicPassport {
+  display_name: string;
+  education_level: EducationLevel | null;
+  institution: string | null;
+  courses: CompletedCourse[];
+  projects: PassportProject[];
+  records: SkillRecord[];
+  skills: string[];
+}
+
+export interface CertificateCheck {
+  valid: boolean;
+  code: string;
+  title: string | null;
+  holder: string | null;
+  issued_at: string | null;
+  is_demo: boolean;
+}
+
+export const MOOD_TAGS = ["exams", "homework", "family", "friends", "sleep", "health", "future", "money", "sports", "achievement"] as const;
+export type MoodTag = (typeof MOOD_TAGS)[number];
+
+export interface Checkin {
+  id: string;
+  mood: number;
+  note: string | null;
+  tags: string[];
+  created_at: string;
+  show_support?: boolean;
+}
+
+export type SupportResourceKind = "helpline" | "counsellor" | "organisation";
+
+export interface SupportResource {
+  id: string;
+  name: string;
+  kind: SupportResourceKind;
+  description: string;
+  phone: string | null;
+  url: string | null;
+  hours: string | null;
+  languages: string[];
+  cost_note: string | null;
+}
+
+export interface AdminSupportResource extends SupportResource {
+  verification_status: VerificationStatus;
+  verified_by_name: string | null;
+  verified_at: string | null;
+  source_note: string | null;
+}
+
+export interface SupportDirectory {
+  emergency: { number: string; label: string };
+  resources: SupportResource[];
+}
+
+export type SupportTopic = "stress" | "study_pressure" | "relationships" | "feeling_low" | "other";
+export type SupportRequestStatus = "open" | "in_progress" | "closed";
+
+export const SUPPORT_TOPICS: { value: SupportTopic; label: string }[] = [
+  { value: "stress", label: "Stress" },
+  { value: "study_pressure", label: "Study pressure" },
+  { value: "relationships", label: "Family or friends" },
+  { value: "feeling_low", label: "Feeling low" },
+  { value: "other", label: "Something else" },
+];
+
+export interface SupportRequest {
+  id: string;
+  topic: SupportTopic;
+  message: string | null;
+  preferred_contact: "email" | "phone";
+  status: SupportRequestStatus;
+  created_at: string;
+  handled_at: string | null;
+}
+
+export interface AdminSupportRequest extends SupportRequest {
+  student_name: string;
+  student_email: string;
+  phone: string | null;
+  is_minor: boolean;
+}
+
+export type TaskStatus = "todo" | "done";
+
+export interface StudyTask {
+  id: string;
+  title: string;
+  due_on: string;
+  planned_minutes: number;
+  status: TaskStatus;
+  done_at: string | null;
+  lesson_id: string | null;
+  lesson_title: string | null;
+  notes: string | null;
+}
+
+export interface TaskSuggestion {
+  lesson_id: string;
+  title: string;
+  course_title: string;
+  duration_min: number;
+}
+
+export interface PlannerSummary {
+  week_start: string;
+  planned_minutes: number;
+  done_minutes: number;
+  tasks_done: number;
+  tasks_total: number;
+  streak_days: number;
+}
+
+/** "12 Mar 2026" for a date or datetime, in Bangladesh time. */
+export function formatDay(iso: string): string {
+  const d = /^\d{4}-\d{2}-\d{2}$/.test(iso) ? new Date(`${iso}T12:00:00+06:00`) : new Date(iso);
+  return new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Dhaka" }).format(d);
 }

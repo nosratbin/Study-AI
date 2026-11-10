@@ -42,6 +42,9 @@ class StudentProfile(IdMixin, TimestampMixin, Base):
     goals: Mapped[str | None] = mapped_column(Text)
     onboarding_completed: Mapped[bool] = mapped_column(Boolean, default=False)
     recommended_level: Mapped[EducationLevel | None] = mapped_column(str_enum(EducationLevel, "student_reco_level"))
+    # Skill Passport share link: a random token; null = not shared. Regenerating it kills old links.
+    passport_token: Mapped[str | None] = mapped_column(String(64), unique=True)
+    passport_shared_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     user: Mapped[User] = relationship(back_populates="student_profile")
 

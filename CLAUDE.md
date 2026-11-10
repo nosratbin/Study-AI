@@ -49,7 +49,9 @@ pnpm vitest run src/lib/validation.test.ts -t "name"             # single test
 - **Opportunities**: student routes (`opportunities.py`) must only use `verified_query()`/`get_verified()` from `app/services/opportunities.py`. Admin CRUD/verify lives in `admin.py` and writes `AuditLog`. The matcher is rule-based (no LLM).
 - **Google Workspace**: `app/services/google.py` does OAuth (PKCE, a signed `la_gstate` cookie on path `/api/google`) and Drive/Docs/Calendar REST over httpx. Tests patch `google._client` with `httpx.MockTransport` and `google.verify_id_token`. Tokens are Fernet-encrypted (`GOOGLE_TOKEN_KEY`). Only an `invalid_grant` refresh error deletes a connection.
 - **Sessions**: tokens carry `jti` and `sid`. Logout writes both to `revoked_tokens` (`sid:<id>` keys); `is_revoked(db, payload)` checks both.
-- **AI**: `app/services/llm.py` (Gemini REST; tests override `get_llm` with `tests/fakes.py:FakeLLM`), `rag.py` (chunk, embed, pgvector cosine retrieve), `tutor.py` (prompts). Tutor quizzes are practice-only, never stored.
+- **Phase 4 modules**: `growth.py` models (challenges, study tasks, support directory/requests). Routes: `projects.py`, `skills.py` (passport, plus `public_router` for `/api/public/*`), `mindcare.py`, `planner.py`, and `admin_care.py`. Certificates are issued in `services/passport.py` when a course's lessons are all completed.
+- **Encryption at rest**: `app/core/crypto.py` `seal`/`unseal` (Fernet, `DATA_ENCRYPTION_KEY`; production refuses to start without it). Use it for MindCare notes and support requests. Mood numbers stay plain.
+- **AI**: `app/services/llm.py` (Gemini REST with a model fallback chain `GEMINI_MODEL` + `GEMINI_FALLBACK_MODELS`; tests override `get_llm` with `tests/fakes.py:FakeLLM`), `rag.py` (chunk, embed, pgvector cosine retrieve), `tutor.py` (prompts). Tutor quizzes are practice-only, never stored.
 - **Module availability**: unreleased modules show as disabled nav items. Flip `available` in `NAV`/`BOTTOM` (`app-shell.tsx`) and `MODULES`/`CURRENT_PHASE` (`backend/app/services/dashboard.py`) when a phase ships.
 - **Client and server validation**: they are mirrored. `web/src/lib/validation.ts` (zod) must match the backend Pydantic schemas: password rules and the minor rule `currentYear - birth_year <= 18`.
 
@@ -61,3 +63,6 @@ pnpm vitest run src/lib/validation.test.ts -t "name"             # single test
 - Seeded content is flagged `is_demo=True` and labelled "Demo" in the UI.
 - API keys (Gemini, Google OAuth secrets) stay server-side only. Google tokens are stored encrypted in `google_connections`.
 - Don't claim an integration works until it has been configured and tested. `/api/health` reports which integrations are configured.
+
+## For unfamiliar features
+For unfamiliar features, don't write from scratch - first search GitHub for open-sorce projects, compare approaches, then get started

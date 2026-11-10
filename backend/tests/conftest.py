@@ -5,6 +5,9 @@ os.environ["ENVIRONMENT"] = "test"
 os.environ["DATABASE_URL"] = "sqlite://"
 os.environ["JWT_SECRET"] = "test-secret-" + "x" * 40
 os.environ["FIREBASE_PROJECT_ID"] = ""
+# Env vars beat .env/.env.local, so real developer keys never leak into tests. Tests opt in via fixtures.
+for _key in ("GEMINI_API_KEY", "GOOGLE_OAUTH_CLIENT_ID", "GOOGLE_OAUTH_CLIENT_SECRET", "GOOGLE_TOKEN_KEY", "DATA_ENCRYPTION_KEY"):
+    os.environ[_key] = ""
 
 import pytest
 from fastapi.testclient import TestClient

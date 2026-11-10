@@ -53,10 +53,14 @@ def is_revoked(db, payload: dict) -> bool:
     """True if this token, or the sign-in session it belongs to, was logged out."""
     from app.models import RevokedToken
 
+    from sqlalchemy import select
+
     jti, sid = payload.get("jti"), payload.get("sid")
-    if not jti or db.get(RevokedToken, jti) is not None:
+    if not jti:
         return True
-    return bool(sid) and db.get(RevokedToken, _session_key(sid)) is not None
+    keys = [jti, _session_key(sid)] if sid else [jti]
+    # One round trip per request: the token's own id and its session id.
+    return db.scalar(select(RevokedToken.jti).where(RevokedToken.jti.in_(keys)).limit(1)) is not None
 
 
 def _add(db, key: str, expires_at: datetime) -> None:

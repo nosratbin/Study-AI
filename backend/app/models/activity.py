@@ -61,6 +61,10 @@ class Project(IdMixin, TimestampMixin, Base):
     reviewed_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
     score: Mapped[int | None] = mapped_column(SmallInteger)
     is_public: Mapped[bool] = mapped_column(Boolean, default=False)
+    challenge_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("project_challenges.id", ondelete="SET NULL"), index=True)
+    documentation: Mapped[str | None] = mapped_column(Text)  # what it does, how it was built, what was learned
+    submitted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 # ---------- Opportunity hub ----------
@@ -136,11 +140,14 @@ class SkillRecord(IdMixin, TimestampMixin, Base):
         str_enum(VerificationStatus, "skill_verification"), default=VerificationStatus.unverified
     )
     verified_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
+    verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    review_note: Mapped[str | None] = mapped_column(Text)  # what evidence the reviewer checked
     is_public: Mapped[bool] = mapped_column(Boolean, default=False)
 
 
 class Certificate(IdMixin, TimestampMixin, Base):
     __tablename__ = "certificates"
+    __table_args__ = (UniqueConstraint("user_id", "course_id", name="uq_certificates_user_course"),)
 
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     course_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("courses.id", ondelete="SET NULL"))
@@ -189,6 +196,7 @@ class GoogleConnection(IdMixin, TimestampMixin, Base):
     google_sub: Mapped[str] = mapped_column(String(64))
     google_email: Mapped[str | None] = mapped_column(String(320))
     drive_folder_id: Mapped[str | None] = mapped_column(String(128))  # the "LEARN AI" folder this app created
+    calendar_id: Mapped[str | None] = mapped_column(String(255))  # the "LEARN AI" calendar this app created
     scopes: Mapped[list[str]] = mapped_column(JSON, default=list)
     refresh_token_enc: Mapped[str | None] = mapped_column(Text)  # Fernet-encrypted
     access_token_enc: Mapped[str | None] = mapped_column(Text)

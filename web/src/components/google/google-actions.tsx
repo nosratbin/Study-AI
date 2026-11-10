@@ -109,7 +109,9 @@ export function SaveLessonToDocs({ lessonId }: { lessonId: string }) {
     setBusy(true);
     setError(null);
     try {
-      setDoc(await api<GoogleDoc>("/google/drive/lesson", { method: "POST", body: { lesson_id: lessonId, notes: notes.trim() || null } }));
+      // The first save returns an existing Doc if there is one; "Save a new copy" asks for a fresh one.
+      const body = { lesson_id: lessonId, notes: notes.trim() || null, new_copy: doc !== null };
+      setDoc(await api<GoogleDoc>("/google/drive/lesson", { method: "POST", body }));
       setOpen(false);
       setNotes("");
     } catch (e) {
@@ -126,7 +128,10 @@ export function SaveLessonToDocs({ lessonId }: { lessonId: string }) {
       <h2 id="docs-heading" className="flex items-center gap-2 text-sm font-semibold">
         <FileText className="size-4 text-brand-600" aria-hidden /> Save to Google Docs
       </h2>
-      {doc && <Done href={doc.web_view_link} label="Saved to the LEARN AI folder in your Google Drive." />}
+      {doc && (
+        <Done href={doc.web_view_link}
+          label={doc.existing ? "This lesson is already saved in your LEARN AI Drive folder." : "Saved to the LEARN AI folder in your Google Drive."} />
+      )}
       {!ready ? (
         <NeedsGoogle status={status.data} feature="drive" next={`/lessons/${lessonId}`} />
       ) : open ? (
@@ -146,7 +151,7 @@ export function SaveLessonToDocs({ lessonId }: { lessonId: string }) {
         </div>
       ) : (
         <Button size="sm" variant="secondary" onClick={() => setOpen(true)}>
-          {doc ? "Save another copy" : "Save this lesson"}
+          {doc ? "Save a new copy" : "Save this lesson"}
         </Button>
       )}
       {error && <Alert>{error}</Alert>}
@@ -179,7 +184,10 @@ export function AddDeadlineToCalendar({ opportunityId }: { opportunityId: string
   return (
     <div className="space-y-2">
       {event ? (
-        <Done href={event.html_link} label="Added to your Google Calendar with reminders 7 days and 1 day before." />
+        <Done href={event.html_link}
+          label={event.created
+            ? "Added to your LEARN AI calendar with reminders 7 days and 1 day before."
+            : "Already in your LEARN AI calendar. We updated it with the latest deadline."} />
       ) : ready ? (
         <Button variant="secondary" loading={busy} onClick={add} className="w-full">
           <CalendarPlus className="size-4" aria-hidden /> Add deadline to Google Calendar

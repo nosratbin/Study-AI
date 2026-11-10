@@ -32,12 +32,15 @@ class ConnectOut(BaseModel):
 class DriveLessonIn(BaseModel):
     lesson_id: uuid.UUID
     notes: Annotated[str, StringConstraints(strip_whitespace=True, max_length=5000)] | None = None
+    # False: return the Doc already saved for this lesson if there is one. True: always make a new copy.
+    new_copy: bool = False
 
 
 class DocOut(BaseModel):
     id: str
     name: str
     web_view_link: str | None
+    existing: bool = False  # True when an earlier copy was returned instead of creating a new Doc
 
 
 class CalendarOpportunityIn(BaseModel):
@@ -51,6 +54,8 @@ class ReminderIn(BaseModel):
     duration_min: int = Field(default=60, ge=15, le=480)
     remind_minutes: Literal[10, 30, 60, 1440] = 30
     notes: Annotated[str, StringConstraints(strip_whitespace=True, max_length=2000)] | None = None
+    # Generated once per form by the client; resending the same id (double click, retry) never duplicates the event.
+    request_id: uuid.UUID = Field(default_factory=uuid.uuid4)
 
     @field_validator("starts_at")
     @classmethod
@@ -68,3 +73,4 @@ class ReminderIn(BaseModel):
 class EventOut(BaseModel):
     id: str
     html_link: str | None
+    created: bool = True  # False when an existing event was updated instead

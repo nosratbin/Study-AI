@@ -162,24 +162,33 @@ def disconnect(user: CurrentUser, db: DbSession):
 
 
 @router.post("/drive/lesson", response_model=DocOut, status_code=201)
-def save_lesson(body: DriveLessonIn, user: CurrentUser, db: DbSession):
-    """Save a lesson (plus the student's own notes) as a Google Doc in their LEARN AI Drive folder."""
+def save_lesson(body: DriveLessonIn, user: CurrentUser, db: DbSession, response: Response):
+    """Save a lesson (plus the student's own notes) as a Google Doc in their LEARN AI Drive folder.
+
+    Returns the Doc saved earlier (200, existing=true) unless new_copy is set, so a repeat click never duplicates it.
+    """
     api = _api_for(db, user, "drive")
     lesson = db.get(Lesson, body.lesson_id)
     if not lesson or not lesson.course.is_published:
         raise ApiError(404, "lesson_not_found", "Lesson not found.")
+    if not body.new_copy and (f := api.find_lesson_doc(lesson.id)):
+        response.status_code = 200
+        return DocOut(id=f["id"], name=f.get("name", lesson.title), web_view_link=f.get("webViewLink"), existing=True)
     s = get_settings()
     body_html = g.lesson_doc_html(
         title=lesson.title, course_title=lesson.course.title, level=str(getattr(lesson.course.level, "value", lesson.course.level)),
         content_md=lesson.content_md or "", lesson_url=f"{s.web_app_url}/lessons/{lesson.id}", notes=body.notes,
     )
-    f = api.create_doc(f"{lesson.title} · LEARN AI notes", body_html)
+    f = api.create_doc(f"{lesson.title} · LEARN AI notes", body_html, lesson_id=lesson.id)
     return DocOut(id=f["id"], name=f.get("name", lesson.title), web_view_link=f.get("webViewLink"))
 
 
 @router.post("/calendar/opportunity", response_model=EventOut, status_code=201)
-def opportunity_deadline(body: CalendarOpportunityIn, user: CurrentUser, db: DbSession):
-    """Add a verified opportunity's deadline (all-day, reminders 7 days and 1 day before)."""
+def opportunity_deadline(body: CalendarOpportunityIn, user: CurrentUser, db: DbSession, response: Response):
+    """Add a verified opportunity's deadline (all-day, reminders 7 days and 1 day before).
+
+    One event per student and opportunity: adding it again updates it (e.g. after the deadline changed).
+    """
     api = _api_for(db, user, "calendar")
     o = get_verified(db, body.opportunity_id)
     if not o:
@@ -190,15 +199,25 @@ def opportunity_deadline(body: CalendarOpportunityIn, user: CurrentUser, db: DbS
     if deadline < datetime.now(UTC):
         raise ApiError(422, "deadline_passed", "This deadline has already passed.")
     s = get_settings()
-    ev = api.create_event(g.deadline_event(title=o.title, provider=o.provider, deadline=deadline,
-                                           official_url=o.official_url, page_url=f"{s.web_app_url}/opportunities-hub/{o.id}"))
-    return EventOut(id=ev["id"], html_link=ev.get("htmlLink"))
+    ev, created = api.put_event(
+        g.event_id("deadline", user.id, o.id),
+        g.deadline_event(title=o.title, provider=o.provider, deadline=deadline, official_url=o.official_url,
+                         page_url=f"{s.web_app_url}/opportunities-hub/{o.id}"),
+    )
+    if not created:
+        response.status_code = 200
+    return EventOut(id=ev["id"], html_link=ev.get("htmlLink"), created=created)
 
 
 @router.post("/calendar/reminder", response_model=EventOut, status_code=201)
-def reminder(body: ReminderIn, user: CurrentUser, db: DbSession):
+def reminder(body: ReminderIn, user: CurrentUser, db: DbSession, response: Response):
     """A class, exam or study-session reminder the student sets up themselves."""
     api = _api_for(db, user, "calendar")
-    ev = api.create_event(g.reminder_event(title=body.title, kind=body.kind, starts_at=body.starts_at,
-                                           duration_min=body.duration_min, notes=body.notes, remind_minutes=body.remind_minutes))
-    return EventOut(id=ev["id"], html_link=ev.get("htmlLink"))
+    ev, created = api.put_event(
+        g.event_id("reminder", user.id, body.request_id),
+        g.reminder_event(title=body.title, kind=body.kind, starts_at=body.starts_at, duration_min=body.duration_min,
+                         notes=body.notes, remind_minutes=body.remind_minutes),
+    )
+    if not created:
+        response.status_code = 200
+    return EventOut(id=ev["id"], html_link=ev.get("htmlLink"), created=created)

@@ -2,7 +2,7 @@
 
 National AI education & student development platform for Bangladesh — MVP for the AI Builders Congress, Daffodil International University.
 
-> **Status: Phase 3 complete**: Opportunity Hub (admin-verified scholarships and competitions, matcher, saving, application tracking) and Google Workspace (Docs, Drive, Calendar), on top of Phase 2 (courses, AI Tutor, assessments, roadmap) and Phase 1 (auth, onboarding, dashboard, public site).
+> **Status: Phase 4 complete**: Project Lab, Skill Passport (with share link and certificate check), MindCare and Study Planner, on top of Phase 3 (Opportunity Hub, Google Workspace), Phase 2 (courses, AI Tutor, assessments, roadmap) and Phase 1 (auth, onboarding, dashboard, public site).
 > See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for architecture, schema, screen map and milestones.
 
 | Part | Stack | Folder |
@@ -75,15 +75,24 @@ To create an admin, insert a user with `role = 'admin'`, or run `python -m app.s
 
 ## Enabling Google Workspace
 
-1. In Google Cloud (the Firebase project), enable the **Google Drive API** and the **Google Calendar API**.
-2. OAuth consent screen: add the scopes `.../auth/drive.file` and `.../auth/calendar.events`. While the app is in Testing mode, add each student's Google account as a test user.
+1. In Google Cloud (the Firebase project), enable the **Google Drive API** and the **Google Calendar API** (https://console.cloud.google.com/apis/library).
+2. Google Auth Platform → **Data Access**: add the scopes `.../auth/drive.file` and `.../auth/calendar.app.created`. Under **Audience**, while the app is in Testing mode, add each student's Google account as a test user.
 3. Credentials → **OAuth client ID → Web application**. Add the redirect URI `http://localhost:3000/api/google/callback` (in production, `https://<your-domain>/api/google/callback`).
 4. Fill `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `GOOGLE_OAUTH_REDIRECT_URI`, `GOOGLE_TOKEN_KEY` (Fernet key; the command is in `.env.example`) and `WEB_APP_URL` in `backend/.env`, then restart the API.
 5. `/api/health` reports `"google_workspace": true`. Then at `/google`, connect Drive and Calendar.
 
-Students choose which features to allow. LEARN AI can only see files it creates (a "LEARN AI" folder of Google Docs) and can only create calendar events. Tokens are Fernet-encrypted in `google_connections`. Disconnecting revokes access at Google.
+Students choose which features to allow. LEARN AI can only see files it creates (a "LEARN AI" folder of Google Docs) and can only manage a separate "LEARN AI" calendar it creates (it can't see the student's other calendars). Tokens are Fernet-encrypted in `google_connections`. Disconnecting revokes access at Google.
 
 Open the app on the same host as the redirect URI (`localhost`, not `127.0.0.1`). Otherwise the state cookie is not sent back and the connection fails with "request expired".
+
+## Phase 4 modules
+
+- **Project Lab** (`/projects`): demo challenges (`python -m app.seed` adds 6, flagged Demo). Students build in Colab or GitHub, submit a link plus a write-up, and a teacher reviews at `/projects/review`. "AI suggestions" uses Gemini for tips only and never grades.
+- **Skill Passport** (`/passport`): completed courses issue a certificate code automatically, which anyone can check at `/certificates/<code>`. Self-reported achievements stay "self-reported" until an admin verifies them at `/admin/achievements`. Sharing is off by default; the link (`/p/<token>`) can be turned off or replaced. Public pages are `noindex`. For students under 18, the public page shows first name plus surname initial and hides the school.
+- **MindCare** (`/mindcare`): mood check-ins, an encrypted journal, box breathing, the 999 emergency number, and a support directory that shows only admin-verified counsellors and helplines (`/admin/support`). Nothing is seeded. Students can ask the support team to contact them; every time the inbox is opened it is audited. Teachers can't see any of it, and academic or dashboard code never reads it.
+- **Study Planner** (`/planner`): weekly tasks, lesson suggestions, streak, a 25/5 focus timer and "Add to Google Calendar".
+
+`DATA_ENCRYPTION_KEY` (a Fernet key; the command is in `.env.example`) encrypts journal notes and support requests. The API refuses to start in production without it. Back it up: if the key is lost or changed, stored notes can't be read.
 
 ## UI components
 

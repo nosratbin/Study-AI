@@ -11,11 +11,13 @@ log = logging.getLogger("learn_ai")
 class ApiError(Exception):
     """Error with a stable machine code and a user-facing message."""
 
-    def __init__(self, status: int, code: str, message: str, headers: dict[str, str] | None = None):
+    def __init__(self, status: int, code: str, message: str, headers: dict[str, str] | None = None,
+                 details: list[dict] | None = None):
         self.status = status
         self.code = code
         self.message = message
         self.headers = headers
+        self.details = details  # optional [{field, message}] the web maps onto form fields
 
 
 def _body(code: str, message: str, request: Request, details=None) -> dict:
@@ -28,7 +30,7 @@ def _body(code: str, message: str, request: Request, details=None) -> dict:
 def install_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(ApiError)
     async def _api_error(request: Request, exc: ApiError):
-        return JSONResponse(_body(exc.code, exc.message, request), status_code=exc.status, headers=exc.headers)
+        return JSONResponse(_body(exc.code, exc.message, request, exc.details), status_code=exc.status, headers=exc.headers)
 
     @app.exception_handler(RequestValidationError)
     async def _validation(request: Request, exc: RequestValidationError):

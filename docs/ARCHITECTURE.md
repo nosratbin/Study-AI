@@ -101,7 +101,7 @@ stored as validated strings (portable, easy to extend).
 | Table | Key columns | Notes |
 |---|---|---|
 | **users** | email (unique, idx), password_hash (nullable for Google-only), full_name, role `student/teacher/admin`, firebase_uid (unique), is_active, token_version, last_login_at | `token_version` bump revokes all refresh tokens |
-| **student_profiles** | user_id (FK unique), education_level `school/college/university`, institution, class_or_year, district, birth_year, is_minor, guardian_consent_at, preferred_language `en/bn`, interests (JSON), onboarding_completed, recommended_level | |
+| **student_profiles** | user_id (FK unique), education_level `school/college/university`, institution, class_or_year, district, birth_year, is_minor, guardian_consent_at, preferred_language `en/bn`, interests (JSON), onboarding_completed, recommended_level, passport_token (unique), passport_shared_at | |
 | **teacher_profiles** | user_id (FK unique), institution, expertise (JSON), bio, is_verified | |
 | **courses** | title, slug (unique), description, level, category, created_by → users, is_published, estimated_hours, order_index | idx (level, is_published) |
 | **lessons** | course_id → courses, title, content_md, order_index, duration_min, colab_url | idx (course_id, order_index) |
@@ -111,16 +111,20 @@ stored as validated strings (portable, easy to extend).
 | **learning_progress** | user_id, course_id, lesson_id (nullable), status `not_started/in_progress/completed`, percent, completed_at | unique (user_id, lesson_id) |
 | **ai_conversations** | user_id, title, language, course_id (nullable) | |
 | **ai_messages** | conversation_id, role `user/assistant`, content, tokens, sources (JSON) | idx (conversation_id, created_at) |
-| **projects** | user_id, title, description, level, repo_url, colab_url, status `draft/submitted/reviewed`, feedback, reviewed_by, score, is_public | |
+| **projects** | user_id, title, description, level, challenge_id, repo_url, colab_url, documentation, status `draft/submitted/reviewed`, feedback, reviewed_by, score, is_public, submitted_at, reviewed_at | |
+| **project_challenges** *(Phase 4)* | title, slug (unique), level, summary, brief_md, skills (JSON), estimated_hours, starter_url, order_index, is_published, is_demo | idx (level, is_published) |
 | **opportunities** | title, description, category, eligibility, education_levels (JSON), deadline, required_documents (JSON), official_url, provider, verification_status `unverified/verified/rejected`, verified_by, verified_at, source_note | only `verified` shown to students |
 | **saved_opportunities** | user_id, opportunity_id | unique pair |
 | **applications** | user_id, opportunity_id, status `planned/applied/accepted/rejected`, notes, applied_at | unique pair |
-| **mood_checkins** | user_id, mood (1–5), note (private), tags (JSON) | isolated; owner-only |
-| **skill_records** | user_id, kind `course/skill/award/scholarship/competition/sport/cultural/leadership/volunteering/project`, title, description, evidence_url, issued_by, achieved_on, verification_status, verified_by, is_public | |
-| **certificates** | user_id, course_id, title, certificate_code (unique), issued_at | |
+| **mood_checkins** | user_id, mood (1–5), note (Fernet-encrypted), tags (JSON) | isolated; owner-only |
+| **support_resources** *(Phase 4)* | name, kind `helpline/counsellor/organisation`, description, phone, url, hours, languages (JSON), cost_note, verification_status, verified_by, verified_at, source_note | only `verified` shown to students |
+| **support_requests** *(Phase 4)* | user_id, topic, message_enc, preferred_contact, phone_enc, status `open/in_progress/closed`, handled_by, handled_at | encrypted; admin inbox audited |
+| **study_tasks** *(Phase 4)* | user_id, title, due_on (date), planned_minutes, status `todo/done`, done_at, lesson_id, notes | idx (user_id, due_on) |
+| **skill_records** | user_id, kind `course/skill/award/scholarship/competition/sport/cultural/leadership/volunteering/project`, title, description, evidence_url, issued_by, achieved_on, verification_status, verified_by, verified_at, review_note, is_public | |
+| **certificates** | user_id, course_id, title, certificate_code (unique), issued_at | unique (user_id, course_id); issued on course completion |
 | **mentorship_sessions** | mentor_id, student_id, topic, scheduled_at, meet_url, status, notes | |
 | **notifications** | user_id, title, body, kind, link, read_at | idx (user_id, read_at) |
-| **google_connections** | user_id (unique), google_sub, scopes (JSON), refresh_token_enc, access_token_enc, expires_at | tokens encrypted |
+| **google_connections** | user_id (unique), google_sub, scopes (JSON), refresh_token_enc, access_token_enc, expires_at, calendar_id | tokens encrypted |
 | **audit_logs** | actor_id, action, target_type, target_id, details (JSON), ip | admin actions |
 | **contact_messages** | name, email, subject, message, handled | public contact form |
 | **knowledge_chunks** *(Phase 2)* | source, title, level, content, embedding vector(768) | pgvector |

@@ -43,10 +43,10 @@ MODULES: list[tuple[str, str, int]] = [
     ("skill_passport", "Skill Passport", 4),
     ("mindcare", "MindCare", 4),
     ("study_planner", "Study Planner", 4),
-    ("career", "Career Navigator", 4),
+    ("career", "Career Navigator", 5),
     ("notifications", "Notifications", 5),
 ]
-CURRENT_PHASE = 3
+CURRENT_PHASE = 4
 
 
 def build_dashboard(db: Session, user: User) -> DashboardOut:

@@ -17,6 +17,13 @@ from app.core.errors import ApiError
 log = logging.getLogger("learn_ai.llm")
 
 GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta"
+# Statuses that mean "this model can't serve right now" (overloaded, rate-limited, retired), so try the next one.
+FALLBACK_STATUSES = {404, 429, 500, 503}
+
+
+class _ModelUnavailable(Exception):
+    def __init__(self, status: int):
+        self.status = status
 
 
 @dataclass
@@ -45,46 +52,66 @@ class LLMProvider(Protocol):
 class GeminiProvider:
     name = "gemini"
 
-    def __init__(self, api_key: str, model: str, embedding_model: str, dim: int, timeout: float):
+    def __init__(self, api_key: str, model: str, embedding_model: str, dim: int, timeout: float,
+                 fallback_models: tuple[str, ...] = ()):
         self.model = model
+        self.fallback_models = tuple(m for m in fallback_models if m and m != model)
         self.embedding_model = embedding_model
         self.dim = dim
         self._client = httpx.Client(timeout=timeout, headers={"x-goog-api-key": api_key})
 
-    def _post(self, url: str, body: dict) -> dict:
+    def _post(self, url: str, body: dict, *, allow_fallback: bool = False) -> dict:
         try:
             r = self._client.post(url, json=body)
         except httpx.TimeoutException:
             raise ApiError(504, "ai_timeout", "The AI tutor took too long to respond. Please try again.")
         except httpx.HTTPError:
             raise ApiError(502, "ai_unavailable", "The AI service is unreachable right now. Please try again.")
-        if r.status_code == 429:
-            raise ApiError(503, "ai_busy", "The AI service is busy right now. Please try again in a minute.")
         if r.status_code >= 400:
             # Log status + Google's error message only (never the request, which may contain student text).
             try:
                 msg = r.json().get("error", {}).get("message", "")[:300]
             except ValueError:
                 msg = r.text[:200]
-            log.warning("gemini error %s: %s", r.status_code, msg)
+            log.warning("gemini error %s on %s: %s", r.status_code, url.rsplit("/", 1)[-1], msg)
+            if allow_fallback and r.status_code in FALLBACK_STATUSES:
+                raise _ModelUnavailable(r.status_code)
+            if r.status_code in (429, 503):
+                raise ApiError(503, "ai_busy", "The AI service is busy right now. Please try again in a minute.")
             raise ApiError(502, "ai_unavailable", "The AI service returned an error. Please try again.")
         return r.json()
 
+    @staticmethod
+    def _thinking(model: str) -> dict:
+        # Thinking tokens count against maxOutputTokens; keep them small so answers aren't cut off.
+        # Gemini 2.5 takes a token budget; Gemini 3+ takes a level.
+        if model.startswith("gemini-2.5"):
+            return {"thinkingBudget": 512}
+        return {"thinkingLevel": "low"}
+
     def generate(self, system, turns, *, json_schema=None, temperature=0.4, max_tokens=2048) -> LLMResult:
+        base_config: dict = {"temperature": temperature, "maxOutputTokens": max_tokens}
+        if json_schema:
+            base_config["responseMimeType"] = "application/json"
+            base_config["responseSchema"] = json_schema
         body: dict = {
             "systemInstruction": {"parts": [{"text": system}]},
             "contents": [
                 {"role": "user" if t.role == "user" else "model", "parts": [{"text": t.content}]} for t in turns
             ],
-            "generationConfig": {"temperature": temperature, "maxOutputTokens": max_tokens},
         }
-        if self.model.startswith("gemini-2.5-flash"):
-            # Thinking tokens count against maxOutputTokens; cap them so answers aren't cut off.
-            body["generationConfig"]["thinkingConfig"] = {"thinkingBudget": 512}
-        if json_schema:
-            body["generationConfig"]["responseMimeType"] = "application/json"
-            body["generationConfig"]["responseSchema"] = json_schema
-        data = self._post(f"{GEMINI_BASE}/models/{self.model}:generateContent", body)
+        models = (self.model, *self.fallback_models)
+        last_status = 0
+        for i, model in enumerate(models):
+            body["generationConfig"] = {**base_config, "thinkingConfig": self._thinking(model)}
+            try:
+                data = self._post(f"{GEMINI_BASE}/models/{model}:generateContent", body,
+                                  allow_fallback=i < len(models) - 1)
+                break
+            except _ModelUnavailable as e:
+                last_status = e.status
+        else:  # pragma: no cover - the last model raises ApiError instead of _ModelUnavailable
+            raise ApiError(503 if last_status in (429, 503) else 502, "ai_busy", "The AI service is busy right now.")
 
         if data.get("promptFeedback", {}).get("blockReason"):
             return LLMResult(text="", blocked=True)
@@ -134,8 +161,9 @@ def get_llm() -> LLMProvider:
     if not s.ai_enabled:
         raise ApiError(503, "ai_not_configured", "The AI Tutor is not configured on this server yet (GEMINI_API_KEY missing).")
     if _provider is None:
+        fallbacks = tuple(m.strip() for m in s.gemini_fallback_models.split(",") if m.strip())
         _provider = GeminiProvider(s.gemini_api_key, s.gemini_model, s.gemini_embedding_model, s.embedding_dim,
-                                   s.ai_timeout_seconds)
+                                   s.ai_timeout_seconds, fallbacks)
     return _provider
 
 

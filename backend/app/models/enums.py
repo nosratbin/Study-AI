@@ -90,6 +90,31 @@ class SessionStatus(StrEnum):
     cancelled = "cancelled"
 
 
+class TaskStatus(StrEnum):
+    todo = "todo"
+    done = "done"
+
+
+class SupportResourceKind(StrEnum):
+    helpline = "helpline"
+    counsellor = "counsellor"
+    organisation = "organisation"
+
+
+class SupportTopic(StrEnum):
+    stress = "stress"
+    study_pressure = "study_pressure"
+    relationships = "relationships"
+    feeling_low = "feeling_low"
+    other = "other"
+
+
+class SupportRequestStatus(StrEnum):
+    open = "open"
+    in_progress = "in_progress"
+    closed = "closed"
+
+
 def str_enum(enum_cls: type[StrEnum], name: str) -> SAEnum:
     return SAEnum(
         enum_cls,
