@@ -104,7 +104,7 @@ function MindCare() {
                 <Card className="h-full space-y-1.5 p-5">
                   <div className="flex flex-wrap gap-1.5">
                     <Badge tone="brand" className="capitalize">{r.kind}</Badge>
-                    <Badge tone="success">Checked by LEARN AI</Badge>
+                    <Badge tone="success">Checked by IccheGhuri</Badge>
                   </div>
                   <p className="font-semibold">{r.name}</p>
                   <p className="text-sm text-muted">{r.description}</p>
@@ -346,7 +346,7 @@ function SupportRequestCard() {
       });
       setOpen(false);
       setForm({ topic: "stress", message: "", preferred_contact: "email", phone: "" });
-      setMsg({ tone: "success", text: "Sent. A member of the LEARN AI support team will contact you. In an emergency, call 999." });
+      setMsg({ tone: "success", text: "Sent. A member of the IccheGhuri support team will contact you. In an emergency, call 999." });
       mine.reload();
     } catch (err) {
       if (err instanceof ApiError) {
@@ -363,7 +363,7 @@ function SupportRequestCard() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="flex items-center gap-2 font-semibold"><HeartHandshake className="size-4 text-brand-500" aria-hidden /> Talk to a person</p>
-          <p className="text-sm text-muted">Ask the LEARN AI support team to reach out. Your message is encrypted and only seen by support staff, never by teachers.</p>
+          <p className="text-sm text-muted">Ask the IccheGhuri support team to reach out. Your message is encrypted and only seen by support staff, never by teachers.</p>
         </div>
         {!open && <Button size="sm" onClick={() => setOpen(true)}>Request support</Button>}
       </div>

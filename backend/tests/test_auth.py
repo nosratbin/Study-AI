@@ -290,3 +290,25 @@ def test_database_url_validation():
     assert Settings(database_url="postgres://u:p@h:5432/db").database_url.startswith("postgresql+psycopg://")
     with pytest.raises(ValidationError):
         Settings(database_url="https://abcd.supabase.co")
+
+
+def test_demo_accounts_log_in_outside_production_only(client, db_session, monkeypatch):
+    """Seeded demo emails use a reserved .local domain: login accepts it in development/test, never in production."""
+    from types import SimpleNamespace
+
+    import app.schemas.auth as auth_schemas
+    from app.seed import seed_demo_users
+
+    monkeypatch.setenv("SEED_DEMO_PASSWORD", "demo-pass-123")
+    seed_demo_users(db_session)
+    for who in ("admin", "teacher", "student"):
+        r = client.post("/api/auth/login", json={"email": f"{who}@demo.iccheghuri.local", "password": "demo-pass-123"})
+        assert r.status_code == 200, r.text
+        assert r.json()["user"]["role"] == who
+
+    assert client.post("/api/auth/login", json={"email": "x@other.local", "password": "demo-pass-123"}).status_code == 422
+    assert client.post("/api/auth/register", json={"full_name": "Demo", "email": "new@demo.iccheghuri.local",
+                                                   "password": "demo-pass-123"}).status_code == 422
+    monkeypatch.setattr(auth_schemas, "get_settings", lambda: SimpleNamespace(environment="production"))
+    r = client.post("/api/auth/login", json={"email": "admin@demo.iccheghuri.local", "password": "demo-pass-123"})
+    assert r.status_code == 422

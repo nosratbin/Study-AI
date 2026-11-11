@@ -26,7 +26,7 @@ let refreshing: Promise<boolean> | null = null;
 const NO_REFRESH = new Set(["/auth/login", "/auth/register", "/auth/google", "/auth/refresh", "/auth/logout"]);
 
 /** Fired when the session can no longer be refreshed; AuthProvider signs the user out. */
-export const SESSION_EXPIRED_EVENT = "learnai:session-expired";
+export const SESSION_EXPIRED_EVENT = "iccheghuri:session-expired";
 
 async function tryRefresh(): Promise<boolean> {
   // Deduplicate concurrent refreshes.

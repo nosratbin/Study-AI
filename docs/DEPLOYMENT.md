@@ -1,4 +1,4 @@
-# Deploying LEARN AI to Railway
+# Deploying IccheGhuri to Railway
 
 Production runs as two Railway services, both built from this repo:
 
@@ -29,7 +29,7 @@ Railway deploys from `main` of `nosratbin/Study-AI`. Every push to `main` redepl
 **Settings**
 - **Root Directory:** `/backend`. Railway picks up the Dockerfile automatically.
 - **Healthcheck Path:** `/api/health`.
-- **Pre-deploy Command** (optional): `alembic upgrade head`. This runs database migrations on every deploy. The database is already at head (0005).
+- **Pre-deploy Command:** `alembic upgrade head`. This runs database migrations on every deploy. The database is already at head (0006).
 - **Do not** generate a public domain.
 
 **Variables**
@@ -91,7 +91,8 @@ Railway deploys from `main` of `nosratbin/Study-AI`. Every push to `main` redepl
 - **Supabase free tier** pauses inactive projects after about a week. Open the site the day before.
 - **Gemini free tier** has per-minute limits. With many simultaneous users, some see "AI is busy". A paid key avoids this.
 - **Production data:**
-  - Demo accounts (`python -m app.seed --demo-users`) and verified MindCare support resources don't exist until you create them.
+  - Demo accounts (`@demo.iccheghuri.local`) can only log in when `ENVIRONMENT` is not `production`, so they don't work on Railway. Create real staff accounts for the live site; an admin can then promote others on Admin → Users.
+  - Verified MindCare support resources don't exist until you create them.
   - The database is shared with local development, so anything seeded locally also appears in production.
 
 ## Sources

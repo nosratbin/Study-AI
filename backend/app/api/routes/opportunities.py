@@ -123,7 +123,7 @@ def unsave(opportunity_id: uuid.UUID, user: StudentUser, db: DbSession):
 
 @router.put("/{opportunity_id}/application", response_model=ApplicationOut)
 def track_application(opportunity_id: uuid.UUID, body: ApplicationIn, user: StudentUser, db: DbSession):
-    """Student's own record of where they are with an application. LEARN AI does not submit anything."""
+    """Student's own record of where they are with an application. IccheGhuri does not submit anything."""
     o = _verified_or_404(db, opportunity_id)
     app = db.scalar(select(Application).where(Application.user_id == user.id, Application.opportunity_id == o.id))
     if not app:

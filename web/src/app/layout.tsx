@@ -7,7 +7,8 @@ const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 const bengali = Noto_Sans_Bengali({ variable: "--font-bengali", subsets: ["bengali"], weight: ["400", "500", "600", "700"] });
 
 export const metadata: Metadata = {
-  title: { default: "LEARN AI — Learn, Innovate, Grow & Thrive", template: "%s · LEARN AI" },
+  title: { default: "IccheGhuri — AI learning for every student in Bangladesh", template: "%s · IccheGhuri" },
+  applicationName: "IccheGhuri",
   description:
     "Making quality AI education, personal development, and global opportunities accessible to every student in Bangladesh.",
 };

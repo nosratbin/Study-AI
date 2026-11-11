@@ -1,4 +1,4 @@
-# LEARN AI Design System (Figma-ready spec)
+# IccheGhuri Design System (Figma-ready spec)
 
 Style: modern EdTech, white + orange, minimal, mobile-first. Source of truth for web tokens:
 `web/src/app/globals.css` (`@theme`). Components: `web/src/components/ui/index.tsx`.

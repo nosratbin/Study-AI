@@ -176,7 +176,11 @@ class MentorshipSession(IdMixin, TimestampMixin, Base):
 
 class Notification(IdMixin, TimestampMixin, Base):
     __tablename__ = "notifications"
-    __table_args__ = (Index("ix_notifications_user_read", "user_id", "read_at"),)
+    __table_args__ = (
+        Index("ix_notifications_user_read", "user_id", "read_at"),
+        # One row per (user, dedupe_key), e.g. "deadline:<opportunity id>", so lazy reminders are never duplicated.
+        UniqueConstraint("user_id", "dedupe_key", name="uq_notifications_user_dedupe"),
+    )
 
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     title: Mapped[str] = mapped_column(String(200))
@@ -184,6 +188,8 @@ class Notification(IdMixin, TimestampMixin, Base):
     kind: Mapped[str] = mapped_column(String(40), default="info")
     link: Mapped[str | None] = mapped_column(String(300))
     read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    dismissed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))  # "deleted" by the user; kept for dedupe
+    dedupe_key: Mapped[str | None] = mapped_column(String(120))
 
 
 # ---------- Google ----------
@@ -195,8 +201,8 @@ class GoogleConnection(IdMixin, TimestampMixin, Base):
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), unique=True)
     google_sub: Mapped[str] = mapped_column(String(64))
     google_email: Mapped[str | None] = mapped_column(String(320))
-    drive_folder_id: Mapped[str | None] = mapped_column(String(128))  # the "LEARN AI" folder this app created
-    calendar_id: Mapped[str | None] = mapped_column(String(255))  # the "LEARN AI" calendar this app created
+    drive_folder_id: Mapped[str | None] = mapped_column(String(128))  # the "IccheGhuri" folder this app created
+    calendar_id: Mapped[str | None] = mapped_column(String(255))  # the "IccheGhuri" calendar this app created
     scopes: Mapped[list[str]] = mapped_column(JSON, default=list)
     refresh_token_enc: Mapped[str | None] = mapped_column(Text)  # Fernet-encrypted
     access_token_enc: Mapped[str | None] = mapped_column(Text)

@@ -20,7 +20,7 @@ export default function AdminAchievementsPage() {
   if (user && user.role !== "admin")
     return (
       <EmptyState icon={<ShieldAlert className="size-7" />} title="Admins only">
-        This page is for LEARN AI administrators.
+        This page is for IccheGhuri administrators.
       </EmptyState>
     );
   return <Achievements />;
@@ -42,7 +42,10 @@ function Achievements() {
             key={f.value}
             aria-pressed={filter === f.value}
             onClick={() => setFilter(f.value)}
-            className={clsx("whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium", filter === f.value ? "bg-white text-brand-700 shadow-sm" : "text-muted hover:text-ink")}
+            className={clsx(
+              "whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium",
+              filter === f.value ? "bg-white text-brand-700 shadow-sm" : "text-muted hover:text-ink",
+            )}
           >
             {f.label}
           </button>
@@ -53,10 +56,14 @@ function Achievements() {
       ) : !list.data ? (
         <Spinner />
       ) : !list.data.length ? (
-        <EmptyState icon={<Medal className="size-7" />} title="Nothing here">No achievements with this status.</EmptyState>
+        <EmptyState icon={<Medal className="size-7" />} title="Nothing here">
+          No achievements with this status.
+        </EmptyState>
       ) : (
         <ul className="space-y-3">
-          {list.data.map((r) => <Row key={r.id} r={r} onDone={list.reload} />)}
+          {list.data.map((r) => (
+            <Row key={r.id} r={r} onDone={list.reload} />
+          ))}
         </ul>
       )}
     </div>
@@ -76,7 +83,10 @@ function Row({ r, onDone }: { r: AdminSkillRecord; onDone: () => void }) {
     setBusy(status);
     setError(null);
     try {
-      await api(`/admin/skill-records/${r.id}/verify`, { method: "POST", body: { status, review_note: note.trim() } });
+      await api(`/admin/skill-records/${r.id}/verify`, {
+        method: "POST",
+        body: { status, review_note: note.trim() },
+      });
       onDone();
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Could not save.");
@@ -100,7 +110,12 @@ function Row({ r, onDone }: { r: AdminSkillRecord; onDone: () => void }) {
           </p>
           {r.description && <p className="mt-1 whitespace-pre-wrap text-sm">{r.description}</p>}
           {r.evidence_url ? (
-            <a href={r.evidence_url} target="_blank" rel="noopener noreferrer" className="mt-1 inline-flex items-center gap-1 break-all text-sm text-brand-600 hover:underline">
+            <a
+              href={r.evidence_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-1 inline-flex items-center gap-1 break-all text-sm text-brand-600 hover:underline"
+            >
               {r.evidence_url} <ExternalLink className="size-3.5 shrink-0" aria-hidden />
             </a>
           ) : (
@@ -112,8 +127,12 @@ function Row({ r, onDone }: { r: AdminSkillRecord; onDone: () => void }) {
           <Textarea id={`n-${r.id}`} rows={2} value={note} onChange={(e) => setNote(e.target.value)} maxLength={1000} />
         </Field>
         <div className="flex gap-2">
-          <Button size="sm" loading={busy === "verified"} disabled={!!busy} onClick={() => act("verified")}>Verify</Button>
-          <Button size="sm" variant="secondary" loading={busy === "rejected"} disabled={!!busy} onClick={() => act("rejected")}>Can&apos;t verify</Button>
+          <Button size="sm" loading={busy === "verified"} disabled={!!busy} onClick={() => act("verified")}>
+            Verify
+          </Button>
+          <Button size="sm" variant="secondary" loading={busy === "rejected"} disabled={!!busy} onClick={() => act("rejected")}>
+            Can&apos;t verify
+          </Button>
         </div>
       </Card>
     </li>

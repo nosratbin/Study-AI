@@ -1,4 +1,4 @@
-"""google connection: app-created LEARN AI calendar id
+"""google connection: app-created IccheGhuri calendar id
 
 Revision ID: 0004
 Revises: 0003

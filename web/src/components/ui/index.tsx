@@ -1,7 +1,8 @@
 import clsx from "clsx";
+import { twMerge } from "tailwind-merge";
 import Link from "next/link";
-import { forwardRef, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from "react";
-import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { forwardRef, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type Ref, type SelectHTMLAttributes, type TextareaHTMLAttributes } from "react";
+import { AlertCircle, CheckCircle2, Info, Loader2 } from "lucide-react";
 
 /* ---------- Button ---------- */
 
@@ -26,6 +27,8 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
   size?: Size;
   loading?: boolean;
+  /** React 19 passes `ref` as a plain prop; it reaches the <button> through `rest`. */
+  ref?: Ref<HTMLButtonElement>;
 }
 
 export function Button({ variant = "primary", size = "md", loading, className, children, disabled, ...rest }: ButtonProps) {
@@ -48,7 +51,9 @@ export function ButtonLink({ href, variant = "primary", size = "md", className, 
 /* ---------- Card ---------- */
 
 export function Card({ className, children, as: As = "div" }: { className?: string; children: ReactNode; as?: "div" | "section" | "article" }) {
-  return <As className={clsx("rounded-card border border-line bg-white shadow-card", className)}>{children}</As>;
+  // Default padding unless the caller sets its own (`p-0` for edge-to-edge content like lists and chat).
+  // twMerge resolves conflicts (p-0, px-*, sm:p-*) so the caller's padding always wins.
+  return <As className={twMerge("rounded-card border border-line bg-white shadow-card p-5 sm:p-6", className)}>{children}</As>;
 }
 
 /* ---------- Badge ---------- */
@@ -118,15 +123,18 @@ export function Textarea({ invalid, className, ...rest }: TextareaHTMLAttributes
 
 /* ---------- Feedback ---------- */
 
-export function Alert({ tone = "error", children }: { tone?: "error" | "success"; children: ReactNode }) {
-  const Icon = tone === "error" ? AlertCircle : CheckCircle2;
+const alertTones = {
+  error: "border-danger/20 bg-danger-50 text-danger",
+  success: "border-success/20 bg-success-50 text-success",
+  info: "border-brand-200 bg-brand-50 text-brand-800",
+};
+
+export function Alert({ tone = "error", children }: { tone?: keyof typeof alertTones; children: ReactNode }) {
+  const Icon = tone === "error" ? AlertCircle : tone === "success" ? CheckCircle2 : Info;
   return (
     <div
       role={tone === "error" ? "alert" : "status"}
-      className={clsx(
-        "flex items-start gap-2.5 rounded-xl border px-3.5 py-3 text-sm",
-        tone === "error" ? "border-danger/20 bg-danger-50 text-danger" : "border-success/20 bg-success-50 text-success",
-      )}
+      className={clsx("flex items-start gap-2.5 rounded-xl border px-3.5 py-3 text-sm", alertTones[tone])}
     >
       <Icon className="mt-0.5 size-4 shrink-0" aria-hidden />
       <div>{children}</div>
@@ -162,16 +170,17 @@ export function EmptyState({ icon, title, children }: { icon: ReactNode; title: 
   );
 }
 
-export function Logo({ className }: { className?: string }) {
+/** IccheGhuri horizontal logo (outlined artwork from brand/). Size it with a height class; default h-9 gives a ~13 px x-height, about 1.6x the nav text. */
+export function Logo({ className, reversed = false }: { className?: string; reversed?: boolean }) {
   return (
-    <span className={clsx("inline-flex items-center gap-2 font-bold tracking-tight text-ink", className)}>
-      <span className="grid size-8 place-items-center rounded-lg bg-brand-500 text-sm text-white" aria-hidden>
-        AI
-      </span>
-      <span>
-        LEARN <span className="text-brand-500">AI</span>
-      </span>
-    </span>
+    // eslint-disable-next-line @next/next/no-img-element -- static vector logo, nothing for next/image to optimise
+    <img
+      src={reversed ? "/brand/iccheghuri-horizontal-reversed.svg" : "/brand/iccheghuri-horizontal.svg"}
+      alt="IccheGhuri"
+      width={795}
+      height={193}
+      className={clsx("block h-9 w-auto shrink-0", className)}
+    />
   );
 }
 

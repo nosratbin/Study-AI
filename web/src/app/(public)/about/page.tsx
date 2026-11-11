@@ -14,7 +14,7 @@ export default function AboutPage() {
   return (
     <>
       <PageHeader eyebrow="About" title="Making quality AI education accessible to every student in Bangladesh">
-        LEARN AI brings AI education, personalised learning, well-being support and verified opportunities together in one
+        IccheGhuri brings AI education, personalised learning, well-being support and verified opportunities together in one
         place — so a student in any district has the same start as one in Dhaka.
       </PageHeader>
       <Section>
@@ -28,7 +28,7 @@ export default function AboutPage() {
           ))}
         </div>
         <p className="mt-10 text-sm text-muted">
-          LEARN AI is being developed for the AI Builders Congress at Daffodil International University (DIU). This is an MVP;
+          IccheGhuri is being developed for the AI Builders Congress at Daffodil International University (DIU). This is an MVP;
           features are rolling out in phases.
         </p>
       </Section>

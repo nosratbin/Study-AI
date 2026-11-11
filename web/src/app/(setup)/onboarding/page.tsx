@@ -100,7 +100,7 @@ function Onboarding() {
 
   return (
     <div className="flex min-h-screen flex-col items-center px-4 py-10">
-      <Logo className="mb-8 text-lg" />
+      <Logo className="mb-8 h-12" />
       <Card className="w-full max-w-2xl p-6 sm:p-8">
         <ol className="mb-8 flex items-center gap-2" aria-label="Progress">
           {STEPS.map((s, i) => (
@@ -172,7 +172,7 @@ function Onboarding() {
                     <input type="checkbox" className="mt-0.5 size-4 accent-brand-500" checked={form.guardian_consent}
                       onChange={(e) => set("guardian_consent", e.target.checked)} aria-describedby="guardian-help" />
                     <span>
-                      <span className="font-medium">My parent or guardian knows I am using LEARN AI and agrees.</span>
+                      <span className="font-medium">My parent or guardian knows I am using IccheGhuri and agrees.</span>
                       <span id="guardian-help" className="mt-1 block text-muted">
                         Because you are under 18, your profile stays private by default and some features have extra safeguards.
                       </span>

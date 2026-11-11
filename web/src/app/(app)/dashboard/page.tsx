@@ -1,17 +1,20 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { BookOpen, CalendarClock, CheckCircle2, ClipboardCheck, PlayCircle, RefreshCw, Trophy, Wrench } from "lucide-react";
+import { BookOpen, CalendarClock, CheckCircle2, ClipboardCheck, PlayCircle, RefreshCw, Trophy } from "lucide-react";
 import Link from "next/link";
 import { Alert, Badge, Button, ButtonLink, Card, EmptyState, Spinner } from "@/components/ui";
 import { CourseCard } from "@/components/learning/course-card";
+import { AdminDashboard } from "@/components/staff/admin-dashboard";
+import { TeacherDashboard } from "@/components/staff/teacher-dashboard";
 import { api, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { LEVELS, type Dashboard } from "@/lib/types";
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  if (user && user.role !== "student") return <StaffPlaceholder role={user.role} />;
+  if (user?.role === "admin") return <AdminDashboard />;
+  if (user?.role === "teacher") return <TeacherDashboard />;
   return <StudentDashboard />;
 }
 
@@ -160,22 +163,5 @@ function StudentDashboard() {
         </aside>
       </div>
     </div>
-  );
-}
-
-function StaffPlaceholder({ role }: { role: string }) {
-  return (
-    <Card className="p-8">
-      <EmptyState icon={<Wrench className="size-8" />} title={`The ${role} dashboard is not built yet`}>
-        Teacher and admin tools are planned for Phase 5. You are signed in with the {role} role.
-        {role === "admin" && (
-          <span className="mt-4 block">
-            <Link href="/admin/opportunities" className="font-medium text-brand-600 underline-offset-2 hover:underline">
-              Review and verify opportunities
-            </Link>
-          </span>
-        )}
-      </EmptyState>
-    </Card>
   );
 }

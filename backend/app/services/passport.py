@@ -35,6 +35,7 @@ from app.schemas.growth import (
     ShareState,
     SkillRecordOut,
 )
+from app.services.notify import notify
 from app.services.opportunities import aware
 
 
@@ -59,6 +60,8 @@ def issue_certificate_if_complete(db: Session, user_id: uuid.UUID, course: Cours
             db.add(cert)
     except IntegrityError:  # a parallel request issued it first
         return db.scalar(select(Certificate).where(Certificate.user_id == user_id, Certificate.course_id == course.id))
+    notify(db, user_id, f"Certificate earned: {course.title}", "It's on your Skill Passport. Share it with the verification code.",
+           kind="certificate", link="/passport")
     return cert
 
 

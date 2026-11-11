@@ -18,7 +18,7 @@ from app.models import Course, KnowledgeChunk, Lesson
 from app.models.enums import EducationLevel
 from app.services.llm import LLMProvider
 
-log = logging.getLogger("learn_ai.rag")
+log = logging.getLogger("iccheghuri.rag")
 
 MAX_CHARS = 900
 MIN_SIMILARITY = 0.35  # below this a chunk is unlikely to be relevant
@@ -133,7 +133,7 @@ def ingest_lessons(db: Session, llm: LLMProvider) -> dict:
         for i, (part, vec) in enumerate(zip(parts, vectors, strict=True)):
             db.add(KnowledgeChunk(
                 source_type="lesson", source_id=str(lesson.id), course_id=course.id,
-                title=f"{course.title}: {lesson.title}", level=course.level, chunk_index=i,
+                title=f"{course.title}: {lesson.title}"[:250], level=course.level, chunk_index=i,
                 content=part, content_hash=h, embedding=vec,
             ))
             stats["embedded_chunks"] += 1

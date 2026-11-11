@@ -53,7 +53,7 @@ def _api_for(db, user: User, feature: str) -> g.GoogleApi:
     if not conn:
         raise ApiError(409, "google_not_connected", "Connect your Google account first.")
     if not g.has_feature(conn, feature):
-        raise ApiError(409, "google_scope_missing", f"Give LEARN AI permission to use Google {feature.title()} first.")
+        raise ApiError(409, "google_scope_missing", f"Give IccheGhuri permission to use Google {feature.title()} first.")
     return g.GoogleApi(db, conn)
 
 
@@ -148,7 +148,7 @@ def callback(
 
 @router.post("/disconnect", status_code=204, response_class=Response)
 def disconnect(user: CurrentUser, db: DbSession):
-    """Revoke LEARN AI's access at Google and delete the stored tokens. Files and events already created stay."""
+    """Revoke IccheGhuri's access at Google and delete the stored tokens. Files and events already created stay."""
     conn = _conn(db, user)
     if conn:
         if get_settings().google_enabled:
@@ -163,7 +163,7 @@ def disconnect(user: CurrentUser, db: DbSession):
 
 @router.post("/drive/lesson", response_model=DocOut, status_code=201)
 def save_lesson(body: DriveLessonIn, user: CurrentUser, db: DbSession, response: Response):
-    """Save a lesson (plus the student's own notes) as a Google Doc in their LEARN AI Drive folder.
+    """Save a lesson (plus the student's own notes) as a Google Doc in their IccheGhuri Drive folder.
 
     Returns the Doc saved earlier (200, existing=true) unless new_copy is set, so a repeat click never duplicates it.
     """
@@ -179,7 +179,7 @@ def save_lesson(body: DriveLessonIn, user: CurrentUser, db: DbSession, response:
         title=lesson.title, course_title=lesson.course.title, level=str(getattr(lesson.course.level, "value", lesson.course.level)),
         content_md=lesson.content_md or "", lesson_url=f"{s.web_app_url}/lessons/{lesson.id}", notes=body.notes,
     )
-    f = api.create_doc(f"{lesson.title} · LEARN AI notes", body_html, lesson_id=lesson.id)
+    f = api.create_doc(f"{lesson.title} · IccheGhuri notes", body_html, lesson_id=lesson.id)
     return DocOut(id=f["id"], name=f.get("name", lesson.title), web_view_link=f.get("webViewLink"))
 
 

@@ -43,7 +43,7 @@ class OnboardingIn(BaseModel):
     def _check(self):
         year = CURRENT_YEAR()
         if self.birth_year > year - 8:
-            raise ValueError("Birth year looks too recent; LEARN AI is for students aged 8 and above")
+            raise ValueError("Birth year looks too recent; IccheGhuri is for students aged 8 and above")
         return self
 
 

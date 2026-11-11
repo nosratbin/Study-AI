@@ -40,7 +40,7 @@ export function PublicNav() {
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-white/90 backdrop-blur">
       <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6" aria-label="Main">
-        <Link href="/" aria-label="LEARN AI home" onClick={() => setOpen(false)}>
+        <Link href="/" aria-label="IccheGhuri home" onClick={() => setOpen(false)}>
           <Logo />
         </Link>
         <ul className="hidden items-center gap-1 lg:flex">

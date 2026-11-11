@@ -32,7 +32,7 @@ export function PublicPassportView() {
   return (
     <div className={wrap}>
       <header className="space-y-2">
-        <p className="text-sm font-medium text-brand-600">LEARN AI Skill Passport</p>
+        <p className="text-sm font-medium text-brand-600">IccheGhuri Skill Passport</p>
         <h1 className="text-3xl font-bold tracking-tight">{p.display_name}</h1>
         <p className="text-muted">{[level, p.institution].filter(Boolean).join(" · ")}</p>
         {p.skills.length > 0 && (
@@ -110,7 +110,7 @@ export function PublicPassportView() {
                   <Badge>{SKILL_KINDS.find((k) => k.value === r.kind)?.label.replace(/ \(.*\)$/, "")}</Badge>
                   {r.verification_status === "verified" ? (
                     <Badge tone="success">
-                      <BadgeCheck className="size-3.5" aria-hidden /> Verified by LEARN AI
+                      <BadgeCheck className="size-3.5" aria-hidden /> Verified by IccheGhuri
                     </Badge>
                   ) : (
                     <Badge>Self-reported</Badge>
@@ -129,7 +129,7 @@ export function PublicPassportView() {
       )}
 
       <p className="text-xs text-muted">
-        &quot;Verified&quot; means a LEARN AI admin checked the evidence. &quot;Self-reported&quot; items were added by the student and have not been
+        &quot;Verified&quot; means a IccheGhuri admin checked the evidence. &quot;Self-reported&quot; items were added by the student and have not been
         checked.
       </p>
     </div>
@@ -149,10 +149,10 @@ export function CertificateCheckView() {
       ) : c.data.valid ? (
         <Card className="space-y-3 p-8 text-center">
           <BadgeCheck className="mx-auto size-10 text-success" aria-hidden />
-          <p className="text-lg font-semibold">Valid LEARN AI certificate</p>
+          <p className="text-lg font-semibold">Valid IccheGhuri certificate</p>
           {c.data.is_demo && (
             <p className="text-sm">
-              <Badge>Demo course</Badge> This course is sample content from the LEARN AI demo, not an accredited course.
+              <Badge>Demo course</Badge> This course is sample content from the IccheGhuri demo, not an accredited course.
             </p>
           )}
           <p className="text-2xl font-bold">{c.data.holder}</p>

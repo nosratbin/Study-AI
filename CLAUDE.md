@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-LEARN AI: an AI education platform MVP for Bangladeshi students (school/college/university levels). It is built in phases (see `docs/ARCHITECTURE.md`, section E). After each phase: report what was built, the files, the setup steps, the test results and any unconfigured integrations, then **wait for the user to confirm before starting the next phase**.
+IccheGhuri: an AI education platform MVP for Bangladeshi students (school/college/university levels). It is built in phases (see `docs/ARCHITECTURE.md`, section E). After each phase: report what was built, the files, the setup steps, the test results and any unconfigured integrations, then **wait for the user to confirm before starting the next phase**.
 
 ## Commands
 
@@ -44,6 +44,7 @@ pnpm vitest run src/lib/validation.test.ts -t "name"             # single test
   - `next.config.ts` rewrites `/api/*` to `BACKEND_URL`, so the browser only calls same-origin `/api` through `src/lib/api.ts`, which auto-refreshes on a 401.
   - Authenticated pages are client components behind `RequireAuth`/`AppShell` (`src/components/layout/app-shell.tsx`). Route groups: `(public)`, `(auth)`, `(setup)` (onboarding), `(app)`.
   - Design tokens are in `src/app/globals.css` `@theme` (brand orange `#F97316`). Shared UI is in `src/components/ui/index.tsx`. The spec is in `docs/DESIGN_SYSTEM.md`.
+  - Brand: the product was renamed from LEARN AI to IccheGhuri. `python brand/src/build.py` regenerates the outlined logo masters in `brand/logo/` (the guide is `brand/brand-guide.html`, built by `brand/src/guide.py`). The web app uses copies in `web/public/brand/` through `Logo` in `components/ui`, plus `src/app/icon.svg`, `apple-icon.png`, `favicon.ico` and `manifest.ts`. After rebuilding, copy the changed SVGs over. A few internal keys keep the old prefix on purpose: the `la_*` cookies, the dev data-key seed in `core/crypto.py` and the Drive `learnai_lesson` property.
   - `src/components/vengeance/` is the vendored VengeanceUI registry (all components, lint-ignored). Its shadcn vars map to the brand in `globals.css`. Use `bg-muted-bg` for shadcn's muted background, because `text-muted` is our secondary text colour. `dark:` only applies under a `.dark` ancestor.
   - `(app)/layout.tsx` wraps everything in `<Suspense>`, because with `cacheComponents` the `usePathname`/`useParams`/`useSearchParams` hooks suspend on dynamic routes and the build fails without a boundary.
 - **Opportunities**: student routes (`opportunities.py`) must only use `verified_query()`/`get_verified()` from `app/services/opportunities.py`. Admin CRUD/verify lives in `admin.py` and writes `AuditLog`. The matcher is rule-based (no LLM).

@@ -20,7 +20,7 @@ export default function AssessmentsPage() {
       <PageHeader title="Skill Assessment" subtitle="Find your level, see your strengths and get a learning path that fits you. Scores come only from fixed answer keys." />
 
       {placement.map((a) => (
-        <Card key={a.id} as="section" className="overflow-hidden border-brand-200">
+        <Card key={a.id} as="section" className="overflow-hidden border-brand-200 p-0">
           <div className="flex flex-col gap-5 bg-gradient-to-br from-brand-50 to-white p-6 sm:flex-row sm:items-center sm:p-8">
             <div className="grid size-14 shrink-0 place-items-center rounded-2xl bg-brand-500 text-white" aria-hidden>
               <Compass className="size-7" />

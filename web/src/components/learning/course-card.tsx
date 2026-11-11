@@ -5,7 +5,7 @@ import { levelLabel, type CourseCard as Course } from "@/lib/types";
 
 export function CourseCard({ course: c, showLevel = false }: { course: Course; showLevel?: boolean }) {
   return (
-    <Card as="article" className="group relative flex flex-col p-5 transition-shadow hover:shadow-md">
+    <Card as="article" className="group relative flex flex-col p-5 transition-shadow hover:shadow-md has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-brand-500">
       <div className="flex items-start justify-between gap-2">
         <h3 className="font-semibold leading-snug">
           <Link href={`/learn/${c.slug}`} className="after:absolute after:inset-0 after:rounded-card focus-visible:outline-none group-hover:text-brand-600">

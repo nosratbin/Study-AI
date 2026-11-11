@@ -231,7 +231,7 @@ export default function TutorPage() {
             <PracticeQuiz disabled={!configured} defaultTopic={lesson?.title ?? ""} />
           </Card>
         ) : (
-          <Card className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <Card className="flex min-h-0 flex-1 flex-col overflow-hidden p-0">
             {lesson && (
               <div className="flex items-center gap-2 border-b border-line bg-brand-50/60 px-4 py-2 text-sm">
                 <BookOpen className="size-4 shrink-0 text-brand-500" aria-hidden />

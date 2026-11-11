@@ -121,7 +121,7 @@ export default function OpportunityPage() {
           </Card>
           <p className="text-xs leading-relaxed text-muted">
             Our team checked this against the official source. Details can change, so always confirm the deadline and requirements on the official
-            website. LEARN AI never submits applications for you.
+            website. IccheGhuri never submits applications for you.
           </p>
         </aside>
       </div>

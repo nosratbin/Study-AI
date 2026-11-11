@@ -37,7 +37,7 @@ export function onboardingSchema(currentYear = new Date().getUTCFullYear()) {
         .number({ error: "Enter your birth year" })
         .int()
         .min(1950, "Enter a valid year")
-        .max(currentYear - MIN_AGE, `LEARN AI is for students aged ${MIN_AGE}+`),
+        .max(currentYear - MIN_AGE, `IccheGhuri is for students aged ${MIN_AGE}+`),
       preferred_language: z.enum(["en", "bn"]),
       interests: z.array(z.string()).max(15),
       goals: z.string().trim().max(1000).optional(),

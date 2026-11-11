@@ -36,7 +36,7 @@ export default function AdminOpportunitiesPage() {
   if (user && user.role !== "admin")
     return (
       <EmptyState icon={<ShieldAlert className="size-7" />} title="Admins only">
-        This page is for LEARN AI administrators.
+        This page is for IccheGhuri administrators.
       </EmptyState>
     );
   return <AdminOpportunities />;
@@ -57,7 +57,10 @@ function AdminOpportunities() {
 
   return (
     <div className="space-y-6 animate-fade-up">
-      <PageHeader title="Verify opportunities" subtitle="Students only see opportunities marked verified. Check every detail against the official source first.">
+      <PageHeader
+        title="Verify opportunities"
+        subtitle="Students only see opportunities marked verified. Check every detail against the official source first."
+      >
         {!editing && (
           <Button onClick={() => setEditing("new")}>
             <Plus className="size-4" aria-hidden /> Add opportunity
@@ -65,7 +68,9 @@ function AdminOpportunities() {
         )}
       </PageHeader>
 
-      {editing && <Editor key={editing === "new" ? "new" : editing.id} initial={editing === "new" ? null : editing} onCancel={() => setEditing(null)} onSaved={saved} />}
+      {editing && (
+        <Editor key={editing === "new" ? "new" : editing.id} initial={editing === "new" ? null : editing} onCancel={() => setEditing(null)} onSaved={saved} />
+      )}
 
       <div role="group" aria-label="Filter by status" className="flex gap-1 overflow-x-auto rounded-xl bg-surface p-1 sm:inline-flex">
         {FILTERS.map((f) => (
@@ -73,7 +78,10 @@ function AdminOpportunities() {
             key={f.value}
             aria-pressed={filter === f.value}
             onClick={() => setFilter(f.value)}
-            className={clsx("whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium", filter === f.value ? "bg-white text-brand-700 shadow-sm" : "text-muted hover:text-ink")}
+            className={clsx(
+              "whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium",
+              filter === f.value ? "bg-white text-brand-700 shadow-sm" : "text-muted hover:text-ink",
+            )}
           >
             {f.label}
           </button>
@@ -103,7 +111,12 @@ function AdminOpportunities() {
                     <p className="text-sm text-muted">
                       {o.provider} · {o.deadline ? `Deadline ${formatDeadline(o.deadline)}` : "No deadline"} · saved by {o.saved_count}
                     </p>
-                    <a href={o.official_url} target="_blank" rel="noopener noreferrer" className="mt-1 inline-flex items-center gap-1 break-all text-sm text-brand-600 hover:underline">
+                    <a
+                      href={o.official_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-1 inline-flex items-center gap-1 break-all text-sm text-brand-600 hover:underline"
+                    >
                       {o.official_url} <ExternalLink className="size-3.5 shrink-0" aria-hidden />
                     </a>
                     {o.verified_by_name && o.verified_at && (
@@ -114,15 +127,34 @@ function AdminOpportunities() {
                     {o.source_note && <p className="mt-1 text-xs text-muted">Source note: {o.source_note}</p>}
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <Button size="sm" variant="secondary" onClick={() => { setReviewing(null); setEditing(o); }}>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => {
+                        setReviewing(null);
+                        setEditing(o);
+                      }}
+                    >
                       Edit
                     </Button>
-                    <Button size="sm" variant={o.verification_status === "verified" ? "ghost" : "primary"} onClick={() => setReviewing(reviewing === o.id ? null : o.id)}>
+                    <Button
+                      size="sm"
+                      variant={o.verification_status === "verified" ? "ghost" : "primary"}
+                      onClick={() => setReviewing(reviewing === o.id ? null : o.id)}
+                    >
                       {o.verification_status === "verified" ? "Re-review" : "Review"}
                     </Button>
                   </div>
                 </div>
-                {reviewing === o.id && <Review o={o} onDone={() => { setReviewing(null); list.reload(); }} />}
+                {reviewing === o.id && (
+                  <Review
+                    o={o}
+                    onDone={() => {
+                      setReviewing(null);
+                      list.reload();
+                    }}
+                  />
+                )}
               </Card>
             </li>
           ))}
@@ -145,7 +177,10 @@ function Review({ o, onDone }: { o: AdminOpportunity; onDone: () => void }) {
     setBusy(status);
     setError(null);
     try {
-      await api(`/admin/opportunities/${o.id}/verify`, { method: "POST", body: { status, source_note: note.trim() || null } });
+      await api(`/admin/opportunities/${o.id}/verify`, {
+        method: "POST",
+        body: { status, source_note: note.trim() || null },
+      });
       onDone();
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Could not update.");
@@ -168,9 +203,7 @@ function Review({ o, onDone }: { o: AdminOpportunity; onDone: () => void }) {
 
   return (
     <div className="space-y-3 rounded-xl bg-surface p-4">
-      <p className="text-sm">
-        Before verifying, open the official link and confirm the title, provider, eligibility, deadline and documents match exactly.
-      </p>
+      <p className="text-sm">Before verifying, open the official link and confirm the title, provider, eligibility, deadline and documents match exactly.</p>
       <Field label="Where did you confirm it?" htmlFor={`note-${o.id}`} hint="e.g. Official notice on www.example.gov.bd, checked 10 Nov 2026">
         <Textarea id={`note-${o.id}`} value={note} onChange={(e) => setNote(e.target.value)} maxLength={2000} rows={2} />
       </Field>
@@ -194,11 +227,22 @@ function Review({ o, onDone }: { o: AdminOpportunity; onDone: () => void }) {
 function toDhaka(iso: string | null): { date: string; time: string } {
   if (!iso) return { date: "", time: "" };
   const parts = Object.fromEntries(
-    new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Dhaka", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Dhaka",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23",
+    })
       .formatToParts(new Date(iso))
       .map((p) => [p.type, p.value]),
   );
-  return { date: `${parts.year}-${parts.month}-${parts.day}`, time: `${parts.hour}:${parts.minute}` };
+  return {
+    date: `${parts.year}-${parts.month}-${parts.day}`,
+    time: `${parts.hour}:${parts.minute}`,
+  };
 }
 
 function Editor({ initial, onCancel, onSaved }: { initial: AdminOpportunity | null; onCancel: () => void; onSaved: (o: AdminOpportunity) => void }) {
@@ -233,18 +277,31 @@ function Editor({ initial, onCancel, onSaved }: { initial: AdminOpportunity | nu
     if (Object.keys(errs).length) return;
 
     const body = {
-      title: f.title.trim(), provider: f.provider.trim(), category: f.category, description: f.description.trim(),
-      eligibility: f.eligibility.trim(), education_levels: f.levels,
+      title: f.title.trim(),
+      provider: f.provider.trim(),
+      category: f.category,
+      description: f.description.trim(),
+      eligibility: f.eligibility.trim(),
+      education_levels: f.levels,
       deadline: f.date ? `${f.date}T${f.time || "23:59"}:00+06:00` : null,
-      required_documents: f.documents.split("\n").map((d) => d.trim()).filter(Boolean),
+      required_documents: f.documents
+        .split("\n")
+        .map((d) => d.trim())
+        .filter(Boolean),
       official_url: f.official_url.trim(),
     };
     setBusy(true);
     setError(null);
     try {
       const o = initial
-        ? await api<AdminOpportunity>(`/admin/opportunities/${initial.id}`, { method: "PATCH", body })
-        : await api<AdminOpportunity>("/admin/opportunities", { method: "POST", body });
+        ? await api<AdminOpportunity>(`/admin/opportunities/${initial.id}`, {
+            method: "PATCH",
+            body,
+          })
+        : await api<AdminOpportunity>("/admin/opportunities", {
+            method: "POST",
+            body,
+          });
       onSaved(o);
     } catch (err) {
       if (err instanceof ApiError) {
@@ -283,21 +340,41 @@ function Editor({ initial, onCancel, onSaved }: { initial: AdminOpportunity | nu
         </Field>
         <div className="sm:col-span-2">
           <Field label="Description" htmlFor="o-description" error={errors.description}>
-            <Textarea id="o-description" value={f.description} onChange={(e) => set("description", e.target.value)} maxLength={8000} rows={4} invalid={!!errors.description} />
+            <Textarea
+              id="o-description"
+              value={f.description}
+              onChange={(e) => set("description", e.target.value)}
+              maxLength={8000}
+              rows={4}
+              invalid={!!errors.description}
+            />
           </Field>
         </div>
         <div className="sm:col-span-2">
           <Field label="Eligibility" htmlFor="o-eligibility" error={errors.eligibility}>
-            <Textarea id="o-eligibility" value={f.eligibility} onChange={(e) => set("eligibility", e.target.value)} maxLength={4000} rows={3} invalid={!!errors.eligibility} />
+            <Textarea
+              id="o-eligibility"
+              value={f.eligibility}
+              onChange={(e) => set("eligibility", e.target.value)}
+              maxLength={4000}
+              rows={3}
+              invalid={!!errors.eligibility}
+            />
           </Field>
         </div>
         <fieldset className="sm:col-span-2">
-          <legend className="mb-1.5 text-sm font-medium">Education level <span className="font-normal text-muted">(none ticked = all levels)</span></legend>
+          <legend className="mb-1.5 text-sm font-medium">
+            Education level <span className="font-normal text-muted">(none ticked = all levels)</span>
+          </legend>
           <div className="flex flex-wrap gap-4">
             {LEVELS.map((l) => (
               <label key={l.value} className="inline-flex cursor-pointer items-center gap-2 text-sm">
-                <input type="checkbox" className="size-4 accent-brand-500" checked={f.levels.includes(l.value)}
-                  onChange={(e) => set("levels", e.target.checked ? [...f.levels, l.value] : f.levels.filter((x) => x !== l.value))} />
+                <input
+                  type="checkbox"
+                  className="size-4 accent-brand-500"
+                  checked={f.levels.includes(l.value)}
+                  onChange={(e) => set("levels", e.target.checked ? [...f.levels, l.value] : f.levels.filter((x) => x !== l.value))}
+                />
                 {l.label}
               </label>
             ))}
@@ -316,8 +393,15 @@ function Editor({ initial, onCancel, onSaved }: { initial: AdminOpportunity | nu
         </div>
         <div className="sm:col-span-2">
           <Field label="Official URL" htmlFor="o-url" error={errors.official_url}>
-            <Input id="o-url" type="url" value={f.official_url} onChange={(e) => set("official_url", e.target.value)} maxLength={500}
-              placeholder="https://" invalid={!!errors.official_url} />
+            <Input
+              id="o-url"
+              type="url"
+              value={f.official_url}
+              onChange={(e) => set("official_url", e.target.value)}
+              maxLength={500}
+              placeholder="https://"
+              invalid={!!errors.official_url}
+            />
           </Field>
         </div>
         <div className="flex flex-wrap gap-2 sm:col-span-2">

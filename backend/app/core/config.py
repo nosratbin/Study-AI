@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=(".env", ".env.local"), env_file_encoding="utf-8", extra="ignore")
 
     environment: Literal["development", "test", "production"] = "development"
-    app_name: str = "LEARN AI API"
+    app_name: str = "IccheGhuri API"
     api_prefix: str = "/api"
 
     database_url: str = Field(

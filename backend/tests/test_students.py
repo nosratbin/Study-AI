@@ -67,7 +67,7 @@ def test_dashboard_uses_level_and_progress(client, db_session):
     assert any(m["key"] == "dashboard" and m["available"] for m in d["modules"])
     assert any(m["key"] == "ai_tutor" and m["available"] for m in d["modules"])
     assert any(m["key"] == "project_lab" and m["available"] for m in d["modules"])
-    assert any(m["key"] == "notifications" and not m["available"] for m in d["modules"])
+    assert all(m["available"] for m in d["modules"]), "every module has shipped by phase 5"
 
     # Complete the first lesson of the suggested course.
     user = db_session.query(User).one()
@@ -139,7 +139,7 @@ def test_health_and_contact(client):
     h = client.get("/api/health").json()
     assert h["status"] == "ok" and h["integrations"]["google_signin"] is False
     ok = client.post("/api/contact", json={"name": "Rina", "email": "rina@example.com", "subject": "Hello",
-                                           "message": "I would like to partner with LEARN AI."})
+                                           "message": "I would like to partner with IccheGhuri."})
     assert ok.status_code == 201
     bad = client.post("/api/contact", json={"name": "R", "email": "x", "subject": "", "message": "short"})
     assert bad.status_code == 422

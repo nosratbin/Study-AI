@@ -5,7 +5,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-log = logging.getLogger("learn_ai")
+log = logging.getLogger("iccheghuri")
 
 
 class ApiError(Exception):

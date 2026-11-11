@@ -8,7 +8,7 @@ import { Alert, Badge, Button, Card, LoadError, Spinner } from "@/components/ui"
 import { api, ApiError } from "@/lib/api";
 import type { AssessmentResult, Attempt } from "@/lib/types";
 
-const draftKey = (attemptId: string) => `learnai:attempt:${attemptId}`;
+const draftKey = (attemptId: string) => `iccheghuri:attempt:${attemptId}`;
 
 function loadDraft(attemptId: string): Record<string, number> {
   try {

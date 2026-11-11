@@ -60,7 +60,7 @@ export default function LoginPage() {
         </Button>
       </form>
       <p className="mt-6 text-center text-sm text-muted">
-        New to LEARN AI?{" "}
+        New to IccheGhuri?{" "}
         <Link href="/register" className="font-semibold text-brand-600 hover:underline">
           Create an account
         </Link>

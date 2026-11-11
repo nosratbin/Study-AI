@@ -449,15 +449,15 @@ export type SkillKind =
 export const SKILL_KINDS: { value: SkillKind; label: string }[] = [
   { value: "award", label: "Award" },
   { value: "competition", label: "Competition" },
-  { value: "certificate", label: "Certificate (outside LEARN AI)" },
+  { value: "certificate", label: "Certificate (outside IccheGhuri)" },
   { value: "scholarship", label: "Scholarship" },
   { value: "skill", label: "Skill" },
-  { value: "project", label: "Project (outside LEARN AI)" },
+  { value: "project", label: "Project (outside IccheGhuri)" },
   { value: "volunteering", label: "Volunteering" },
   { value: "leadership", label: "Leadership" },
   { value: "sport", label: "Sport" },
   { value: "cultural", label: "Cultural activity" },
-  { value: "course", label: "Course (outside LEARN AI)" },
+  { value: "course", label: "Course (outside IccheGhuri)" },
 ];
 
 export interface SkillRecord {
@@ -641,4 +641,194 @@ export interface PlannerSummary {
 export function formatDay(iso: string): string {
   const d = /^\d{4}-\d{2}-\d{2}$/.test(iso) ? new Date(`${iso}T12:00:00+06:00`) : new Date(iso);
   return new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Dhaka" }).format(d);
+}
+
+// ---------- Phase 5: notifications ----------
+
+export type NotificationKind = "info" | "project" | "achievement" | "certificate" | "deadline" | "announcement" | "career";
+
+export interface AppNotification {
+  id: string;
+  title: string;
+  body: string;
+  kind: NotificationKind;
+  link: string | null;
+  read_at: string | null;
+  created_at: string;
+}
+
+export interface NotificationList {
+  items: AppNotification[];
+  unread: number;
+}
+
+export type AnnouncementAudience = "all" | "students" | "teachers";
+
+// ---------- Phase 5: teacher + admin dashboards ----------
+
+export interface DayCount {
+  day: string;
+  count: number;
+}
+
+export interface LabelCount {
+  label: string;
+  count: number;
+}
+
+export interface TeacherDashboard {
+  stats: { students: number; active_7d: number; lessons_completed_7d: number; review_queue: number; my_reviews: number; verified: boolean };
+  activity: DayCount[];
+  courses: {
+    id: string;
+    title: string;
+    slug: string;
+    level: EducationLevel;
+    is_published: boolean;
+    is_demo: boolean;
+    lesson_count: number;
+    learners: number;
+    completions: number;
+    avg_percent: number;
+  }[];
+  assessments: { id: string; title: string; attempts: number; avg_percent: number }[];
+  weak_topics: { topic: string; label: string; avg_percent: number; questions: number }[];
+}
+
+export interface StudentRow {
+  id: string;
+  full_name: string;
+  education_level: EducationLevel | null;
+  institution: string | null;
+  is_minor: boolean;
+  lessons_completed: number;
+  courses_completed: number;
+  avg_assessment: number | null;
+  projects_submitted: number;
+  last_active: string | null;
+}
+
+export interface StudentDetail {
+  student: StudentRow;
+  interests: string[];
+  courses: { course_id: string; title: string; completed_lessons: number; lesson_count: number; percent: number }[];
+  results: { assessment_title: string; percent: number; completed_at: string | null }[];
+  projects: { id: string; title: string; status: ProjectStatus; score: number | null }[];
+}
+
+export interface StaffLesson {
+  id: string;
+  title: string;
+  order_index: number;
+  duration_min: number;
+  colab_url: string | null;
+  content_md: string;
+}
+
+export interface StaffCourse {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  level: EducationLevel;
+  category: string;
+  estimated_hours: number;
+  is_published: boolean;
+  is_demo: boolean;
+  created_by_name: string | null;
+  can_edit: boolean;
+  lesson_count: number;
+  updated_at: string;
+}
+
+export interface StaffCourseDetail extends StaffCourse {
+  lessons: StaffLesson[];
+}
+
+export interface AuditEntry {
+  id: string;
+  actor_name: string | null;
+  action: string;
+  target_type: string;
+  target_id: string | null;
+  details: Record<string, unknown>;
+  ip: string | null;
+  created_at: string;
+}
+
+export interface AdminDashboard {
+  stats: { students: number; teachers: number; admins: number; active_7d: number; new_30d: number; deactivated: number };
+  students_by_level: LabelCount[];
+  signups: DayCount[];
+  lessons_completed: DayCount[];
+  ai_messages: DayCount[];
+  content: {
+    courses_published: number;
+    lessons: number;
+    assessments: number;
+    challenges: number;
+    careers: number;
+    opportunities_verified: number;
+  };
+  queues: { opportunities_pending: number; achievements_pending: number; projects_submitted: number };
+  recent_audit: AuditEntry[];
+}
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  full_name: string;
+  role: Role;
+  is_active: boolean;
+  created_at: string;
+  last_login_at: string | null;
+  education_level: EducationLevel | null;
+  institution: string | null;
+  is_minor: boolean;
+  teacher_verified: boolean | null;
+}
+
+export interface UserPage {
+  items: AdminUser[];
+  total: number;
+}
+
+// ---------- Phase 5: Career Navigator ----------
+
+export interface CareerCard {
+  id: string;
+  slug: string;
+  title: string;
+  field: string;
+  summary: string;
+  is_demo: boolean;
+  match: number;
+  reasons: string[];
+  is_goal: boolean;
+}
+
+export interface CareerDetail extends CareerCard {
+  description_md: string;
+  skills: { name: string; have: boolean; evidence: string | null }[];
+  education_paths: string[];
+  courses: { slug: string; title: string; level: EducationLevel; is_demo: boolean; status: ProgressStatus; percent: number }[];
+  opportunities: { id: string; title: string; category_label: string; deadline: string | null }[];
+  goal_note: string | null;
+}
+
+export interface CareerPlan {
+  steps: { title: string; detail: string }[];
+  note: string;
+}
+
+/** "3 hours ago" style relative time. */
+export function timeAgo(iso: string): string {
+  const s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
+  if (s < 60) return "just now";
+  const units: [number, string][] = [[60, "minute"], [3600, "hour"], [86400, "day"], [604800, "week"]];
+  if (s >= 2592000) return formatDay(iso);
+  let [div, name] = units[0];
+  for (const u of units) if (s >= u[0]) [div, name] = u;
+  const n = Math.floor(s / div);
+  return `${n} ${name}${n === 1 ? "" : "s"} ago`;
 }

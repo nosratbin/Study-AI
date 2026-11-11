@@ -14,7 +14,7 @@ const CALLBACK_ERRORS: Record<string, string> = {
   denied: "You cancelled on Google's screen, so nothing was connected.",
   expired: "The connection request expired. Please try again.",
   state_mismatch: "That sign-in didn't come from this browser session. Please try again.",
-  session: "Your LEARN AI session changed during sign-in. Please try again.",
+  session: "Your IccheGhuri session changed during sign-in. Please try again.",
   exchange_failed: "Google didn't confirm the sign-in. Please try again.",
   not_configured: "Google Workspace is not set up on this server yet.",
   google_error: "Google reported a problem. Please try again.",
@@ -25,13 +25,13 @@ const FEATURES: { key: GoogleFeature; title: string; icon: typeof FolderOpen; ac
     key: "drive",
     title: "Google Drive & Docs",
     icon: FolderOpen,
-    access: "Save lessons and your notes as Google Docs in a \"LEARN AI\" folder. We can only see files LEARN AI creates, never the rest of your Drive.",
+    access: "Save lessons and your notes as Google Docs in a \"IccheGhuri\" folder. We can only see files IccheGhuri creates, never the rest of your Drive.",
   },
   {
     key: "calendar",
     title: "Google Calendar",
     icon: CalendarDays,
-    access: "Add reminders for classes, exams and deadlines to a separate \"LEARN AI\" calendar we create. We can't see or change your other calendars or events.",
+    access: "Add reminders for classes, exams and deadlines to a separate \"IccheGhuri\" calendar we create. We can't see or change your other calendars or events.",
   },
 ];
 
@@ -104,7 +104,7 @@ export default function GooglePage() {
       {!s.configured ? (
         <Card>
           <p className="font-semibold">Not available yet</p>
-          <p className="mt-1 text-sm text-muted">Google Workspace hasn&apos;t been set up on this LEARN AI server. Your administrator needs to add Google OAuth credentials.</p>
+          <p className="mt-1 text-sm text-muted">Google Workspace hasn&apos;t been set up on this IccheGhuri server. Your administrator needs to add Google OAuth credentials.</p>
         </Card>
       ) : (
         <>

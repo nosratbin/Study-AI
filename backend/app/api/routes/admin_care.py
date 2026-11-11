@@ -25,6 +25,7 @@ from app.schemas.growth import (
     SupportResourceIn,
     SupportStatusIn,
 )
+from app.services.notify import notify
 from app.services.opportunities import aware
 from app.services.passport import record_out
 
@@ -58,6 +59,9 @@ def verify_record(record_id: uuid.UUID, body: SkillVerifyIn, request: Request, a
     r.verified_by, r.verified_at = (admin.id, datetime.now(UTC)) if verified else (None, None)
     r.review_note = body.review_note
     _audit(db, request, admin, f"skill_record.{body.status}", "skill_record", str(r.id), {"review_note": body.review_note})
+    notify(db, r.user_id, f"Achievement {'verified' if verified else 'not verified'}: {r.title}",
+           "It now shows as verified on your Skill Passport." if verified else "See the reviewer's note on your Skill Passport.",
+           kind="achievement", link="/passport")
     db.commit()
     owner = db.get(User, r.user_id)
     return SkillRecordAdminOut(**record_out(r).model_dump(), owner_name=owner.full_name, review_note=r.review_note)

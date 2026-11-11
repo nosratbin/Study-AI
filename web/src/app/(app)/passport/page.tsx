@@ -111,7 +111,7 @@ export default function PassportPage() {
         action={!adding && <Button size="sm" variant="secondary" onClick={() => setAdding(true)}><Plus className="size-4" aria-hidden /> Add</Button>}
       >
         <p className="text-sm text-muted">
-          Awards, competitions, volunteering and more. They show as <strong>self-reported</strong> until a LEARN AI admin checks your evidence link.
+          Awards, competitions, volunteering and more. They show as <strong>self-reported</strong> until a IccheGhuri admin checks your evidence link.
         </p>
         {adding && <RecordForm onCancel={() => setAdding(false)} onSaved={() => { setAdding(false); pp.reload(); }} />}
         {p.records.length > 0 && (

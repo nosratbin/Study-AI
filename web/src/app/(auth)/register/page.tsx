@@ -69,7 +69,7 @@ export default function RegisterPage() {
         <Button type="submit" loading={busy} className="w-full">
           Create account
         </Button>
-        <p className="text-center text-xs text-muted">Teacher or mentor? Accounts are set up by a LEARN AI admin.</p>
+        <p className="text-center text-xs text-muted">Teacher or mentor? Accounts are set up by a IccheGhuri admin.</p>
       </form>
       <p className="mt-6 text-center text-sm text-muted">
         Already have an account?{" "}

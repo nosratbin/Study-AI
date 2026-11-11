@@ -7,7 +7,7 @@ import pytest
 
 from app.core.security import create_token, hash_password
 from app.main import app
-from app.models import AuditLog, Course, MoodCheckin, Role, SkillRecord, SupportRequest, SupportResource, User
+from app.models import AuditLog, Course, MoodCheckin, Role, SkillRecord, SupportRequest, SupportResource, TeacherProfile, User
 from app.models.enums import VerificationStatus
 from app.seed import seed_courses
 from app.seed_challenges import seed_challenges
@@ -17,8 +17,10 @@ from .conftest import ONBOARDING, register
 from .fakes import FakeLLM
 
 
-def staff(db_session, role=Role.admin, email="admin@example.com") -> dict:
+def staff(db_session, role=Role.admin, email="admin@example.com", verified=True) -> dict:
     u = User(email=email, full_name=f"Staff {role}", role=role, password_hash=hash_password("secret123"))
+    if role == Role.teacher:
+        u.teacher_profile = TeacherProfile(is_verified=verified)
     db_session.add(u)
     db_session.commit()
     return {"Authorization": f"Bearer {create_token(u.id, u.role, 0, 'access')}"}
@@ -251,9 +253,11 @@ def test_support_requests_are_encrypted_and_inbox_access_is_audited(client, db_s
 def test_dashboard_and_passport_code_never_touch_mindcare():
     import inspect
 
-    from app.services import dashboard, passport, roadmap
+    from app.api.routes import admin_users, careers, notifications, teacher
+    from app.services import careers as careers_service
+    from app.services import dashboard, notify, passport, roadmap, staff_dashboard
 
-    for mod in (dashboard, passport, roadmap):
+    for mod in (dashboard, passport, roadmap, staff_dashboard, notify, careers_service, teacher, admin_users, careers, notifications):
         src = inspect.getsource(mod)
         for name in ("MoodCheckin", "mood_checkins", "SupportRequest", "support_requests"):
             assert name not in src, f"{mod.__name__} references {name}"

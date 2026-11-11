@@ -19,8 +19,10 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.core.security import hash_password
 from app.db.session import SessionLocal
+from app.schemas.auth import DEMO_EMAIL_DOMAIN
 from app.models import Course, EducationLevel, Lesson, Role, StudentProfile, TeacherProfile, User
 from app.seed_assessments import seed_assessments
+from app.seed_careers import seed_careers
 from app.seed_challenges import seed_challenges
 
 L = EducationLevel
@@ -113,9 +115,9 @@ def seed_courses(db: Session) -> int:
 def seed_demo_users(db: Session) -> None:
     password = os.environ.get("SEED_DEMO_PASSWORD") or secrets.token_urlsafe(10) + "1a"
     users = [
-        ("admin@demo.learnai.local", "Demo Admin", Role.admin),
-        ("teacher@demo.learnai.local", "Demo Teacher", Role.teacher),
-        ("student@demo.learnai.local", "Demo Student", Role.student),
+        (f"admin@{DEMO_EMAIL_DOMAIN}", "Demo Admin", Role.admin),
+        (f"teacher@{DEMO_EMAIL_DOMAIN}", "Demo Teacher", Role.teacher),
+        (f"student@{DEMO_EMAIL_DOMAIN}", "Demo Student", Role.student),
     ]
     for email, name, role in users:
         if db.scalar(select(User).where(User.email == email)):
@@ -143,6 +145,7 @@ def main() -> None:
         print(f"courses created: {seed_courses(db)}")
         print(f"assessments created: {seed_assessments(db)}")
         print(f"project challenges created: {seed_challenges(db)}")
+        print(f"demo careers created: {seed_careers(db)}")
         if args.demo_users:
             seed_demo_users(db)
 

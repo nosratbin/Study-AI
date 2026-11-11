@@ -1,4 +1,4 @@
-# LEARN AI
+# IccheGhuri
 
 National AI education & student development platform for Bangladesh — MVP for the AI Builders Congress, Daffodil International University.
 
@@ -81,7 +81,7 @@ To create an admin, insert a user with `role = 'admin'`, or run `python -m app.s
 4. Fill `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `GOOGLE_OAUTH_REDIRECT_URI`, `GOOGLE_TOKEN_KEY` (Fernet key; the command is in `.env.example`) and `WEB_APP_URL` in `backend/.env`, then restart the API.
 5. `/api/health` reports `"google_workspace": true`. Then at `/google`, connect Drive and Calendar.
 
-Students choose which features to allow. LEARN AI can only see files it creates (a "LEARN AI" folder of Google Docs) and can only manage a separate "LEARN AI" calendar it creates (it can't see the student's other calendars). Tokens are Fernet-encrypted in `google_connections`. Disconnecting revokes access at Google.
+Students choose which features to allow. IccheGhuri can only see files it creates (a "IccheGhuri" folder of Google Docs) and can only manage a separate "IccheGhuri" calendar it creates (it can't see the student's other calendars). Tokens are Fernet-encrypted in `google_connections`. Disconnecting revokes access at Google.
 
 Open the app on the same host as the redirect URI (`localhost`, not `127.0.0.1`). Otherwise the state cookie is not sent back and the connection fails with "request expired".
 
@@ -96,7 +96,7 @@ Open the app on the same host as the redirect URI (`localhost`, not `127.0.0.1`)
 
 ## UI components
 
-`web/src/components/ui` holds the LEARN AI design system. `web/src/components/vengeance` holds every VengeanceUI component, vendored and excluded from lint. Its shadcn theme variables are mapped to the brand palette in `globals.css`. The shadcn "muted" background is `bg-muted-bg`, because `muted` is the LEARN AI secondary text colour.
+`web/src/components/ui` holds the IccheGhuri design system. `web/src/components/vengeance` holds every VengeanceUI component, vendored and excluded from lint. Its shadcn theme variables are mapped to the brand palette in `globals.css`. The shadcn "muted" background is `bg-muted-bg`, because `muted` is the IccheGhuri secondary text colour.
 
 ## Tests
 

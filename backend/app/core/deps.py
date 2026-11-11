@@ -57,3 +57,18 @@ def require_roles(*roles: Role) -> Callable[[User], User]:
 StudentUser = Annotated[User, Depends(require_roles(Role.student))]
 TeacherUser = Annotated[User, Depends(require_roles(Role.teacher, Role.admin))]
 AdminUser = Annotated[User, Depends(require_roles(Role.admin))]
+
+
+def is_verified_staff(user: User) -> bool:
+    """Admins, or teachers an admin has verified."""
+    return user.role == Role.admin or (user.role == Role.teacher and bool(user.teacher_profile and user.teacher_profile.is_verified))
+
+
+def _verified_teacher(user: TeacherUser) -> User:
+    """Student data and publishing need an admin-verified teacher (or an admin)."""
+    if not is_verified_staff(user):
+        raise ApiError(403, "teacher_not_verified", "An admin needs to verify your teacher account first.")
+    return user
+
+
+VerifiedTeacherUser = Annotated[User, Depends(_verified_teacher)]

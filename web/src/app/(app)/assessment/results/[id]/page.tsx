@@ -167,7 +167,7 @@ export default function ResultPage() {
         </section>
       )}
 
-      <Card as="section">
+      <Card as="section" className="p-0">
         <button onClick={() => setShowReview((v) => !v)} className="flex w-full items-center justify-between p-5 text-left font-semibold" aria-expanded={showReview}>
           Review your answers
           <ChevronDown className={clsx("size-5 text-muted transition-transform", showReview && "rotate-180")} aria-hidden />

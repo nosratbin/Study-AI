@@ -268,7 +268,7 @@ function CalendarReminder({ t, onClose }: { t: StudyTask; onClose: () => void })
         tone: "success",
         text: (
           <>
-            {ev.created ? "Added to" : "Updated in"} your LEARN AI calendar.{" "}
+            {ev.created ? "Added to" : "Updated in"} your IccheGhuri calendar.{" "}
             {ev.html_link && <a href={ev.html_link} target="_blank" rel="noopener noreferrer" className="underline">Open in Google Calendar</a>}
           </>
         ),

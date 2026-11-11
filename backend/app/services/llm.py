@@ -14,7 +14,7 @@ import httpx
 from app.core.config import get_settings
 from app.core.errors import ApiError
 
-log = logging.getLogger("learn_ai.llm")
+log = logging.getLogger("iccheghuri.llm")
 
 GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta"
 # Statuses that mean "this model can't serve right now" (overloaded, rate-limited, retired), so try the next one.

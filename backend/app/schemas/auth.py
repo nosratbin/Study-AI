@@ -2,8 +2,10 @@ import re
 import uuid
 from datetime import datetime
 
+from email_validator import EmailNotValidError, validate_email
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
+from app.core.config import get_settings
 from app.core.security import MAX_PASSWORD_BYTES
 from app.models.enums import Role
 
@@ -32,9 +34,25 @@ class RegisterIn(BaseModel):
         return v
 
 
+# Seeded demo accounts (app/seed.py) use this reserved domain so they can never receive mail or exist in the wild.
+# Login accepts it only outside production; registration never does.
+DEMO_EMAIL_DOMAIN = "demo.iccheghuri.local"
+
+
 class LoginIn(BaseModel):
-    email: EmailStr
+    email: str = Field(min_length=3, max_length=254)
     password: str = Field(min_length=1, max_length=200)
+
+    @field_validator("email")
+    @classmethod
+    def _email(cls, v: str) -> str:
+        try:
+            return validate_email(v.strip(), check_deliverability=False).normalized
+        except EmailNotValidError as e:
+            demo = v.strip().lower()
+            if demo.endswith("@" + DEMO_EMAIL_DOMAIN) and get_settings().environment != "production":
+                return demo
+            raise ValueError(f"value is not a valid email address: {e}") from e
 
 
 class GoogleIn(BaseModel):

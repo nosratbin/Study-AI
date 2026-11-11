@@ -1,4 +1,4 @@
-# LEARN AI — Architecture & Plan
+# IccheGhuri — Architecture & Plan
 
 Status: Phase 1 in progress. This document covers the planning deliverables
 A–E and is updated at the end of each phase.

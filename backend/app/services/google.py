@@ -1,7 +1,7 @@
 """Google Workspace integration: server-side OAuth 2.0 (PKCE) plus Drive, Docs and Calendar over REST.
 
 Scopes are the narrowest that do the job and are requested per feature (incremental authorization):
-- drive.file: only files this app creates (a "LEARN AI" folder and the Google Docs saved into it).
+- drive.file: only files this app creates (a "IccheGhuri" folder and the Google Docs saved into it).
   Docs are created by uploading HTML to Drive with conversion, so no separate Docs scope is needed.
 - calendar.events: create reminder events; no access to other calendar settings.
 Tokens are encrypted at rest with Fernet and never sent to the browser.
@@ -35,13 +35,13 @@ CALENDAR_API = "https://www.googleapis.com/calendar/v3"
 
 FEATURE_SCOPES = {
     "drive": "https://www.googleapis.com/auth/drive.file",
-    # Only calendars this app creates (a "LEARN AI" calendar): no access to the student's own calendars or events.
+    # Only calendars this app creates (a "IccheGhuri" calendar): no access to the student's own calendars or events.
     "calendar": "https://www.googleapis.com/auth/calendar.app.created",
 }
 BASE_SCOPES = ["openid", "email"]
-FOLDER_NAME = "LEARN AI"
-CALENDAR_NAME = "LEARN AI"
-LESSON_PROP = "learnai_lesson"  # Drive appProperties key: which lesson a Doc was saved from
+FOLDER_NAME = "IccheGhuri"
+CALENDAR_NAME = "IccheGhuri"
+LESSON_PROP = "learnai_lesson"  # Drive appProperties key: which lesson a Doc was saved from. Keeps the pre-rename prefix: Docs already in students' Drives carry it.
 DHAKA = timezone(timedelta(hours=6), "Asia/Dhaka")  # Bangladesh has no DST
 
 
@@ -244,7 +244,7 @@ class GoogleApi:
             if r.status_code == 409:
                 raise ApiError(409, "google_conflict", "That item already exists in Google.")
             if r.status_code == 403 and "insufficient" in r.text.lower():
-                raise ApiError(409, "google_scope_missing", "Give LEARN AI permission for this Google feature first.")
+                raise ApiError(409, "google_scope_missing", "Give IccheGhuri permission for this Google feature first.")
             if r.status_code >= 400:
                 raise ApiError(502, "google_api_error", "Google could not complete the request. Please try again.")
             return r.json() if r.content else {}
@@ -277,7 +277,7 @@ class GoogleApi:
 
     def create_doc(self, title: str, body_html: str, lesson_id: uuid.UUID | None = None) -> dict:
         folder = self.folder_id()
-        boundary = f"learnai-{secrets.token_hex(8)}"
+        boundary = f"iccheghuri-{secrets.token_hex(8)}"
         meta: dict = {"name": title[:200], "mimeType": "application/vnd.google-apps.document", "parents": [folder]}
         if lesson_id:
             meta["appProperties"] = {LESSON_PROP: str(lesson_id)}
@@ -295,7 +295,7 @@ class GoogleApi:
             return self.conn.calendar_id
         c = self.request("POST", f"{CALENDAR_API}/calendars", params={"fields": "id"}, json={
             "summary": CALENDAR_NAME, "timeZone": "Asia/Dhaka",
-            "description": "Deadlines and study reminders added from LEARN AI. You can hide or delete this calendar any time.",
+            "description": "Deadlines and study reminders added from IccheGhuri. You can hide or delete this calendar any time.",
         })
         self.conn.calendar_id = c["id"]
         self.db.commit()
@@ -320,7 +320,7 @@ class GoogleApi:
             except ApiError as e:
                 if e.code != "google_not_found" or attempt:
                     raise
-                self.conn.calendar_id = None  # the student deleted the LEARN AI calendar: make a new one
+                self.conn.calendar_id = None  # the student deleted the IccheGhuri calendar: make a new one
                 self.db.commit()
         raise ApiError(502, "google_api_error", "Google could not complete the request. Please try again.")  # unreachable
 
@@ -353,7 +353,7 @@ def lesson_doc_html(*, title: str, course_title: str, level: str, content_md: st
     saved = datetime.now(DHAKA).strftime("%d %b %Y")
     parts = [
         f"<h1>{html.escape(title)}</h1>",
-        f"<p><i>{html.escape(course_title)} · {html.escape(level.title())} level · saved from LEARN AI on {saved}</i></p>",
+        f"<p><i>{html.escape(course_title)} · {html.escape(level.title())} level · saved from IccheGhuri on {saved}</i></p>",
         f'<p>Open the lesson: <a href="{html.escape(lesson_url)}">{html.escape(lesson_url)}</a></p><hr>',
         body,
     ]
@@ -369,7 +369,7 @@ def deadline_event(*, title: str, provider: str, deadline: datetime, official_ur
         "summary": f"Deadline: {title}"[:250],
         "description": (
             f"{provider}\nDeadline: {local} (Bangladesh time)\n\nOfficial page: {official_url}\n"
-            f"In LEARN AI: {page_url}\n\nVerified by LEARN AI. Always confirm details on the official website."
+            f"In IccheGhuri: {page_url}\n\nVerified by IccheGhuri. Always confirm details on the official website."
         ),
         "start": {"date": day.isoformat()},
         "end": {"date": (day + timedelta(days=1)).isoformat()},
@@ -386,7 +386,7 @@ def reminder_event(*, title: str, kind: str, starts_at: datetime, duration_min: 
     label = {"class": "Class", "exam": "Exam", "study": "Study session", "other": "Reminder"}[kind]
     return {
         "summary": f"{label}: {title}"[:250],
-        "description": (notes or "") + ("\n\n" if notes else "") + "Created with LEARN AI.",
+        "description": (notes or "") + ("\n\n" if notes else "") + "Created with IccheGhuri.",
         "start": {"dateTime": start.isoformat(), "timeZone": "Asia/Dhaka"},
         "end": {"dateTime": end.isoformat(), "timeZone": "Asia/Dhaka"},
         "reminders": {"useDefault": False, "overrides": [{"method": "popup", "minutes": remind_minutes}]},

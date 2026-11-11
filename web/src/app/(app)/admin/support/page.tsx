@@ -22,7 +22,7 @@ export default function AdminSupportPage() {
   if (user && user.role !== "admin")
     return (
       <EmptyState icon={<ShieldAlert className="size-7" />} title="Admins only">
-        This page is for LEARN AI administrators.
+        This page is for IccheGhuri administrators.
       </EmptyState>
     );
   return (
@@ -48,7 +48,11 @@ export default function AdminSupportPage() {
 
 /* ---------- Requests ---------- */
 
-const STATUS_LABEL: Record<SupportRequestStatus, string> = { open: "New", in_progress: "In progress", closed: "Closed" };
+const STATUS_LABEL: Record<SupportRequestStatus, string> = {
+  open: "New",
+  in_progress: "In progress",
+  closed: "Closed",
+};
 
 function RequestInbox() {
   const [showClosed, setShowClosed] = useState(false);
@@ -56,7 +60,10 @@ function RequestInbox() {
 
   async function setStatus(id: string, status: SupportRequestStatus) {
     try {
-      await api(`/admin/support-requests/${id}`, { method: "PATCH", body: { status } });
+      await api(`/admin/support-requests/${id}`, {
+        method: "PATCH",
+        body: { status },
+      });
       list.reload();
     } catch (e) {
       window.alert(e instanceof ApiError ? e.message : "Could not update.");
@@ -66,8 +73,8 @@ function RequestInbox() {
   return (
     <section className="space-y-4">
       <Alert tone="success">
-        Every time this inbox is opened it is recorded in the audit log. Contact students only about their request, and follow your safeguarding
-        procedure for anyone under 18 or at risk. In an emergency, call 999.
+        Every time this inbox is opened it is recorded in the audit log. Contact students only about their request, and follow your safeguarding procedure for
+        anyone under 18 or at risk. In an emergency, call 999.
       </Alert>
       <label className="flex items-center gap-2 text-sm">
         <input type="checkbox" className="size-4 accent-brand-500" checked={showClosed} onChange={(e) => setShowClosed(e.target.checked)} />
@@ -93,17 +100,33 @@ function RequestInbox() {
                 <p className="font-semibold">{r.student_name}</p>
                 <p className="text-sm">
                   {r.preferred_contact === "phone" && r.phone ? (
-                    <a className="inline-flex items-center gap-1 text-brand-600 hover:underline" href={`tel:${r.phone.replace(/[^0-9+]/g, "")}`}><Phone className="size-3.5" aria-hidden /> {r.phone}</a>
+                    <a className="inline-flex items-center gap-1 text-brand-600 hover:underline" href={`tel:${r.phone.replace(/[^0-9+]/g, "")}`}>
+                      <Phone className="size-3.5" aria-hidden /> {r.phone}
+                    </a>
                   ) : (
-                    <a className="text-brand-600 hover:underline" href={`mailto:${r.student_email}`}>{r.student_email}</a>
+                    <a className="text-brand-600 hover:underline" href={`mailto:${r.student_email}`}>
+                      {r.student_email}
+                    </a>
                   )}
                   <span className="text-muted"> · prefers {r.preferred_contact}</span>
                 </p>
                 <p className="whitespace-pre-wrap rounded-xl bg-surface p-3 text-sm">{r.message ?? "(message could not be decrypted)"}</p>
                 <div className="flex flex-wrap gap-2 pt-1">
-                  {r.status !== "in_progress" && <Button size="sm" variant="secondary" onClick={() => setStatus(r.id, "in_progress")}>Mark in progress</Button>}
-                  {r.status !== "closed" && <Button size="sm" variant="secondary" onClick={() => setStatus(r.id, "closed")}>Close</Button>}
-                  {r.status === "closed" && <Button size="sm" variant="ghost" onClick={() => setStatus(r.id, "open")}>Reopen</Button>}
+                  {r.status !== "in_progress" && (
+                    <Button size="sm" variant="secondary" onClick={() => setStatus(r.id, "in_progress")}>
+                      Mark in progress
+                    </Button>
+                  )}
+                  {r.status !== "closed" && (
+                    <Button size="sm" variant="secondary" onClick={() => setStatus(r.id, "closed")}>
+                      Close
+                    </Button>
+                  )}
+                  {r.status === "closed" && (
+                    <Button size="sm" variant="ghost" onClick={() => setStatus(r.id, "open")}>
+                      Reopen
+                    </Button>
+                  )}
                 </div>
               </Card>
             </li>
@@ -124,15 +147,25 @@ function Directory() {
   return (
     <section className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-muted">Students only see verified entries. Call or visit each service to confirm the details before verifying. Editing an entry un-verifies it.</p>
-        {!editing && <Button onClick={() => setEditing("new")}><Plus className="size-4" aria-hidden /> Add resource</Button>}
+        <p className="text-sm text-muted">
+          Students only see verified entries. Call or visit each service to confirm the details before verifying. Editing an entry un-verifies it.
+        </p>
+        {!editing && (
+          <Button onClick={() => setEditing("new")}>
+            <Plus className="size-4" aria-hidden /> Add resource
+          </Button>
+        )}
       </div>
       {editing && (
         <ResourceEditor
           key={editing === "new" ? "new" : editing.id}
           initial={editing === "new" ? null : editing}
           onCancel={() => setEditing(null)}
-          onSaved={(r) => { setEditing(null); setReviewing(r.id); list.reload(); }}
+          onSaved={(r) => {
+            setEditing(null);
+            setReviewing(r.id);
+            list.reload();
+          }}
         />
       )}
       {list.error ? (
@@ -140,7 +173,9 @@ function Directory() {
       ) : !list.data ? (
         <Spinner />
       ) : !list.data.length ? (
-        <EmptyState icon={<HeartHandshake className="size-7" />} title="No resources yet">Add counsellors and helplines you have confirmed.</EmptyState>
+        <EmptyState icon={<HeartHandshake className="size-7" />} title="No resources yet">
+          Add counsellors and helplines you have confirmed.
+        </EmptyState>
       ) : (
         <ul className="space-y-3">
           {list.data.map((r) => (
@@ -148,7 +183,11 @@ function Directory() {
               <Card className="space-y-2 p-5">
                 <div className="flex flex-wrap gap-1.5">
                   <Badge tone={r.verification_status === "verified" ? "success" : r.verification_status === "rejected" ? "neutral" : "brand"}>
-                    {r.verification_status === "verified" ? "Verified · visible to students" : r.verification_status === "rejected" ? "Rejected" : "Needs review"}
+                    {r.verification_status === "verified"
+                      ? "Verified · visible to students"
+                      : r.verification_status === "rejected"
+                        ? "Rejected"
+                        : "Needs review"}
                   </Badge>
                   <Badge className="capitalize">{r.kind}</Badge>
                 </div>
@@ -156,20 +195,41 @@ function Directory() {
                 <p className="text-sm text-muted">{r.description}</p>
                 <p className="flex flex-wrap gap-4 text-sm">
                   {r.phone && <span>{r.phone}</span>}
-                  {r.url && <a href={r.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-brand-600 hover:underline">{r.url} <ExternalLink className="size-3.5" aria-hidden /></a>}
+                  {r.url && (
+                    <a href={r.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-brand-600 hover:underline">
+                      {r.url} <ExternalLink className="size-3.5" aria-hidden />
+                    </a>
+                  )}
                 </p>
-                {r.verified_by_name && r.verified_at && <p className="text-xs text-muted">Verified by {r.verified_by_name} on {formatDay(r.verified_at)}</p>}
+                {r.verified_by_name && r.verified_at && (
+                  <p className="text-xs text-muted">
+                    Verified by {r.verified_by_name} on {formatDay(r.verified_at)}
+                  </p>
+                )}
                 {r.source_note && <p className="text-xs text-muted">Source note: {r.source_note}</p>}
                 <div className="flex flex-wrap gap-2">
-                  <Button size="sm" variant="secondary" onClick={() => { setReviewing(null); setEditing(r); }}>Edit</Button>
-                  <Button size="sm" onClick={() => setReviewing(reviewing === r.id ? null : r.id)}>Review</Button>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => {
+                      setReviewing(null);
+                      setEditing(r);
+                    }}
+                  >
+                    Edit
+                  </Button>
+                  <Button size="sm" onClick={() => setReviewing(reviewing === r.id ? null : r.id)}>
+                    Review
+                  </Button>
                   <Button
                     size="sm"
                     variant="danger"
                     onClick={async () => {
                       if (!window.confirm(`Delete ${r.name}?`)) return;
                       try {
-                        await api(`/admin/support-resources/${r.id}`, { method: "DELETE" });
+                        await api(`/admin/support-resources/${r.id}`, {
+                          method: "DELETE",
+                        });
                       } catch (e) {
                         window.alert(e instanceof ApiError ? e.message : "Could not delete.");
                       }
@@ -179,7 +239,15 @@ function Directory() {
                     Delete
                   </Button>
                 </div>
-                {reviewing === r.id && <ResourceReview r={r} onDone={() => { setReviewing(null); list.reload(); }} />}
+                {reviewing === r.id && (
+                  <ResourceReview
+                    r={r}
+                    onDone={() => {
+                      setReviewing(null);
+                      list.reload();
+                    }}
+                  />
+                )}
               </Card>
             </li>
           ))}
@@ -202,7 +270,10 @@ function ResourceReview({ r, onDone }: { r: AdminSupportResource; onDone: () => 
     setBusy(status);
     setError(null);
     try {
-      await api(`/admin/support-resources/${r.id}/verify`, { method: "POST", body: { status, source_note: note.trim() } });
+      await api(`/admin/support-resources/${r.id}/verify`, {
+        method: "POST",
+        body: { status, source_note: note.trim() },
+      });
       onDone();
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Could not save.");
@@ -217,14 +288,26 @@ function ResourceReview({ r, onDone }: { r: AdminSupportResource; onDone: () => 
         <Textarea id={`src-${r.id}`} rows={2} value={note} onChange={(e) => setNote(e.target.value)} maxLength={1000} />
       </Field>
       <div className="flex gap-2">
-        <Button size="sm" loading={busy === "verified"} disabled={!!busy} onClick={() => act("verified")}>Verify</Button>
-        <Button size="sm" variant="secondary" loading={busy === "rejected"} disabled={!!busy} onClick={() => act("rejected")}>Reject</Button>
+        <Button size="sm" loading={busy === "verified"} disabled={!!busy} onClick={() => act("verified")}>
+          Verify
+        </Button>
+        <Button size="sm" variant="secondary" loading={busy === "rejected"} disabled={!!busy} onClick={() => act("rejected")}>
+          Reject
+        </Button>
       </div>
     </div>
   );
 }
 
-function ResourceEditor({ initial, onCancel, onSaved }: { initial: AdminSupportResource | null; onCancel: () => void; onSaved: (r: AdminSupportResource) => void }) {
+function ResourceEditor({
+  initial,
+  onCancel,
+  onSaved,
+}: {
+  initial: AdminSupportResource | null;
+  onCancel: () => void;
+  onSaved: (r: AdminSupportResource) => void;
+}) {
   const [form, setForm] = useState({
     name: initial?.name ?? "",
     kind: (initial?.kind ?? "counsellor") as SupportResourceKind,
@@ -246,14 +329,22 @@ function ResourceEditor({ initial, onCancel, onSaved }: { initial: AdminSupportR
     setBusy(true);
     setError(null);
     const body = {
-      name: form.name, kind: form.kind, description: form.description, phone: form.phone.trim() || null, url: form.url.trim() || null,
-      hours: form.hours.trim() || null, cost_note: form.cost_note.trim() || null,
+      name: form.name,
+      kind: form.kind,
+      description: form.description,
+      phone: form.phone.trim() || null,
+      url: form.url.trim() || null,
+      hours: form.hours.trim() || null,
+      cost_note: form.cost_note.trim() || null,
       languages: [form.bn && "bn", form.en && "en"].filter(Boolean),
     };
     try {
       const r = initial
         ? await api<AdminSupportResource>(`/admin/support-resources/${initial.id}`, { method: "PUT", body })
-        : await api<AdminSupportResource>("/admin/support-resources", { method: "POST", body });
+        : await api<AdminSupportResource>("/admin/support-resources", {
+            method: "POST",
+            body,
+          });
       onSaved(r);
     } catch (err) {
       if (err instanceof ApiError) {
@@ -270,7 +361,15 @@ function ResourceEditor({ initial, onCancel, onSaved }: { initial: AdminSupportR
         {error && <Alert>{error}</Alert>}
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Name" htmlFor="sr-name" error={errors.name}>
-            <Input id="sr-name" value={form.name} onChange={(e) => set("name", e.target.value)} required minLength={2} maxLength={200} invalid={!!errors.name} />
+            <Input
+              id="sr-name"
+              value={form.name}
+              onChange={(e) => set("name", e.target.value)}
+              required
+              minLength={2}
+              maxLength={200}
+              invalid={!!errors.name}
+            />
           </Field>
           <Field label="Type" htmlFor="sr-kind">
             <Select id="sr-kind" value={form.kind} onChange={(e) => set("kind", e.target.value)}>
@@ -289,20 +388,42 @@ function ResourceEditor({ initial, onCancel, onSaved }: { initial: AdminSupportR
             <Input id="sr-hours" value={form.hours} onChange={(e) => set("hours", e.target.value)} maxLength={120} placeholder="e.g. Sun–Thu, 9am–5pm" />
           </Field>
           <Field label="Cost" htmlFor="sr-cost" optional>
-            <Input id="sr-cost" value={form.cost_note} onChange={(e) => set("cost_note", e.target.value)} maxLength={200} placeholder="e.g. Free for students" />
+            <Input
+              id="sr-cost"
+              value={form.cost_note}
+              onChange={(e) => set("cost_note", e.target.value)}
+              maxLength={200}
+              placeholder="e.g. Free for students"
+            />
           </Field>
         </div>
         <Field label="Description" htmlFor="sr-desc" error={errors.description}>
-          <Textarea id="sr-desc" value={form.description} onChange={(e) => set("description", e.target.value)} required minLength={10} maxLength={2000} invalid={!!errors.description} />
+          <Textarea
+            id="sr-desc"
+            value={form.description}
+            onChange={(e) => set("description", e.target.value)}
+            required
+            minLength={10}
+            maxLength={2000}
+            invalid={!!errors.description}
+          />
         </Field>
         <fieldset className="flex gap-4 text-sm">
           <legend className="mb-1 text-sm font-medium">Languages</legend>
-          <label className="flex items-center gap-2"><input type="checkbox" className="accent-brand-500" checked={form.bn} onChange={(e) => set("bn", e.target.checked)} /> বাংলা</label>
-          <label className="flex items-center gap-2"><input type="checkbox" className="accent-brand-500" checked={form.en} onChange={(e) => set("en", e.target.checked)} /> English</label>
+          <label className="flex items-center gap-2">
+            <input type="checkbox" className="accent-brand-500" checked={form.bn} onChange={(e) => set("bn", e.target.checked)} /> বাংলা
+          </label>
+          <label className="flex items-center gap-2">
+            <input type="checkbox" className="accent-brand-500" checked={form.en} onChange={(e) => set("en", e.target.checked)} /> English
+          </label>
         </fieldset>
         <div className="flex gap-2">
-          <Button type="submit" loading={busy}>Save</Button>
-          <Button type="button" variant="ghost" onClick={onCancel}>Cancel</Button>
+          <Button type="submit" loading={busy}>
+            Save
+          </Button>
+          <Button type="button" variant="ghost" onClick={onCancel}>
+            Cancel
+          </Button>
         </div>
       </form>
     </Card>

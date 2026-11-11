@@ -9,7 +9,7 @@ from cryptography.fernet import Fernet, InvalidToken
 
 from app.core.config import get_settings
 
-log = logging.getLogger("learn_ai.crypto")
+log = logging.getLogger("iccheghuri.crypto")
 
 
 @lru_cache
@@ -18,7 +18,7 @@ def _fernet() -> Fernet:
     if not key:
         # Development/test only (production refuses to start without a key): a fixed, non-secret key.
         log.warning("DATA_ENCRYPTION_KEY is not set; using an insecure development key")
-        key = base64.urlsafe_b64encode(hashlib.sha256(b"learn-ai-insecure-dev-data-key").digest()).decode()
+        key = base64.urlsafe_b64encode(hashlib.sha256(b"learn-ai-insecure-dev-data-key").digest()).decode()  # pre-rename seed kept: changing it makes existing dev data unreadable
     return Fernet(key.encode())
 
 

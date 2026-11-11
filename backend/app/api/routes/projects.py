@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, Query, Request, Response
 from sqlalchemy import select
 
 from app.core.config import get_settings
-from app.core.deps import DbSession, StudentUser, TeacherUser
+from app.core.deps import DbSession, StudentUser, VerifiedTeacherUser
 from app.core.errors import ApiError
 from app.core.rate_limit import client_ip, limiter
 from app.models import AuditLog, Project, ProjectChallenge, User
@@ -26,6 +26,7 @@ from app.schemas.growth import (
     ReviewIn,
 )
 from app.services.llm import ChatTurn, LLMProvider, get_llm, parse_json
+from app.services.notify import notify
 from app.services.opportunities import aware
 
 router = APIRouter(prefix="/projects", tags=["project lab"])
@@ -85,13 +86,13 @@ def challenge(slug: str, user: StudentUser, db: DbSession):
 
 
 @router.get("/review-queue", response_model=list[ProjectOut])
-def review_queue(staff: TeacherUser, db: DbSession):
+def review_queue(staff: VerifiedTeacherUser, db: DbSession):
     rows = db.scalars(select(Project).where(Project.status == ProjectStatus.submitted).order_by(Project.submitted_at)).all()
     return [project_out(db, p, with_owner=True) for p in rows]
 
 
 @router.post("/{project_id}/review", response_model=ProjectOut)
-def review(project_id: uuid.UUID, body: ReviewIn, request: Request, staff: TeacherUser, db: DbSession):
+def review(project_id: uuid.UUID, body: ReviewIn, request: Request, staff: VerifiedTeacherUser, db: DbSession):
     p = db.get(Project, project_id)
     if not p or p.status != ProjectStatus.submitted:
         raise ApiError(404, "project_not_found", "No submitted project with that id.")
@@ -101,6 +102,8 @@ def review(project_id: uuid.UUID, body: ReviewIn, request: Request, staff: Teach
     p.status, p.reviewed_by, p.reviewed_at = ProjectStatus.reviewed, staff.id, datetime.now(UTC)
     db.add(AuditLog(actor_id=staff.id, action="project.review", target_type="project", target_id=str(p.id),
                     details={"score": body.score}, ip=client_ip(request)))
+    notify(db, p.user_id, f"Your project was reviewed: {p.title}", "A teacher left feedback on your project.",
+           kind="project", link=f"/projects/{p.id}")
     db.commit()
     return project_out(db, p, with_owner=True)
 

@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth";
 import { api, ApiError } from "@/lib/api";
 import { useApi } from "@/lib/use-api";
 import { formatDay, type Project } from "@/lib/types";
+import { isNotVerified, NotVerifiedNotice } from "@/components/staff/not-verified";
 
 export default function ReviewQueuePage() {
   const { user } = useAuth();
@@ -23,6 +24,7 @@ function Queue() {
   const q = useApi<Project[]>("/projects/review-queue");
   const [open, setOpen] = useState<string | null>(null);
 
+  if (isNotVerified(q.error)) return <NotVerifiedNotice title="Project reviews" />;
   return (
     <div className="space-y-6 animate-fade-up">
       <PageHeader title="Project reviews" subtitle="Oldest submissions first. Your feedback and optional score are shown to the student." />

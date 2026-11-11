@@ -55,7 +55,7 @@ export default function CoursePage() {
         <h2 id="lessons-heading" className="mb-3 font-semibold">
           Lessons
         </h2>
-        <Card>
+        <Card className="p-0">
           <ol className="divide-y divide-line">
             {course.lessons.map((l, i) => {
               const Icon = l.status === "completed" ? CheckCircle2 : l.status === "in_progress" ? CircleDot : Circle;

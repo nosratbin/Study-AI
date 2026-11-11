@@ -12,6 +12,12 @@ export default function SettingsPage() {
   const router = useRouter();
   const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [form, setForm] = useState({ full_name: user?.full_name ?? "", education_level: "" as EducationLevel | "", preferred_language: "en" as Language, institution: "", class_or_year: "", district: "" });
+  // The page can render before auth resolves, so fill the name once the user arrives.
+  const [nameFor, setNameFor] = useState(user?.id);
+  if (user && nameFor !== user.id) {
+    setNameFor(user.id);
+    setForm((f) => ({ ...f, full_name: user.full_name }));
+  }
   const [loadError, setLoadError] = useState<string | null>(null);
   const [msg, setMsg] = useState<{ tone: "error" | "success"; text: string } | null>(null);
   const [busy, setBusy] = useState(false);

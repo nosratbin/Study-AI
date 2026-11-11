@@ -4,7 +4,7 @@
 /* dark: utilities apply only inside a .dark ancestor (the app is light-only for now), not via the OS setting. */
 @custom-variant dark (&:is(.dark *));
 
-/* LEARN AI design tokens — keep in sync with docs/DESIGN_SYSTEM.md */
+/* IccheGhuri design tokens — keep in sync with docs/DESIGN_SYSTEM.md */
 @theme {
   --color-brand-50: #fff7ed;
   --color-brand-100: #ffedd5;
@@ -34,7 +34,7 @@
   }
 }
 
-/* shadcn / VengeanceUI theme variables, mapped to the LEARN AI palette.
+/* shadcn / VengeanceUI theme variables, mapped to the IccheGhuri palette.
    shadcn's "muted" background is exposed as muted-bg, because "muted" is our secondary text colour. */
 :root {
   --background: #ffffff;

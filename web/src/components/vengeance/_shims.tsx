@@ -2,7 +2,7 @@
 
 /**
  * Local stand-ins for VengeanceUI docs-site imports (their logo and theme toggle),
- * so notch-navbar compiles here. LEARN AI has no dark mode yet, so the toggle renders nothing.
+ * so notch-navbar compiles here. IccheGhuri has no dark mode yet, so the toggle renders nothing.
  */
 
 export function ThemeToggle() {

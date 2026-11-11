@@ -38,7 +38,7 @@ export default function ContactPage() {
 
   return (
     <>
-      <PageHeader eyebrow="Contact" title="Talk to the LEARN AI team">
+      <PageHeader eyebrow="Contact" title="Talk to the IccheGhuri team">
         Schools, teachers, mentors and partners — send us a message and we&apos;ll get back to you.
       </PageHeader>
       <Section>

@@ -8,7 +8,7 @@ import { api, ApiError } from "@/lib/api";
 import { useApi } from "@/lib/use-api";
 import type { GoogleDoc, GoogleEvent, GoogleFeature, GoogleStatus } from "@/lib/types";
 
-const NEXT_KEY = "learnai:google-next";
+const NEXT_KEY = "iccheghuri:google-next";
 const GOOGLE_AUTH = "https://accounts.google.com/";
 
 /** Start Google's consent screen. `next` is where /google offers to send the student back afterwards. */
@@ -66,7 +66,7 @@ function NeedsGoogle({ status, feature, next }: { status: GoogleStatus; feature:
   return (
     <div className="space-y-2">
       <p className="text-sm text-muted">
-        {status.connected ? `Allow LEARN AI to use ${name} first.` : `Connect your Google account to use ${name}.`}{" "}
+        {status.connected ? `Allow IccheGhuri to use ${name} first.` : `Connect your Google account to use ${name}.`}{" "}
         <Link href="/google" className="text-brand-600 underline-offset-2 hover:underline">
           What we can access
         </Link>
@@ -130,7 +130,7 @@ export function SaveLessonToDocs({ lessonId }: { lessonId: string }) {
       </h2>
       {doc && (
         <Done href={doc.web_view_link}
-          label={doc.existing ? "This lesson is already saved in your LEARN AI Drive folder." : "Saved to the LEARN AI folder in your Google Drive."} />
+          label={doc.existing ? "This lesson is already saved in your IccheGhuri Drive folder." : "Saved to the IccheGhuri folder in your Google Drive."} />
       )}
       {!ready ? (
         <NeedsGoogle status={status.data} feature="drive" next={`/lessons/${lessonId}`} />
@@ -186,8 +186,8 @@ export function AddDeadlineToCalendar({ opportunityId }: { opportunityId: string
       {event ? (
         <Done href={event.html_link}
           label={event.created
-            ? "Added to your LEARN AI calendar with reminders 7 days and 1 day before."
-            : "Already in your LEARN AI calendar. We updated it with the latest deadline."} />
+            ? "Added to your IccheGhuri calendar with reminders 7 days and 1 day before."
+            : "Already in your IccheGhuri calendar. We updated it with the latest deadline."} />
       ) : ready ? (
         <Button variant="secondary" loading={busy} onClick={add} className="w-full">
           <CalendarPlus className="size-4" aria-hidden /> Add deadline to Google Calendar

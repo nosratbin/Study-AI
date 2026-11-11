@@ -371,7 +371,7 @@ def test_reminder_retry_with_same_request_id_does_not_duplicate(client, db_sessi
     assert len(google.events) == 2
 
 
-def test_deleted_learn_ai_calendar_is_recreated(client, db_session, google):
+def test_deleted_app_calendar_is_recreated(client, db_session, google):
     connected(client, db_session, scopes=(CAL,))
     conn = db_session.query(GoogleConnection).one()
     conn.calendar_id = "gone@group.calendar.google.com"  # the student deleted it in Google Calendar

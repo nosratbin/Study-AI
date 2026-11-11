@@ -4,7 +4,7 @@ import { Spinner } from "@/components/ui";
 import { CertificateCheckView } from "@/components/passport/public-passport";
 
 export const metadata: Metadata = {
-  title: "Verify a certificate · LEARN AI",
+  title: "Verify a certificate · IccheGhuri",
   robots: { index: false, follow: false },
   referrer: "no-referrer",
 };
