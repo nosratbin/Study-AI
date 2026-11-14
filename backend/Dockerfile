@@ -16,6 +16,6 @@ COPY . .
 RUN useradd --create-home --uid 10001 app && chown -R app /app
 USER app
 
-# "::" listens on IPv4 and IPv6 (Railway private networking). --proxy-headers makes the
-# rate limiter see the visitor's IP from X-Forwarded-For instead of the proxy's.
-CMD ["sh", "-c", "exec uvicorn app.main:app --host :: --port ${PORT:-8000} --proxy-headers --forwarded-allow-ips='*'"]
+# Listens on IPv4 and IPv6 on $PORT (Railway's healthcheck uses IPv4, private networking may use IPv6).
+# Plain `uvicorn --host ::` would be IPv6-only; see app/serve.py.
+CMD ["python", "-m", "app.serve"]

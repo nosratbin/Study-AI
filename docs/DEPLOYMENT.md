@@ -51,8 +51,8 @@ Railway deploys from `main` of `nosratbin/Study-AI`. Every push to `main` redepl
 | `CORS_ORIGINS` | `["https://<your-site>"]` (JSON list) |
 
 **Notes on the Dockerfile**
-- uvicorn listens on `::`, which accepts both IPv4 and IPv6. Railway's private network needs this.
-- It runs with `--proxy-headers`, so the rate limiter sees the visitor's IP. Next.js forwards `X-Forwarded-For` through the rewrite.
+- It starts `python -m app.serve`, which runs uvicorn on one dual-stack socket that accepts both IPv4 and IPv6. Railway's healthcheck connects over IPv4, and the private network may use IPv6. Plain `uvicorn --host ::` is IPv6-only (asyncio sets `IPV6_V6ONLY`), so the healthcheck would never reach it.
+- It runs with proxy headers on, so the rate limiter sees the visitor's IP. Next.js forwards `X-Forwarded-For` through the rewrite.
 - `.dockerignore` keeps `.env*`, `.venv` and tests out of the image.
 
 ## 4. Web service
