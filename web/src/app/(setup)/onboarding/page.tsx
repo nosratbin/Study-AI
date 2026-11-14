@@ -195,7 +195,7 @@ function Onboarding() {
                     <button type="button" key={i} aria-pressed={on}
                       onClick={() => set("interests", on ? form.interests.filter((x) => x !== i) : [...form.interests, i])}
                       className={clsx("rounded-full border px-3.5 py-1.5 text-sm transition-colors",
-                        on ? "border-brand-500 bg-brand-500 text-white" : "border-line bg-white text-ink hover:border-brand-200")}>
+                        on ? "border-brand-500 bg-brand-500 text-white" : "border-line bg-card text-ink hover:border-brand-200")}>
                       {i}
                     </button>
                   );

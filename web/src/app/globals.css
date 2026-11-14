@@ -1,8 +1,9 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-/* dark: utilities apply only inside a .dark ancestor (the app is light-only for now), not via the OS setting. */
-@custom-variant dark (&:is(.dark *));
+/* Dark mode: next-themes puts .dark on <html> (system preference by default, toggle overrides).
+   dark: utilities apply under that class; most surfaces flip through the token overrides in .dark below. */
+@custom-variant dark (&:where(.dark, .dark *));
 
 /* IccheGhuri design tokens — keep in sync with docs/DESIGN_SYSTEM.md */
 @theme {
@@ -27,9 +28,33 @@
   --radius-card: 1rem;
   --shadow-card: 0 1px 2px rgb(23 32 51 / 0.04), 0 4px 16px rgb(23 32 51 / 0.04);
 
-  --animate-fade-up: fade-up 0.35s ease-out both;
+  /* Motion: one strong ease-out for anything entering, one ease-in-out for on-screen movement (Emil Kowalski's curves). */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --animate-fade-up: fade-up 0.35s cubic-bezier(0.23, 1, 0.32, 1) both;
+  --animate-rise: rise 0.7s cubic-bezier(0.23, 1, 0.32, 1) both;
+  --animate-kite-launch: kite-launch 1.1s cubic-bezier(0.23, 1, 0.32, 1) both;
+  --animate-drift: drift var(--drift-duration, 90s) linear infinite;
+  --animate-sway: sway var(--sway-duration, 6s) cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
+  @keyframes drift {
+    from { transform: translateX(-30vw); }
+    to { transform: translateX(130vw); }
+  }
+  @keyframes sway {
+    from { transform: rotate(calc(var(--sway, 4deg) * -1)) translateY(0); }
+    to { transform: rotate(var(--sway, 4deg)) translateY(-6px); }
+  }
   @keyframes fade-up {
     from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: none; }
+  }
+  /* The brand kite catches the wind: up from below the card and out of a tilt, before it starts to sway. */
+  @keyframes kite-launch {
+    from { opacity: 0; transform: translate(-24px, 56px) rotate(-16deg) scale(0.92); }
     to { opacity: 1; transform: none; }
   }
 }
@@ -69,6 +94,45 @@
   --sidebar-accent-foreground: #c2410c;
   --sidebar-border: #e2e8f0;
   --sidebar-ring: #f97316;
+}
+
+/* Night palette: deep evening navy, warm orange kept as the one accent. Utilities read these through var(), so
+   bg-card, bg-surface, text-ink, text-muted, border-line, bg-brand-50 and friends all flip without dark: classes. */
+.dark {
+  --color-ink: #ededed;
+  --color-muted: #a3a3a3;
+  --color-surface: #121212;
+  --color-line: #2a2a2a;
+  --color-brand-50: #2a1a0e;
+  --color-brand-100: #3b2210;
+  --color-brand-200: #5a3314;
+  --color-brand-700: #fdba74;
+  --color-success: #4ade80;
+  --color-success-50: #0f2a1a;
+  --color-danger: #f87171;
+  --color-danger-50: #2c1215;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px rgb(0 0 0 / 0.25);
+
+  --background: #121212;
+  --foreground: #ededed;
+  --card: #1a1a1a;
+  --card-foreground: #ededed;
+  --popover: #1a1a1a;
+  --popover-foreground: #ededed;
+  --secondary: #2a1a0e;
+  --secondary-foreground: #fdba74;
+  --muted: #222222;
+  --muted-foreground: #a3a3a3;
+  --accent: #3b2210;
+  --accent-foreground: #ededed;
+  --border: #2a2a2a;
+  --input: #363636;
+  --sidebar: #1a1a1a;
+  --sidebar-foreground: #ededed;
+  --sidebar-accent: #2a1a0e;
+  --sidebar-accent-foreground: #fdba74;
+  --sidebar-border: #2a2a2a;
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -114,6 +178,16 @@
 
 html {
   color-scheme: light;
+}
+html.dark {
+  color-scheme: dark;
+}
+
+/* Theme switch: a circular reveal from the toggle (View Transitions). The old snapshot stays put underneath. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
 }
 
 body {

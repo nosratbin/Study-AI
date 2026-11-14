@@ -93,7 +93,7 @@ export default function LessonPage() {
           </span>
         </Link>
         {lesson.colab_url && (
-          <a href={lesson.colab_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 rounded-card border border-line bg-white p-4 transition-colors hover:bg-surface">
+          <a href={lesson.colab_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 rounded-card border border-line bg-card p-4 transition-colors hover:bg-surface">
             <ExternalLink className="size-7 shrink-0 text-muted" aria-hidden />
             <span>
               <span className="block font-semibold">Practise in Google Colab</span>

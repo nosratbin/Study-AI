@@ -35,7 +35,7 @@ export default function AdminSupportPage() {
             role="tab"
             aria-selected={tab === t}
             onClick={() => setTab(t)}
-            className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium ${tab === t ? "bg-white text-brand-700 shadow-sm" : "text-muted hover:text-ink"}`}
+            className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium ${tab === t ? "bg-card text-brand-700 shadow-sm" : "text-muted hover:text-ink"}`}
           >
             {t === "inbox" ? "Requests" : "Directory"}
           </button>

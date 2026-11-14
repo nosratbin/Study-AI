@@ -22,7 +22,7 @@ export default function OpportunitiesPage() {
         <h2 className="mb-4 text-lg font-semibold">Categories</h2>
         <ul className="flex flex-wrap gap-2">
           {CATEGORIES.map((c) => (
-            <li key={c} className="rounded-full border border-line bg-white px-3 py-1.5 text-sm text-muted">
+            <li key={c} className="rounded-full border border-line bg-card px-3 py-1.5 text-sm text-muted">
               {c}
             </li>
           ))}

@@ -21,7 +21,7 @@ export default function AboutPage() {
         <h2 className="mb-6 text-2xl font-bold tracking-tight">What we stand for</h2>
         <div className="grid gap-4 sm:grid-cols-2">
           {PRINCIPLES.map((p) => (
-            <div key={p.title} className="rounded-card border border-line bg-white p-6 shadow-card">
+            <div key={p.title} className="rounded-card border border-line bg-card p-6 shadow-card">
               <h3 className="font-semibold">{p.title}</h3>
               <p className="mt-1.5 text-sm text-muted">{p.text}</p>
             </div>

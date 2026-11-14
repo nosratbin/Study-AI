@@ -80,7 +80,7 @@ function AdminOpportunities() {
             onClick={() => setFilter(f.value)}
             className={clsx(
               "whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium",
-              filter === f.value ? "bg-white text-brand-700 shadow-sm" : "text-muted hover:text-ink",
+              filter === f.value ? "bg-card text-brand-700 shadow-sm" : "text-muted hover:text-ink",
             )}
           >
             {f.label}

@@ -89,7 +89,7 @@ export function AdminDashboard() {
           <Link
             key={href}
             href={href}
-            className="flex items-center gap-3 rounded-card border border-line bg-white p-4 shadow-card transition-colors hover:border-brand-300"
+            className="flex items-center gap-3 rounded-card border border-line bg-card p-4 shadow-card transition-colors hover:border-brand-300"
           >
             <span
               className={

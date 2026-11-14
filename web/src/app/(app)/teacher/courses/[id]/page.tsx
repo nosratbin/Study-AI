@@ -123,7 +123,7 @@ function PublishToggle({ course, onChange }: { course: StaffCourseDetail; onChan
   }
 
   return (
-    <div className="shrink-0 rounded-card border border-line bg-white p-3 sm:w-64">
+    <div className="shrink-0 rounded-card border border-line bg-card p-3 sm:w-64">
       <div className="flex items-center justify-between gap-3">
         <label htmlFor="publish" className="text-sm font-medium">
           Visible to students

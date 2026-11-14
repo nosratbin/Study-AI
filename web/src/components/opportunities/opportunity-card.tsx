@@ -20,7 +20,7 @@ export function DeadlineText({ o, className }: { o: Opportunity; className?: str
 
 export function OpportunityCard({ o, reasons }: { o: Opportunity; reasons?: string[] }) {
   return (
-    <article className="group relative flex flex-col gap-3 rounded-card border border-line bg-white p-5 transition-shadow hover:shadow-md focus-within:ring-2 focus-within:ring-brand-500/40">
+    <article className="group relative flex flex-col gap-3 rounded-card border border-line bg-card p-5 transition-shadow hover:shadow-md focus-within:ring-2 focus-within:ring-brand-500/40">
       <div className="flex flex-wrap items-center gap-2">
         <Badge tone="brand">{o.category_label}</Badge>
         <Badge tone="success">

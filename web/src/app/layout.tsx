@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Noto_Sans_Bengali } from "next/font/google";
 import { AuthProvider } from "@/lib/auth";
+import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
@@ -13,13 +14,21 @@ export const metadata: Metadata = {
     "Making quality AI education, personal development, and global opportunities accessible to every student in Bangladesh.",
 };
 
-export const viewport: Viewport = { themeColor: "#F97316" };
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#F97316" },
+    { media: "(prefers-color-scheme: dark)", color: "#121212" },
+  ],
+};
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${inter.variable} ${bengali.variable} h-full`}>
+    // next-themes sets the class on <html> before hydration, so React must not warn about the mismatch.
+    <html lang="en" className={`${inter.variable} ${bengali.variable} h-full`} suppressHydrationWarning>
       <body className="min-h-full flex flex-col">
-        <AuthProvider>{children}</AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>{children}</AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

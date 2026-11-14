@@ -124,7 +124,7 @@ export function SaveLessonToDocs({ lessonId }: { lessonId: string }) {
 
   const ready = status.data.connected && status.data.features.drive;
   return (
-    <section className="space-y-3 rounded-card border border-line bg-white p-4" aria-labelledby="docs-heading">
+    <section className="space-y-3 rounded-card border border-line bg-card p-4" aria-labelledby="docs-heading">
       <h2 id="docs-heading" className="flex items-center gap-2 text-sm font-semibold">
         <FileText className="size-4 text-brand-600" aria-hidden /> Save to Google Docs
       </h2>

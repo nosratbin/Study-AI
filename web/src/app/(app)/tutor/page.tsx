@@ -199,13 +199,13 @@ export default function TutorPage() {
                 key={value}
                 aria-pressed={mode === value}
                 onClick={() => setMode(value)}
-                className={clsx("inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium", mode === value ? "bg-white text-brand-700 shadow-sm" : "text-muted hover:text-ink")}
+                className={clsx("inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium", mode === value ? "bg-card text-brand-700 shadow-sm" : "text-muted hover:text-ink")}
               >
                 <Icon className="size-4" aria-hidden /> {label}
               </button>
             ))}
           </div>
-          <button onClick={() => setShowHistory((v) => !v)} className="grid size-10 place-items-center rounded-xl border border-line bg-white text-muted lg:hidden" aria-label="Conversation history" aria-expanded={showHistory}>
+          <button onClick={() => setShowHistory((v) => !v)} className="grid size-10 place-items-center rounded-xl border border-line bg-card text-muted lg:hidden" aria-label="Conversation history" aria-expanded={showHistory}>
             <MessagesSquare className="size-5" aria-hidden />
           </button>
         </div>
@@ -218,7 +218,7 @@ export default function TutorPage() {
       <div className="relative flex min-h-0 flex-1 gap-4">
         <aside className="hidden w-60 shrink-0 lg:block">{history}</aside>
         {showHistory && (
-          <div className="absolute inset-0 z-20 rounded-card border border-line bg-white p-4 shadow-lg lg:hidden">
+          <div className="absolute inset-0 z-20 rounded-card border border-line bg-card p-4 shadow-lg lg:hidden">
             <button onClick={() => setShowHistory(false)} className="absolute top-3 right-3 grid size-8 place-items-center rounded-lg text-muted hover:bg-surface" aria-label="Close history">
               <X className="size-4" aria-hidden />
             </button>
@@ -238,7 +238,7 @@ export default function TutorPage() {
                 <span className="min-w-0 flex-1 truncate">
                   Asking about: <Link href={`/lessons/${lesson.id}`} className="font-medium hover:text-brand-600">{lesson.title}</Link>
                 </span>
-                <button onClick={clearLesson} className="grid size-7 place-items-center rounded-md text-muted hover:bg-white" aria-label="Stop using this lesson as context">
+                <button onClick={clearLesson} className="grid size-7 place-items-center rounded-md text-muted hover:bg-card" aria-label="Stop using this lesson as context">
                   <X className="size-4" aria-hidden />
                 </button>
               </div>
@@ -255,7 +255,7 @@ export default function TutorPage() {
                   <p className="mt-1 text-sm text-muted">Ask in Bangla or English. I explain step by step, at your level.</p>
                   <div className="mt-5 grid gap-2 text-left sm:grid-cols-2">
                     {(lesson ? [`Explain “${lesson.title}” in simple words.`, "Give me an example from everyday life.", "এই পাঠের মূল বিষয়গুলো বাংলায় বুঝিয়ে দাও।", "Quiz me with 3 quick questions on this."] : STARTERS).map((s) => (
-                      <button key={s} onClick={() => send(s)} disabled={!configured} className="rounded-xl border border-line bg-white px-3 py-2.5 text-sm transition-colors hover:border-brand-200 hover:bg-brand-50 disabled:opacity-50">
+                      <button key={s} onClick={() => send(s)} disabled={!configured} className="rounded-xl border border-line bg-card px-3 py-2.5 text-sm transition-colors hover:border-brand-200 hover:bg-brand-50 disabled:opacity-50">
                         {s}
                       </button>
                     ))}
@@ -304,7 +304,7 @@ export default function TutorPage() {
                   maxLength={4000}
                   disabled={!configured}
                   placeholder={configured ? "Ask anything about AI, coding or your lesson…" : "AI Tutor is not configured yet"}
-                  className="max-h-40 min-h-11 flex-1 resize-none rounded-xl border border-line bg-white px-3.5 py-2.5 text-[15px] placeholder:text-muted/70 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30 focus:outline-none disabled:bg-surface"
+                  className="max-h-40 min-h-11 flex-1 resize-none rounded-xl border border-line bg-card px-3.5 py-2.5 text-[15px] placeholder:text-muted/70 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30 focus:outline-none disabled:bg-surface"
                 />
                 <Button type="submit" loading={sending} disabled={!configured || !input.trim()} className="h-11 w-11 shrink-0 px-0" aria-label="Send">
                   {!sending && <Send className="size-4" aria-hidden />}

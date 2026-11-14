@@ -33,7 +33,7 @@ export default function LevelsPage() {
       <Section>
         <div className="grid gap-4 lg:grid-cols-3">
           {LEVELS.map((l) => (
-            <div key={l.value} className="rounded-card border border-line bg-white p-6 shadow-card">
+            <div key={l.value} className="rounded-card border border-line bg-card p-6 shadow-card">
               <p className="text-sm font-medium text-brand-600">{l.tag}</p>
               <h2 className="mt-1 text-xl font-semibold">{l.label}</h2>
               <p className="mt-2 text-sm text-muted">{l.blurb}</p>

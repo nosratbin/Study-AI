@@ -105,7 +105,7 @@ export function PublicPassportView() {
           <h2 className="text-lg font-semibold">Achievements</h2>
           <ul className="space-y-2">
             {p.records.map((r) => (
-              <li key={r.id} className="rounded-xl border border-line bg-white px-4 py-3">
+              <li key={r.id} className="rounded-xl border border-line bg-card px-4 py-3">
                 <div className="flex flex-wrap gap-1.5">
                   <Badge>{SKILL_KINDS.find((k) => k.value === r.kind)?.label.replace(/ \(.*\)$/, "")}</Badge>
                   {r.verification_status === "verified" ? (

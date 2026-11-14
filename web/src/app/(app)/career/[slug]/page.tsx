@@ -67,7 +67,7 @@ function CareerView({ slug }: { slug: string }) {
             {c.field} · {c.summary}
           </p>
         </div>
-        <div className="w-full shrink-0 rounded-card border border-line bg-white p-4 sm:w-56">
+        <div className="w-full shrink-0 rounded-card border border-line bg-card p-4 sm:w-56">
           <div className="flex items-baseline justify-between">
             <span className="text-sm text-muted">Your match</span>
             <span className="text-2xl font-bold text-brand-600">{c.match}%</span>

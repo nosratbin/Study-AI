@@ -76,7 +76,7 @@ export default function CareersPage() {
                   <li key={g.id}>
                     <Link
                       href={`/career/${g.slug}`}
-                      className="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-white px-3 py-1.5 text-sm font-medium hover:border-brand-400"
+                      className="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-card px-3 py-1.5 text-sm font-medium hover:border-brand-400"
                     >
                       {g.title}{" "}
                       <span className="text-xs text-muted">

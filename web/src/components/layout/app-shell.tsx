@@ -33,6 +33,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { Logo, Spinner } from "@/components/ui";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/vengeance/sheet";
 import { useAuth } from "@/lib/auth";
@@ -135,7 +136,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-screen">
-      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-line bg-white lg:flex">
+      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-line bg-card lg:flex">
         <div className="flex items-center justify-between py-4 pl-5 pr-3">
           <Link href="/dashboard" aria-label="Dashboard">
             <Logo />
@@ -160,6 +161,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <p className="truncate text-sm font-medium">{user?.full_name}</p>
               <p className="truncate text-xs capitalize text-muted">{user?.role}</p>
             </div>
+            <ThemeToggle />
             <button onClick={onLogout} className="grid size-9 place-items-center rounded-lg text-muted hover:bg-surface hover:text-ink" aria-label="Log out">
               <LogOut className="size-4" />
             </button>
@@ -168,12 +170,13 @@ export function AppShell({ children }: { children: ReactNode }) {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-line bg-white/90 px-4 backdrop-blur lg:hidden">
+        <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-line bg-card/90 px-4 backdrop-blur lg:hidden">
           <Link href="/dashboard" aria-label="Dashboard">
             <Logo />
           </Link>
           <div className="flex items-center gap-1">
             <NotificationBell />
+            <ThemeToggle className="size-10" />
             <button onClick={onLogout} className="grid size-10 place-items-center rounded-lg text-muted" aria-label="Log out">
               <LogOut className="size-5" />
             </button>
@@ -182,7 +185,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-28 pt-6 sm:px-6 lg:pb-10 lg:pt-8">{children}</main>
       </div>
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white pb-[env(safe-area-inset-bottom)] lg:hidden" aria-label="Bottom">
+      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-card pb-[env(safe-area-inset-bottom)] lg:hidden" aria-label="Bottom">
         <ul className="grid grid-cols-5">
           {bottom.map(({ href, label, icon: Icon, available }) => {
             const active = isActive(pathname, href);
@@ -226,7 +229,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </nav>
 
       <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
-        <SheetContent side="bottom" className="max-h-[85vh] rounded-t-2xl bg-white pb-[env(safe-area-inset-bottom)] lg:hidden">
+        <SheetContent side="bottom" className="max-h-[85vh] rounded-t-2xl bg-card pb-[env(safe-area-inset-bottom)] lg:hidden">
           <SheetHeader className="px-5 pt-5">
             <SheetTitle>All sections</SheetTitle>
             <SheetDescription className="sr-only">Every part of IccheGhuri you can open.</SheetDescription>

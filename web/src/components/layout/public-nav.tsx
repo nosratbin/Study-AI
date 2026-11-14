@@ -7,6 +7,7 @@ import clsx from "clsx";
 import { Menu, X } from "lucide-react";
 import { ButtonLink, Logo } from "@/components/ui";
 import { homeFor, useAuth } from "@/lib/auth";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const LINKS = [
   { href: "/about", label: "About" },
@@ -38,7 +39,7 @@ export function PublicNav() {
   );
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-white/90 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-line bg-card/90 backdrop-blur">
       <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6" aria-label="Main">
         <Link href="/" aria-label="IccheGhuri home" onClick={() => setOpen(false)}>
           <Logo />
@@ -58,18 +59,24 @@ export function PublicNav() {
             </li>
           ))}
         </ul>
-        <div className={clsx("hidden items-center gap-2 lg:flex", loading && "invisible")}>{cta}</div>
-        <button
-          className="grid size-10 place-items-center rounded-lg text-ink lg:hidden"
-          aria-label={open ? "Close menu" : "Open menu"}
-          aria-expanded={open}
-          onClick={() => setOpen((o) => !o)}
-        >
-          {open ? <X className="size-5" /> : <Menu className="size-5" />}
-        </button>
+        <div className="hidden items-center gap-2 lg:flex">
+          <ThemeToggle />
+          <div className={clsx("flex items-center gap-2", loading && "invisible")}>{cta}</div>
+        </div>
+        <div className="flex items-center gap-1 lg:hidden">
+          <ThemeToggle className="size-10" />
+          <button
+            className="grid size-10 place-items-center rounded-lg text-ink"
+            aria-label={open ? "Close menu" : "Open menu"}
+            aria-expanded={open}
+            onClick={() => setOpen((o) => !o)}
+          >
+            {open ? <X className="size-5" /> : <Menu className="size-5" />}
+          </button>
+        </div>
       </nav>
       {open && (
-        <div className="border-t border-line bg-white px-4 pb-4 lg:hidden">
+        <div className="border-t border-line bg-card px-4 pb-4 lg:hidden">
           <ul className="py-2">
             {LINKS.map((l) => (
               <li key={l.href}>

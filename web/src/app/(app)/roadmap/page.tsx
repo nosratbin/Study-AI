@@ -53,7 +53,7 @@ function Stage({ stage: s, n }: { stage: RoadmapStage; n: number }) {
           "absolute top-1 left-0 grid size-10 place-items-center rounded-full border-2 text-sm font-bold",
           s.status === "completed" && "border-success bg-success text-white",
           current && "border-brand-500 bg-brand-500 text-white ring-4 ring-brand-100",
-          s.status === "upcoming" && "border-line bg-white text-muted",
+          s.status === "upcoming" && "border-line bg-card text-muted",
           s.status === "locked" && "border-line bg-surface text-muted",
         )}
         aria-hidden
@@ -84,7 +84,7 @@ function Stage({ stage: s, n }: { stage: RoadmapStage; n: number }) {
             <ul className="mt-4 flex flex-wrap gap-2">
               {s.courses.map((c) => (
                 <li key={c.id}>
-                  <Link href={`/learn/${c.slug}`} className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-1.5 text-sm hover:border-brand-200 hover:bg-brand-50">
+                  <Link href={`/learn/${c.slug}`} className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-card px-3 py-1.5 text-sm hover:border-brand-200 hover:bg-brand-50">
                     {c.percent === 100 && <Check className="size-3.5 text-success" aria-hidden />}
                     {c.title}
                     {c.is_demo && <span className="text-xs text-muted">(Demo)</span>}

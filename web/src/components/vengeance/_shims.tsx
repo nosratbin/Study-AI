@@ -2,12 +2,10 @@
 
 /**
  * Local stand-ins for VengeanceUI docs-site imports (their logo and theme toggle),
- * so notch-navbar compiles here. IccheGhuri has no dark mode yet, so the toggle renders nothing.
+ * so notch-navbar compiles here. ThemeToggle is the app's own.
  */
 
-export function ThemeToggle() {
-  return null;
-}
+export { ThemeToggle } from "@/components/theme-toggle";
 
 export default function LogoIcon({ className }: { className?: string }) {
   return (

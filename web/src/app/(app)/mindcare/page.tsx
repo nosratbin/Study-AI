@@ -296,7 +296,7 @@ function CheckinRow({ c, onDeleted }: { c: Checkin; onDeleted: () => void }) {
     }
   }
   return (
-    <li className="flex items-start gap-3 rounded-xl border border-line bg-white px-4 py-3">
+    <li className="flex items-start gap-3 rounded-xl border border-line bg-card px-4 py-3">
       <span className="text-2xl" role="img" aria-label={m?.label}>{m?.face}</span>
       <div className="min-w-0 flex-1">
         <p className="text-sm text-muted">{formatDeadline(c.created_at)}{c.tags.length ? ` · ${c.tags.join(", ")}` : ""}</p>

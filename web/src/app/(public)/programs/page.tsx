@@ -38,7 +38,7 @@ export default function ProgramsPage() {
       <Section>
         <div className="grid gap-4 md:grid-cols-2">
           {PROGRAMS.map((p) => (
-            <div key={p.name} className="rounded-card border border-line bg-white p-6 shadow-card">
+            <div key={p.name} className="rounded-card border border-line bg-card p-6 shadow-card">
               <p className="text-sm font-medium text-brand-600">{p.level}</p>
               <h2 className="mt-1 text-xl font-semibold">{p.name}</h2>
               <ul className="mt-4 space-y-2">

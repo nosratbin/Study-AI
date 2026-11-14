@@ -21,6 +21,22 @@ Style: modern EdTech, white + orange, minimal, mobile-first. Source of truth for
 
 Contrast: ink on white 15.4:1; muted on white 4.8:1; white on brand-500 3.0:1 — so primary buttons use **semibold 14px+** labels (WCAG AA large/UI); use brand-700 for orange body text.
 
+### Dark mode
+
+`next-themes` puts `.dark` on `<html>`. It follows the OS until the visitor uses the sun/moon toggle (public nav and app shell), and the choice is kept in localStorage. `.dark` in `globals.css` overrides the tokens themselves, so `bg-card`, `bg-surface`, `text-ink`, `text-muted`, `border-line` and `bg-brand-50` flip without `dark:` classes. Use `bg-card`, never `bg-white`, for surfaces.
+
+| Token | Dark value |
+|---|---|
+| surface | `#121212` (charcoal, neutral; no blue tint) |
+| card | `#1A1A1A` |
+| muted-bg | `#222222` |
+| line | `#2A2A2A` |
+| input | `#363636` |
+| ink | `#EDEDED` |
+| muted | `#A3A3A3` |
+| brand-50 / 100 / 200 | `#2A1A0E` / `#3B2210` / `#5A3314` |
+| brand-700 (text on brand-50) | `#FDBA74` |
+
 ## Typography
 
 Inter (Latin) with Noto Sans Bengali fallback for Bangla.

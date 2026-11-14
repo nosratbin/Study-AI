@@ -7,15 +7,17 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
   return (
     <>
       {/* PublicNav reads usePathname(); dynamic public routes (/p/[token], /certificates/[code]) need a boundary to prerender. */}
-      <Suspense fallback={<div className="h-16 border-b border-line bg-white" aria-hidden />}>
+      <Suspense fallback={<div className="h-16 border-b border-line bg-card" aria-hidden />}>
         <PublicNav />
       </Suspense>
       <main className="flex-1">{children}</main>
-      <footer className="border-t border-line bg-white">
+      <footer className="border-t border-line bg-card">
         <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-3 sm:px-6">
           <div className="space-y-2">
             <Logo />
-            <p className="text-sm text-muted">Learn, Innovate, Grow &amp; Thrive.</p>
+            <p className="text-sm text-muted">
+              <span lang="bn">ইচ্ছেঘুড়ি</span>, the wish kite: AI learning for every student in Bangladesh
+            </p>
           </div>
           <div className="text-sm">
             <p className="mb-2 font-semibold">Platform</p>
@@ -33,9 +35,6 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
             </ul>
           </div>
         </div>
-        <p className="border-t border-line py-4 text-center text-xs text-muted">
-          Built for the AI Builders Congress, Daffodil International University · MVP
-        </p>
       </footer>
     </>
   );

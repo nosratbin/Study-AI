@@ -13,9 +13,9 @@ const base =
   "inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed select-none";
 const variants: Record<Variant, string> = {
   primary: "bg-brand-500 text-white hover:bg-brand-600 active:bg-brand-700 shadow-sm",
-  secondary: "bg-white text-ink border border-line hover:bg-surface",
+  secondary: "bg-card text-ink border border-line hover:bg-surface",
   ghost: "text-ink hover:bg-brand-50",
-  danger: "bg-white text-danger border border-danger/30 hover:bg-danger-50",
+  danger: "bg-card text-danger border border-danger/30 hover:bg-danger-50",
 };
 const sizes: Record<Size, string> = { sm: "h-9 px-3 text-sm", md: "h-11 px-5 text-sm", lg: "h-12 px-6 text-base" };
 
@@ -53,7 +53,7 @@ export function ButtonLink({ href, variant = "primary", size = "md", className, 
 export function Card({ className, children, as: As = "div" }: { className?: string; children: ReactNode; as?: "div" | "section" | "article" }) {
   // Default padding unless the caller sets its own (`p-0` for edge-to-edge content like lists and chat).
   // twMerge resolves conflicts (p-0, px-*, sm:p-*) so the caller's padding always wins.
-  return <As className={twMerge("rounded-card border border-line bg-white shadow-card p-5 sm:p-6", className)}>{children}</As>;
+  return <As className={twMerge("rounded-card border border-line bg-card shadow-card p-5 sm:p-6", className)}>{children}</As>;
 }
 
 /* ---------- Badge ---------- */
@@ -93,7 +93,7 @@ export function Field({ label, htmlFor, error, hint, children, optional }: { lab
 }
 
 const inputBase =
-  "w-full rounded-xl border bg-white px-3.5 text-[15px] text-ink placeholder:text-muted/70 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500";
+  "w-full rounded-xl border bg-card px-3.5 text-[15px] text-ink placeholder:text-muted/70 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500";
 
 export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement> & { invalid?: boolean }>(
   function Input({ invalid, className, ...rest }, ref) {
@@ -172,16 +172,17 @@ export function EmptyState({ icon, title, children }: { icon: ReactNode; title: 
 
 /** IccheGhuri horizontal logo (outlined artwork from brand/). Size it with a height class; default h-9 gives a ~13 px x-height, about 1.6x the nav text. */
 export function Logo({ className, reversed = false }: { className?: string; reversed?: boolean }) {
+  const cls = clsx("h-9 w-auto shrink-0", className);
+  /* eslint-disable @next/next/no-img-element -- static vector logo, nothing for next/image to optimise */
+  if (reversed) return <img src="/brand/iccheghuri-horizontal-reversed.svg" alt="IccheGhuri" width={795} height={193} className={clsx("block", cls)} />;
+  // Follows the theme: the reversed wordmark is swapped in under .dark.
   return (
-    // eslint-disable-next-line @next/next/no-img-element -- static vector logo, nothing for next/image to optimise
-    <img
-      src={reversed ? "/brand/iccheghuri-horizontal-reversed.svg" : "/brand/iccheghuri-horizontal.svg"}
-      alt="IccheGhuri"
-      width={795}
-      height={193}
-      className={clsx("block h-9 w-auto shrink-0", className)}
-    />
+    <>
+      <img src="/brand/iccheghuri-horizontal.svg" alt="IccheGhuri" width={795} height={193} className={clsx("block dark:hidden", cls)} />
+      <img src="/brand/iccheghuri-horizontal-reversed.svg" alt="IccheGhuri" width={795} height={193} className={clsx("hidden dark:block", cls)} />
+    </>
   );
+  /* eslint-enable @next/next/no-img-element */
 }
 
 /* ---------- Load error with retry ---------- */

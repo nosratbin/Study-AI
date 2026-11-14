@@ -77,7 +77,7 @@ export default function PassportPage() {
         <Section title="Assessments">
           <ul className="space-y-2">
             {p.assessments.map((a, i) => (
-              <li key={i} className="flex flex-wrap justify-between gap-2 rounded-xl border border-line bg-white px-4 py-3 text-sm">
+              <li key={i} className="flex flex-wrap justify-between gap-2 rounded-xl border border-line bg-card px-4 py-3 text-sm">
                 <span className="font-medium">{a.title}</span>
                 <span className="text-muted">{a.score} / {a.max_score}{a.completed_at ? ` · ${formatDay(a.completed_at)}` : ""}</span>
               </li>
@@ -93,7 +93,7 @@ export default function PassportPage() {
           <ul className="grid gap-3 sm:grid-cols-2">
             {p.projects.map((pr) => (
               <li key={pr.id}>
-                <Link href={`/projects/${pr.id}`} className="block h-full rounded-card border border-line bg-white p-5 shadow-card hover:border-brand-200">
+                <Link href={`/projects/${pr.id}`} className="block h-full rounded-card border border-line bg-card p-5 shadow-card hover:border-brand-200">
                   <div className="flex flex-wrap gap-2">
                     {pr.reviewed ? <Badge tone="success"><BadgeCheck className="size-3.5" aria-hidden /> Teacher reviewed</Badge> : <Badge>{pr.status === "draft" ? "Draft" : "Submitted"}</Badge>}
                     {pr.is_public && <Badge>Public</Badge>}
@@ -229,7 +229,7 @@ function RecordRow({ r, onChange }: { r: SkillRecord; onChange: () => void }) {
   }
 
   return (
-    <li className="rounded-xl border border-line bg-white px-4 py-3">
+    <li className="rounded-xl border border-line bg-card px-4 py-3">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="flex flex-wrap gap-1.5">

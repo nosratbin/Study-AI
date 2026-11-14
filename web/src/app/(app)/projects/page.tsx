@@ -66,7 +66,7 @@ function StudentLab() {
           <ul className="grid gap-3 sm:grid-cols-2">
             {mine.data.map((p) => (
               <li key={p.id}>
-                <Link href={`/projects/${p.id}`} className="block h-full rounded-card border border-line bg-white p-5 shadow-card transition-colors hover:border-brand-200">
+                <Link href={`/projects/${p.id}`} className="block h-full rounded-card border border-line bg-card p-5 shadow-card transition-colors hover:border-brand-200">
                   <div className="flex flex-wrap gap-2">
                     <Badge tone={PROJECT_STATUS[p.status].tone}>{PROJECT_STATUS[p.status].label}</Badge>
                     {p.is_public && <Badge>On public passport</Badge>}
@@ -91,7 +91,7 @@ function StudentLab() {
                 key={l.value}
                 aria-pressed={level === l.value}
                 onClick={() => setLevel(l.value)}
-                className={clsx("whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium", level === l.value ? "bg-white text-brand-700 shadow-sm" : "text-muted hover:text-ink")}
+                className={clsx("whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium", level === l.value ? "bg-card text-brand-700 shadow-sm" : "text-muted hover:text-ink")}
               >
                 {l.label}
               </button>
@@ -108,7 +108,7 @@ function StudentLab() {
           <ul className="grid gap-3 md:grid-cols-2">
             {challenges.data.map((c) => (
               <li key={c.id}>
-                <Link href={`/projects/challenges/${c.slug}`} className="flex h-full flex-col rounded-card border border-line bg-white p-5 shadow-card transition-colors hover:border-brand-200">
+                <Link href={`/projects/challenges/${c.slug}`} className="flex h-full flex-col rounded-card border border-line bg-card p-5 shadow-card transition-colors hover:border-brand-200">
                   <div className="flex flex-wrap gap-2">
                     <Badge tone="brand">{LEVELS.find((l) => l.value === c.level)?.label}</Badge>
                     {c.is_demo && <Badge>Demo</Badge>}

@@ -59,7 +59,7 @@ export default function ChallengePage() {
       <div className="flex flex-wrap gap-2">
         <Button onClick={start} loading={busy}>Start this project</Button>
         {ch.starter_url && (
-          <a href={ch.starter_url} target="_blank" rel="noopener noreferrer" className="inline-flex h-11 items-center gap-2 rounded-xl border border-line bg-white px-5 text-sm font-semibold hover:bg-surface">
+          <a href={ch.starter_url} target="_blank" rel="noopener noreferrer" className="inline-flex h-11 items-center gap-2 rounded-xl border border-line bg-card px-5 text-sm font-semibold hover:bg-surface">
             Open a new Colab notebook <ExternalLink className="size-4" aria-hidden />
           </a>
         )}

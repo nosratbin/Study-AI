@@ -151,7 +151,7 @@ export default function TakeAssessmentPage() {
         </div>
         {left !== null && (
           <div
-            className={clsx("inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 font-mono text-sm font-semibold tabular-nums", lowTime ? "border-danger/30 bg-danger-50 text-danger" : "border-line bg-white")}
+            className={clsx("inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 font-mono text-sm font-semibold tabular-nums", lowTime ? "border-danger/30 bg-danger-50 text-danger" : "border-line bg-card")}
             role="timer"
             aria-live={lowTime ? "assertive" : "off"}
             aria-label={`Time left: ${Math.floor(left / 60)} minutes ${left % 60} seconds`}
@@ -171,7 +171,7 @@ export default function TakeAssessmentPage() {
             aria-current={i === index ? "step" : undefined}
             className={clsx(
               "size-9 rounded-lg text-sm font-medium transition-colors",
-              i === index ? "bg-brand-500 text-white" : answers[x.id] !== undefined ? "bg-brand-100 text-brand-700" : "border border-line bg-white text-muted hover:border-brand-200",
+              i === index ? "bg-brand-500 text-white" : answers[x.id] !== undefined ? "bg-brand-100 text-brand-700" : "border border-line bg-card text-muted hover:border-brand-200",
             )}
           >
             {i + 1}

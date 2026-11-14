@@ -96,7 +96,7 @@ export default function PlannerPage() {
                 const items = tasks.data!.filter((t) => t.due_on === d);
                 const l = dayLabel(d);
                 return (
-                  <li key={d} className={clsx("rounded-xl border bg-white p-3", d === today ? "border-brand-200 ring-1 ring-brand-200" : "border-line")}>
+                  <li key={d} className={clsx("rounded-xl border bg-card p-3", d === today ? "border-brand-200 ring-1 ring-brand-200" : "border-line")}>
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-semibold">
                         {l.weekday} <span className="font-normal text-muted">{l.date}</span>
@@ -237,7 +237,7 @@ function TaskRow({ t, past, onChange }: { t: StudyTask; past: boolean; onChange:
           </p>
         </div>
         {!done && !past && (
-          <button className="grid size-8 place-items-center rounded-lg text-muted hover:bg-white hover:text-ink" onClick={() => setReminding(!reminding)} aria-label="Add to Google Calendar" title="Add to Google Calendar">
+          <button className="grid size-8 place-items-center rounded-lg text-muted hover:bg-card hover:text-ink" onClick={() => setReminding(!reminding)} aria-label="Add to Google Calendar" title="Add to Google Calendar">
             <CalendarPlus className="size-4" aria-hidden />
           </button>
         )}
@@ -347,7 +347,7 @@ function FocusTimer() {
       <p className="flex items-center gap-2 text-left font-semibold"><Timer className="size-4 text-brand-500" aria-hidden /> Focus timer</p>
       <div role="group" aria-label="Timer mode" className="flex justify-center gap-1 rounded-xl bg-surface p-1">
         {(Object.keys(MODES) as (keyof typeof MODES)[]).map((m) => (
-          <button key={m} aria-pressed={mode === m} onClick={() => pick(m)} className={clsx("flex-1 rounded-lg px-3 py-1.5 text-sm font-medium", mode === m ? "bg-white text-brand-700 shadow-sm" : "text-muted")}>
+          <button key={m} aria-pressed={mode === m} onClick={() => pick(m)} className={clsx("flex-1 rounded-lg px-3 py-1.5 text-sm font-medium", mode === m ? "bg-card text-brand-700 shadow-sm" : "text-muted")}>
             {MODES[m].label} {MODES[m].secs / 60}m
           </button>
         ))}

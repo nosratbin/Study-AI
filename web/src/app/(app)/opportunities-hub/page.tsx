@@ -49,7 +49,7 @@ export default function OpportunitiesPage() {
             onClick={() => setTab(t.value)}
             className={clsx(
               "whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-colors",
-              tab === t.value ? "bg-white text-brand-700 shadow-sm" : "text-muted hover:text-ink",
+              tab === t.value ? "bg-card text-brand-700 shadow-sm" : "text-muted hover:text-ink",
             )}
           >
             {t.label}
