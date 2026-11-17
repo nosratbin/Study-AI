@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore, type MouseEvent } from "react";
+import { useId, useSyncExternalStore, type MouseEvent } from "react";
 import { flushSync } from "react-dom";
 import { useTheme } from "next-themes";
 import { motion, useReducedMotion } from "framer-motion";
@@ -20,6 +20,9 @@ export function ThemeToggle({ className }: { className?: string }) {
   const reduce = useReducedMotion();
   // false during SSR and hydration, true afterwards: the server can't know the visitor's theme.
   const mounted = useSyncExternalStore(noop, () => true, () => false);
+  // The nav renders two toggles (desktop and mobile) and hides one with display:none. A shared mask id would make
+  // url(#…) resolve to the hidden copy's mask, which doesn't render, so the moon showed as a plain disc.
+  const maskId = `theme-toggle-moon-${useId().replace(/[^\w-]/g, "")}`;
 
   const dark = mounted && resolvedTheme === "dark";
   const t = { duration: reduce ? 0 : 0.32, ease: EASE };
@@ -57,7 +60,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       )}
     >
       <svg viewBox="0 0 24 24" className="size-[18px]" aria-hidden fill="none">
-        <mask id="theme-toggle-moon">
+        <mask id={maskId}>
           <rect width="24" height="24" fill="white" />
           <motion.circle initial={false} animate={{ cx: dark ? 17 : 30, cy: dark ? 7 : 0 }} transition={t} r="7" fill="black" />
         </mask>
@@ -68,7 +71,7 @@ export function ThemeToggle({ className }: { className?: string }) {
           animate={{ r: dark ? 8.5 : 4.5 }}
           transition={t}
           fill="currentColor"
-          mask="url(#theme-toggle-moon)"
+          mask={`url(#${maskId})`}
         />
         <motion.g
           initial={false}
