@@ -33,7 +33,8 @@ export default function VerifyEmailPage() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [askEmail, setAskEmail] = useState("");
-  const [now, setNow] = useState(() => Date.now());
+  // Set on mount: reading the clock during render breaks the prerender (Next 16 cache components).
+  const [now, setNow] = useState(0);
   const started = useRef(false);
   const finishing = useRef(false);
 
@@ -54,6 +55,7 @@ export default function VerifyEmailPage() {
     started.current = true;
     const token = new URLSearchParams(window.location.hash.slice(1)).get("token");
     const saved = readPending();
+    setNow(Date.now());
     setPending(saved);
     if (!token) {
       setMode(saved ? "code" : "ask");
