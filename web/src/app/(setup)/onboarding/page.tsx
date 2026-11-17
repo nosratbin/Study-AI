@@ -6,6 +6,7 @@ import clsx from "clsx";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { RequireAuth } from "@/components/layout/app-shell";
 import { Alert, Button, Card, Field, Input, Logo, Select, Textarea } from "@/components/ui";
+import { Card as ChoiceCard, CARD_TARGET_CLASS, CardAction, CardDescription, CardHeader, CardTitle } from "@/components/beui/card";
 import { Combobox } from "@/components/ui/combobox";
 import { api, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -124,18 +125,32 @@ function Onboarding() {
               <legend className="text-xl font-bold tracking-tight">Hi {user?.full_name.split(" ")[0]}, what&apos;s your education level?</legend>
               <p className="text-sm text-muted">This shapes your courses, AI Tutor explanations and projects. You can change it later.</p>
               {/* Native radios: arrow keys move between options, and screen readers announce "1 of 3, selected". */}
+              {/* The label is stretched over the card, so a click anywhere picks it. The radio is hidden, so the check mark
+                  (always laid out, only faded in) marks the choice without relying on colour. */}
               <div className="grid gap-3 sm:grid-cols-3">
-                {LEVELS.map((l) => (
-                  <label key={l.value}
-                    className={clsx("relative cursor-pointer rounded-xl border-2 p-4 text-left transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-500/40",
-                      form.education_level === l.value ? "border-brand-500 bg-brand-50" : "border-line hover:border-brand-200")}>
-                    <input type="radio" name="education_level" value={l.value} className="sr-only"
-                      checked={form.education_level === l.value} onChange={() => set("education_level", l.value)} />
-                    <span className="block font-semibold">{l.label}</span>
-                    <span className="block text-xs font-medium text-brand-600">{l.tag}</span>
-                    <span className="mt-2 block text-xs text-muted">{l.blurb}</span>
-                  </label>
-                ))}
+                {LEVELS.map((l) => {
+                  const on = form.education_level === l.value;
+                  return (
+                    <ChoiceCard key={l.value} size="compact" interactive selected={on}>
+                      <CardHeader>
+                        <CardTitle>
+                          <label className={CARD_TARGET_CLASS}>
+                            <input type="radio" name="education_level" value={l.value} className="sr-only" aria-describedby={`level-${l.value}-about`}
+                              checked={on} onChange={() => set("education_level", l.value)} />
+                            {l.label}
+                          </label>
+                        </CardTitle>
+                        <CardDescription id={`level-${l.value}-about`} className="text-xs">
+                          <span className="block font-medium text-brand-600">{l.tag}</span>
+                          <span className="mt-1.5 block">{l.blurb}</span>
+                        </CardDescription>
+                        <CardAction>
+                          <Check aria-hidden className={clsx("size-4 text-brand-600 transition-opacity", on ? "opacity-100" : "opacity-0")} />
+                        </CardAction>
+                      </CardHeader>
+                    </ChoiceCard>
+                  );
+                })}
               </div>
               {errors.education_level && <p id="level-error" className="text-sm text-danger" role="alert">{errors.education_level}</p>}
             </fieldset>

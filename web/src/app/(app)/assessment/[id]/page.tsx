@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { ArrowLeft, ArrowRight, Clock, Send } from "lucide-react";
+import { Card as ChoiceCard, CARD_TARGET_CLASS, CardContent } from "@/components/beui/card";
 import { Alert, Badge, Button, Card, LoadError, Spinner } from "@/components/ui";
 import { api, ApiError } from "@/lib/api";
 import type { AssessmentResult, Attempt } from "@/lib/types";
@@ -189,16 +190,15 @@ export default function TakeAssessmentPage() {
             {q.options.map((opt, j) => {
               const checked = answers[q.id] === j;
               return (
-                <label
-                  key={j}
-                  className={clsx(
-                    "flex cursor-pointer items-start gap-3 rounded-xl border px-4 py-3 text-[15px] transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-500/40",
-                    checked ? "border-brand-500 bg-brand-50" : "border-line hover:border-brand-200 hover:bg-surface",
-                  )}
-                >
-                  <input type="radio" name={`q-${q.id}`} className="mt-1 size-4 accent-brand-500" checked={checked} onChange={() => choose(q.id, j)} />
-                  <span className="whitespace-pre-wrap">{opt}</span>
-                </label>
+                <ChoiceCard key={j} size="compact" interactive selected={checked} className="py-3">
+                  <CardContent>
+                    {/* Stretched over the card, so a click anywhere on the option picks it. */}
+                    <label className={clsx("flex items-start gap-3 text-[15px]", CARD_TARGET_CLASS)}>
+                      <input type="radio" name={`q-${q.id}`} className="mt-1 size-4 accent-brand-500" checked={checked} onChange={() => choose(q.id, j)} />
+                      <span className="whitespace-pre-wrap">{opt}</span>
+                    </label>
+                  </CardContent>
+                </ChoiceCard>
               );
             })}
           </div>

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
+import { Card as MutedCard, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/beui/card";
 import { Alert, Button, Card, Field, Input, Select, Spinner } from "@/components/ui";
 import { Combobox } from "@/components/ui/combobox";
 import { api, ApiError } from "@/lib/api";
@@ -113,11 +114,15 @@ export default function SettingsPage() {
           )}
         </Card>
       )}
-      <Card className="p-6">
-        <h2 className="font-semibold">Security</h2>
-        <p className="mt-1 text-sm text-muted">Signed in as {user?.email}. Sign out of every device if you think someone else has access.</p>
-        <Button variant="danger" className="mt-4" onClick={onLogoutAll}>Sign out everywhere</Button>
-      </Card>
+      <MutedCard variant="muted">
+        <CardHeader>
+          <CardTitle as="h2">Security</CardTitle>
+          <CardDescription>Signed in as {user?.email}. Sign out of every device if you think someone else has access.</CardDescription>
+        </CardHeader>
+        <CardFooter>
+          <Button variant="danger" onClick={onLogoutAll}>Sign out everywhere</Button>
+        </CardFooter>
+      </MutedCard>
     </div>
   );
 }

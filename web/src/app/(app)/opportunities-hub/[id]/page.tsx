@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, BadgeCheck, Bookmark, CalendarClock, ExternalLink, FileCheck2, GraduationCap } from "lucide-react";
+import { Card as InfoCard, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/beui/card";
 import { Alert, Badge, Button, Card, LoadError, Select, Spinner, Textarea } from "@/components/ui";
 import { DeadlineText } from "@/components/opportunities/opportunity-card";
 import { AddDeadlineToCalendar } from "@/components/google/google-actions";
@@ -93,32 +94,49 @@ export default function OpportunityPage() {
         </div>
 
         <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">
-          <Card className="space-y-4">
-            <div>
-              <h2 className="flex items-center gap-2 text-sm font-semibold">
-                <CalendarClock className="size-4 text-brand-600" aria-hidden /> Deadline
-              </h2>
-              <p className="mt-1 text-sm">
-                <DeadlineText o={o} />
-              </p>
-              {o.deadline && <p className="mt-1 text-xs text-muted">Bangladesh time</p>}
-            </div>
-            <a
-              href={o.official_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-500 px-5 text-sm font-medium text-white shadow-sm hover:bg-brand-600"
-            >
-              Apply on the official website <ExternalLink className="size-4" aria-hidden />
-              <span className="sr-only">(opens in a new tab)</span>
-            </a>
-            <p className="break-all text-xs text-muted">{new URL(o.official_url).hostname}</p>
-            <Button variant="secondary" className="w-full" loading={saving} onClick={toggleSave} aria-pressed={o.saved}>
-              <Bookmark className={o.saved ? "size-4 fill-current" : "size-4"} aria-hidden /> {o.saved ? "Saved" : "Save"}
-            </Button>
-            {saveError && <Alert>{saveError}</Alert>}
-            {o.deadline && !o.is_closed && <AddDeadlineToCalendar opportunityId={o.id} />}
-          </Card>
+          <InfoCard>
+            <CardHeader>
+              <CardTitle as="h2" className="flex items-center gap-2">
+                <CalendarClock className="size-4 text-brand-600" aria-hidden /> Apply
+              </CardTitle>
+              <CardDescription>Applications go through the provider&apos;s own website.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <dl className="divide-y divide-line">
+                <div className="flex justify-between gap-4 pb-2.5">
+                  <dt className="shrink-0 text-muted">Deadline</dt>
+                  <dd className="text-right">
+                    <DeadlineText o={o} />
+                    {o.deadline && <span className="block text-xs text-muted">Bangladesh time</span>}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-4 py-2.5">
+                  <dt className="shrink-0 text-muted">Level</dt>
+                  <dd className="text-right font-medium">{o.education_levels.length ? o.education_levels.map((l) => levelLabel(l)).join(", ") : "All levels"}</dd>
+                </div>
+                <div className="flex justify-between gap-4 pt-2.5">
+                  <dt className="shrink-0 text-muted">Website</dt>
+                  <dd className="min-w-0 break-all text-right font-medium">{new URL(o.official_url).hostname}</dd>
+                </div>
+              </dl>
+            </CardContent>
+            <CardFooter className="flex-col items-stretch gap-3">
+              <a
+                href={o.official_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-500 px-5 text-sm font-medium text-white shadow-sm hover:bg-brand-600"
+              >
+                Apply on the official website <ExternalLink className="size-4" aria-hidden />
+                <span className="sr-only">(opens in a new tab)</span>
+              </a>
+              <Button variant="secondary" className="w-full" loading={saving} onClick={toggleSave} aria-pressed={o.saved}>
+                <Bookmark className={o.saved ? "size-4 fill-current" : "size-4"} aria-hidden /> {o.saved ? "Saved" : "Save"}
+              </Button>
+              {saveError && <Alert>{saveError}</Alert>}
+              {o.deadline && !o.is_closed && <AddDeadlineToCalendar opportunityId={o.id} />}
+            </CardFooter>
+          </InfoCard>
           <p className="text-xs leading-relaxed text-muted">
             Our team checked this against the official source. Details can change, so always confirm the deadline and requirements on the official
             website. IccheGhuri never submits applications for you.
