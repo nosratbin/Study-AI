@@ -122,3 +122,32 @@ def test_production_without_smtp_refuses_password_signup(client, monkeypatch):
     r = register_unverified(client)
     assert r.status_code == 503 and r.json()["error"]["code"] == "email_not_configured"
     assert client.get("/api/health").json()["integrations"]["email"] is False
+
+
+def test_resend_api_sends_over_https(client, monkeypatch):
+    """With RESEND_API_KEY the mail goes to Resend's HTTPS API (SMTP ports are blocked on some hosts)."""
+    import json
+
+    import httpx
+
+    from app.core.config import get_settings
+    from app.services import email
+
+    s = get_settings()
+    monkeypatch.setattr(s, "resend_api_key", "re_test_key")
+    monkeypatch.setattr(s, "smtp_from", "My App <no-reply@example.com>")
+    seen: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(request)
+        return httpx.Response(200, json={"id": "abc"})
+
+    monkeypatch.setattr(email, "_client", lambda: httpx.Client(transport=httpx.MockTransport(handler)))
+    assert register_unverified(client).status_code == 201
+    assert len(seen) == 1 and not OUTBOX
+    req = seen[0]
+    body = json.loads(req.content)
+    assert str(req.url) == email.RESEND_URL and req.headers["authorization"] == "Bearer re_test_key"
+    assert body["to"] == [EMAIL] and body["from"] == "My App <no-reply@example.com>"
+    assert body["subject"].split(" ", 1)[0].isdigit() and "#token=" in body["html"]
+    assert client.get("/api/health").json()["integrations"]["email"] is True

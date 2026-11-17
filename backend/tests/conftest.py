@@ -7,7 +7,7 @@ os.environ["JWT_SECRET"] = "test-secret-" + "x" * 40
 os.environ["FIREBASE_PROJECT_ID"] = ""
 # Env vars beat .env/.env.local, so real developer keys never leak into tests. Tests opt in via fixtures.
 for _key in ("GEMINI_API_KEY", "GOOGLE_OAUTH_CLIENT_ID", "GOOGLE_OAUTH_CLIENT_SECRET", "GOOGLE_TOKEN_KEY", "DATA_ENCRYPTION_KEY",
-             "SMTP_HOST", "SMTP_USERNAME", "SMTP_PASSWORD", "SMTP_FROM"):  # tests must never send real email
+             "SMTP_HOST", "SMTP_USERNAME", "SMTP_PASSWORD", "SMTP_FROM", "RESEND_API_KEY"):  # tests must never send real email
     os.environ[_key] = ""
 
 import pytest

@@ -74,6 +74,9 @@ class Settings(BaseSettings):
     smtp_security: Literal["starttls", "ssl", "none"] = "starttls"
     # The From header, e.g. "IccheGhuri <no-reply@yourdomain.com>". The domain must be verified with the provider.
     smtp_from: str = ""
+    # Resend's HTTPS API. Takes priority over SMTP; needed on hosts that block outbound SMTP (Railway below Pro).
+    # The sender is still SMTP_FROM.
+    resend_api_key: str = ""
     email_code_minutes: int = 15
     email_resend_seconds: int = 60
 
@@ -87,7 +90,7 @@ class Settings(BaseSettings):
 
     @property
     def email_enabled(self) -> bool:
-        return bool(self.smtp_host and self.smtp_from)
+        return bool((self.resend_api_key or self.smtp_host) and self.smtp_from)
 
     @property
     def ai_enabled(self) -> bool:
