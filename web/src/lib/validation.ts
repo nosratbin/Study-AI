@@ -7,16 +7,24 @@ const password = z
   .refine((v) => new TextEncoder().encode(v).length <= 72, "Password is too long")
   .refine((v) => /[A-Za-z]/.test(v) && /\d/.test(v), "Include at least one letter and one number");
 
+/** Same rule and wording as the backend `reject_alias`: name+tag@domain is another door into one inbox. */
+export const EMAIL_ALIAS_MESSAGE = "Email aliases with + aren't allowed. Use your main email address";
+
 export const registerSchema = z
   .object({
-    full_name: z
-      .string()
-      .transform((v) => v.trim().replace(/\s+/g, " "))
-      .pipe(z.string().min(2, "Enter your full name").max(120)),
-    email: z.string().trim().toLowerCase().pipe(z.email("Enter a valid email address")),
-    password,
-    confirm: z.string(),
-  })
+  full_name: z
+    .string()
+    .transform((v) => v.trim().replace(/\s+/g, " "))
+    .pipe(z.string().min(2, "Enter your full name").max(120)),
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .pipe(z.email("Enter a valid email address"))
+    .refine((v) => !v.split("@")[0].includes("+"), EMAIL_ALIAS_MESSAGE),
+  password,
+  confirm: z.string().min(1, "Confirm your password"),
+})
   .refine((v) => v.password === v.confirm, { path: ["confirm"], message: "Passwords don't match" });
 
 export const loginSchema = z.object({

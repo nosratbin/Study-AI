@@ -65,6 +65,18 @@ class Settings(BaseSettings):
     # Where the browser lands after the OAuth callback.
     web_app_url: str = "http://localhost:3000"
 
+    # Outgoing email (verification codes). Any SMTP provider works: Resend, Brevo, Cloudflare, Gmail.
+    # Unset: development prints emails to the server log; production refuses password sign-up (Google still works).
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_username: str = ""
+    smtp_password: str = ""
+    smtp_security: Literal["starttls", "ssl", "none"] = "starttls"
+    # The From header, e.g. "IccheGhuri <no-reply@yourdomain.com>". The domain must be verified with the provider.
+    smtp_from: str = ""
+    email_code_minutes: int = 15
+    email_resend_seconds: int = 60
+
     # Fernet key for sensitive student text at rest (MindCare journal notes, support requests).
     # Required in production. Changing it makes existing journal notes unreadable.
     data_encryption_key: str = ""
@@ -72,6 +84,10 @@ class Settings(BaseSettings):
     @property
     def google_enabled(self) -> bool:
         return bool(self.google_oauth_client_id and self.google_oauth_client_secret and self.google_token_key)
+
+    @property
+    def email_enabled(self) -> bool:
+        return bool(self.smtp_host and self.smtp_from)
 
     @property
     def ai_enabled(self) -> bool:

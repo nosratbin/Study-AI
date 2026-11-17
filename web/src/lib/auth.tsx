@@ -4,12 +4,16 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { api, ApiError, SESSION_EXPIRED_EVENT } from "./api";
 import { getGoogleIdToken } from "./firebase";
 import type { User } from "./types";
+import { rememberPending, type PendingVerification } from "./verification";
 
 interface AuthState {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<User>;
-  register: (full_name: string, email: string, password: string) => Promise<User>;
+  /** Creates the account and emails a code and link; there is no session until the email is verified. */
+  register: (full_name: string, email: string, password: string) => Promise<PendingVerification>;
+  verifyEmail: (email: string, code: string) => Promise<User>;
+  verifyEmailLink: (token: string) => Promise<User>;
   loginWithGoogle: () => Promise<User>;
   logout: () => Promise<void>;
   reload: () => Promise<void>;
@@ -78,7 +82,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return r.user;
       },
       async register(full_name, email, password) {
-        const r = await api<{ user: User }>("/auth/register", { method: "POST", body: { full_name, email, password } });
+        const r = await api<{ email: string; resend_after: number }>("/auth/register", { method: "POST", body: { full_name, email, password } });
+        return rememberPending(r.email, r.resend_after);
+      },
+      async verifyEmail(email, code) {
+        const r = await api<{ user: User }>("/auth/verify-email", { method: "POST", body: { email, code } });
+        setUser(r.user);
+        return r.user;
+      },
+      async verifyEmailLink(token) {
+        const r = await api<{ user: User }>("/auth/verify-email/link", { method: "POST", body: { token } });
         setUser(r.user);
         return r.user;
       },

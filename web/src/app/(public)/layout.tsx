@@ -1,7 +1,20 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { PublicNav } from "@/components/layout/public-nav";
+import { FooterLinks } from "@/components/shell/footer-links";
 import { Logo } from "@/components/ui";
+
+const PLATFORM = [
+  { href: "/programs", label: "Programs" },
+  { href: "/levels", label: "Learning levels" },
+  { href: "/features", label: "Features" },
+  { href: "/opportunities", label: "Opportunities" },
+];
+
+const PROJECT = [
+  { href: "/about", label: "About" },
+  { href: "/contact", label: "Contact" },
+];
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -12,28 +25,22 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       </Suspense>
       <main className="flex-1">{children}</main>
       <footer className="border-t border-line bg-card">
-        <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-3 sm:px-6">
-          <div className="space-y-2">
-            <Logo />
-            <p className="text-sm text-muted">
-              <span lang="bn">ইচ্ছেঘুড়ি</span>, the wish kite: AI learning for every student in Bangladesh
+        <div className="mx-auto grid max-w-6xl gap-10 px-4 pt-12 pb-10 sm:grid-cols-[1.6fr_1fr_1fr] sm:px-6">
+          <div className="max-w-xs">
+            <Link href="/" aria-label="IccheGhuri home" className="inline-block rounded-lg">
+              <Logo className="h-8" />
+            </Link>
+            <p className="mt-4 text-sm leading-relaxed text-muted">
+              AI learning for every student in Bangladesh, from Class 6 to university.
             </p>
           </div>
-          <div className="text-sm">
-            <p className="mb-2 font-semibold">Platform</p>
-            <ul className="space-y-1.5 text-muted">
-              <li><Link href="/programs" className="hover:text-ink">Programs</Link></li>
-              <li><Link href="/levels" className="hover:text-ink">Learning levels</Link></li>
-              <li><Link href="/opportunities" className="hover:text-ink">Opportunities</Link></li>
-            </ul>
-          </div>
-          <div className="text-sm">
-            <p className="mb-2 font-semibold">Project</p>
-            <ul className="space-y-1.5 text-muted">
-              <li><Link href="/about" className="hover:text-ink">About</Link></li>
-              <li><Link href="/contact" className="hover:text-ink">Contact</Link></li>
-            </ul>
-          </div>
+          <FooterLinks title="Platform" links={PLATFORM} />
+          <FooterLinks title="Project" links={PROJECT} />
+        </div>
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <p className="border-t border-line py-6 text-sm text-muted">
+            Our team checks every scholarship, deadline and application link before students see it
+          </p>
         </div>
       </footer>
     </>

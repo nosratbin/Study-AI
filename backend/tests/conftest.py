@@ -6,7 +6,8 @@ os.environ["DATABASE_URL"] = "sqlite://"
 os.environ["JWT_SECRET"] = "test-secret-" + "x" * 40
 os.environ["FIREBASE_PROJECT_ID"] = ""
 # Env vars beat .env/.env.local, so real developer keys never leak into tests. Tests opt in via fixtures.
-for _key in ("GEMINI_API_KEY", "GOOGLE_OAUTH_CLIENT_ID", "GOOGLE_OAUTH_CLIENT_SECRET", "GOOGLE_TOKEN_KEY", "DATA_ENCRYPTION_KEY"):
+for _key in ("GEMINI_API_KEY", "GOOGLE_OAUTH_CLIENT_ID", "GOOGLE_OAUTH_CLIENT_SECRET", "GOOGLE_TOKEN_KEY", "DATA_ENCRYPTION_KEY",
+             "SMTP_HOST", "SMTP_USERNAME", "SMTP_PASSWORD", "SMTP_FROM"):  # tests must never send real email
     os.environ[_key] = ""
 
 import pytest
@@ -41,14 +42,33 @@ def client(db_session):
 
     app.dependency_overrides[get_db] = _get_db
     limiter.reset()
+    from app.services.email import OUTBOX
+
+    OUTBOX.clear()
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()
 
 
+def register_unverified(client, email="ayesha@example.com", password="secret123", name="Ayesha Rahman"):
+    """Sign up only: the account exists but has no session until the email code is entered."""
+    return client.post("/api/auth/register", json={"full_name": name, "email": email, "password": password})
+
+
+def last_code(email: str) -> str:
+    from app.services.email import OUTBOX
+
+    mail = next(m for m in reversed(OUTBOX) if m.to == email.lower())
+    return mail.subject.split(" ", 1)[0]
+
+
 def register(client, email="ayesha@example.com", password="secret123", name="Ayesha Rahman", mobile=False):
+    """Sign up and verify the email, like a student finishing registration. Returns the verify response (the session)."""
+    r = register_unverified(client, email=email, password=password, name=name)
+    if r.status_code != 201:
+        return r
     headers = {"X-Client-Type": "mobile"} if mobile else {}
-    return client.post("/api/auth/register", json={"full_name": name, "email": email, "password": password}, headers=headers)
+    return client.post("/api/auth/verify-email", json={"email": email, "code": last_code(email)}, headers=headers)
 
 
 ONBOARDING = {

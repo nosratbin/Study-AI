@@ -1,54 +1,67 @@
 import type { Metadata } from "next";
-import { PageHeader, Section } from "@/components/marketing";
+import { ArrowRight } from "lucide-react";
 import { ButtonLink } from "@/components/ui";
-import { LEVELS } from "@/lib/types";
+import { ScrollReveal } from "@/components/beui/scroll-reveal";
+import { PageIntro } from "@/components/programs/page-intro";
+import { LevelExplorer } from "@/components/levels/level-explorer";
 
 export const metadata: Metadata = { title: "Learning levels" };
 
-const DETAILS: Record<string, { tutor: string; projects: string; assessment: string }> = {
-  school: {
-    tutor: "Simple language, everyday examples, short steps and lots of encouragement.",
-    projects: "Visual, unplugged and block-style activities; first Python lines.",
-    assessment: "Short concept checks on logic and AI basics.",
-  },
-  college: {
-    tutor: "Clear technical vocabulary with worked examples and code snippets.",
-    projects: "Guided Colab notebooks: data cleaning, simple classifiers.",
-    assessment: "Python and AI fundamentals topic tests.",
-  },
-  university: {
-    tutor: "Rigorous explanations, maths where useful, references and trade-offs.",
-    projects: "End-to-end ML/DL projects suitable for a portfolio.",
-    assessment: "ML, DL and applied problem-solving tests.",
-  },
-};
+/*
+ * Learning levels. The explorer is the page's one rich moment: switch levels and the kite climbs to that height while
+ * the panel shows the tutor style, projects, assessment and courses for it. The rest stays on quiet hairlines.
+ */
+
+const STEPS = [
+  { title: "Pick it when you sign up", text: "Choose School, College or University. Lessons, tests and the tutor follow it." },
+  { title: "Take the skill assessment", text: "Your results can recommend a different level if another one fits better." },
+  { title: "Change it any time", text: "Switch levels in Settings whenever you need to." },
+];
 
 export default function LevelsPage() {
   return (
     <>
-      <PageHeader eyebrow="Learning levels" title="Three levels, each with its own content, tutor style and projects">
-        Pick your level when you sign up. Your skill assessment can recommend a different level, and you can change it any
-        time in Settings.
-      </PageHeader>
-      <Section>
-        <div className="grid gap-4 lg:grid-cols-3">
-          {LEVELS.map((l) => (
-            <div key={l.value} className="rounded-card border border-line bg-card p-6 shadow-card">
-              <p className="text-sm font-medium text-brand-600">{l.tag}</p>
-              <h2 className="mt-1 text-xl font-semibold">{l.label}</h2>
-              <p className="mt-2 text-sm text-muted">{l.blurb}</p>
-              <dl className="mt-5 space-y-3 text-sm">
-                <div><dt className="font-medium">AI Tutor</dt><dd className="text-muted">{DETAILS[l.value].tutor}</dd></div>
-                <div><dt className="font-medium">Projects</dt><dd className="text-muted">{DETAILS[l.value].projects}</dd></div>
-                <div><dt className="font-medium">Assessment</dt><dd className="text-muted">{DETAILS[l.value].assessment}</dd></div>
-              </dl>
-            </div>
-          ))}
+      <PageIntro label="Learning levels" title="Three levels, each with its own lessons, tutor and projects">
+        Class 6 to university. See what each level teaches, how the tutor talks to you and how you&apos;re tested.
+      </PageIntro>
+
+      <section className="mx-auto max-w-6xl px-4 sm:px-6">
+        <LevelExplorer />
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:py-24">
+        <div className="grid gap-10 lg:grid-cols-[0.8fr_1.6fr] lg:gap-16">
+          <h2 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">How your level is set</h2>
+          <ol className="grid gap-8 sm:grid-cols-3">
+            {STEPS.map((s, i) => (
+              <li key={s.title}>
+                <ScrollReveal y={12} blur={0} duration={0.5} delay={i * 0.06} className="h-full border-t border-line pt-5">
+                  <span className="font-mono text-xs text-muted tabular-nums">0{i + 1}</span>
+                  <h3 className="mt-2 font-semibold">{s.title}</h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-muted">{s.text}</p>
+                </ScrollReveal>
+              </li>
+            ))}
+          </ol>
         </div>
-        <div className="mt-10">
-          <ButtonLink href="/register">Choose my level</ButtonLink>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 pb-8 sm:px-6">
+        <div className="flex flex-col gap-6 rounded-[24px] border border-line bg-card p-8 sm:p-10 md:flex-row md:items-center md:justify-between">
+          <div className="max-w-xl">
+            <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Start where you are</h2>
+            <p className="mt-2 text-muted">Creating an account and learning is free.</p>
+          </div>
+          <div className="flex shrink-0 flex-wrap gap-3">
+            <ButtonLink href="/register" size="lg" className="transition-[background-color,transform] active:scale-[0.97]">
+              Choose my level <ArrowRight className="size-4" aria-hidden />
+            </ButtonLink>
+            <ButtonLink href="/programs" size="lg" variant="secondary">
+              See the programs
+            </ButtonLink>
+          </div>
         </div>
-      </Section>
+      </section>
     </>
   );
 }

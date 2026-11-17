@@ -5,7 +5,8 @@ export class ApiError extends Error {
     public status: number,
     public code: string,
     message: string,
-    public details?: { field: string | null; message: string }[],
+    /** Validation errors are {field, message}; some errors carry other data (email_unverified: {email, resend_after}). */
+    public details?: { field?: string | null; message?: string; [key: string]: unknown }[],
   ) {
     super(message);
   }
@@ -13,7 +14,7 @@ export class ApiError extends Error {
   /** Map backend validation details to { field: message } for forms. */
   fieldErrors(): Record<string, string> {
     const out: Record<string, string> = {};
-    for (const d of this.details ?? []) if (d.field && !out[d.field]) out[d.field] = d.message.replace(/^Value error, /, "");
+    for (const d of this.details ?? []) if (d.field && d.message && !out[d.field]) out[d.field] = d.message.replace(/^Value error, /, "");
     return out;
   }
 }
@@ -23,7 +24,10 @@ type Method = "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
 let refreshing: Promise<boolean> | null = null;
 
 /** Auth endpoints that must never trigger an automatic refresh-and-retry. */
-const NO_REFRESH = new Set(["/auth/login", "/auth/register", "/auth/google", "/auth/refresh", "/auth/logout"]);
+const NO_REFRESH = new Set([
+  "/auth/login", "/auth/register", "/auth/google", "/auth/refresh", "/auth/logout",
+  "/auth/verify-email", "/auth/verify-email/link", "/auth/verify-email/resend",
+]);
 
 /** Fired when the session can no longer be refreshed; AuthProvider signs the user out. */
 export const SESSION_EXPIRED_EVENT = "iccheghuri:session-expired";

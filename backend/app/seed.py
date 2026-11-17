@@ -10,6 +10,7 @@ Demo account passwords come from SEED_DEMO_PASSWORD or are generated and printed
 """
 
 import argparse
+from datetime import UTC, datetime
 import os
 import secrets
 
@@ -123,7 +124,8 @@ def seed_demo_users(db: Session) -> None:
         if db.scalar(select(User).where(User.email == email)):
             print(f"  exists: {email}")
             continue
-        u = User(email=email, full_name=name, role=role, password_hash=hash_password(password))
+        # Reserved demo domain, never a real inbox: marked verified so the demo accounts can sign in.
+        u = User(email=email, full_name=name, role=role, password_hash=hash_password(password), email_verified_at=datetime.now(UTC))
         if role == Role.student:
             u.student_profile = StudentProfile()
         if role == Role.teacher:

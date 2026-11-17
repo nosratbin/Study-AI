@@ -3,6 +3,7 @@ import logging
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from starlette.background import BackgroundTask
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 log = logging.getLogger("iccheghuri")
@@ -12,12 +13,13 @@ class ApiError(Exception):
     """Error with a stable machine code and a user-facing message."""
 
     def __init__(self, status: int, code: str, message: str, headers: dict[str, str] | None = None,
-                 details: list[dict] | None = None):
+                 details: list[dict] | None = None, background: BackgroundTask | None = None):
         self.status = status
         self.code = code
         self.message = message
         self.headers = headers
         self.details = details  # optional [{field, message}] the web maps onto form fields
+        self.background = background  # work that must still run after the error is sent (an endpoint's tasks are dropped)
 
 
 def _body(code: str, message: str, request: Request, details=None) -> dict:
@@ -30,7 +32,8 @@ def _body(code: str, message: str, request: Request, details=None) -> dict:
 def install_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(ApiError)
     async def _api_error(request: Request, exc: ApiError):
-        return JSONResponse(_body(exc.code, exc.message, request, exc.details), status_code=exc.status, headers=exc.headers)
+        return JSONResponse(_body(exc.code, exc.message, request, exc.details), status_code=exc.status, headers=exc.headers,
+                            background=exc.background)
 
     @app.exception_handler(RequestValidationError)
     async def _validation(request: Request, exc: RequestValidationError):

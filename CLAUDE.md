@@ -33,6 +33,7 @@ pnpm vitest run src/lib/validation.test.ts -t "name"             # single test
   - Clients sending `X-Client-Type: mobile` get the tokens in the response body instead.
   - Google Sign-In: the client gets a Firebase ID token, `/api/auth/google` verifies it with google-auth (`app/services/firebase.py`), and the backend then issues its own JWT.
   - `users.token_version` revokes all of a user's sessions. Roles are always read from the DB, never from token claims.
+  - Email verification (`services/verification.py`, `services/email.py`): `/register` returns `{email, resend_after}` and no session. One email carries a 6-digit code and a `/verify-email#token=` link (both stored as HMAC hashes). Unverified accounts can't log in (403 `email_unverified` sends a fresh code). Google sign-in counts as verified. Plus-aliases are rejected on both client and server. Without SMTP, dev logs the mail and tests read `email.OUTBOX`, while production returns 503. To send email after raising `ApiError`, pass `background=tasks`, because an endpoint's own tasks are dropped when it raises.
 - **RBAC** lives in `app/core/deps.py` (`StudentUser`, `TeacherUser`, `AdminUser` annotated deps). Enforce permissions there, not in the UI. Self-registration only creates students.
 - **Errors** always use the shape `{"error": {code, message, request_id, details?}}` (`app/core/errors.py`). Raise `ApiError(status, code, message)`. The web `ApiError.fieldErrors()` maps validation `details` onto form fields.
 - **Models**:

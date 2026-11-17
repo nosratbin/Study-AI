@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { Fragment, useRef } from "react";
 import clsx from "clsx";
 import { EASE_OUT, gsap, ScrollTrigger, useGSAP, withMotion } from "@/lib/gsap";
 
@@ -64,6 +64,8 @@ export function KiteString() {
       let lens: number[] = []; // path length from the first knot to each knot
       let total = 0;
       let progress = 0;
+      const lit = knots.map(() => false);
+      let onLight: ((j: number) => void) | null = null; // set only when motion is allowed
 
       const render = (p: number) => {
         progress = p;
@@ -73,7 +75,13 @@ export function KiteString() {
         const t = gsap.utils.clamp(0, 1, (y - ys[i]) / (ys[i + 1] - ys[i] || 1));
         const drawn = lens[i] + t * (lens[i + 1] - lens[i]);
         line.current!.style.strokeDashoffset = String(total - drawn);
-        knots.forEach((k, j) => k.toggleAttribute("data-on", p > 0 && drawn >= lens[j] - 0.5));
+        knots.forEach((k, j) => {
+          const on = p > 0 && drawn >= lens[j] - 0.5;
+          if (on === lit[j]) return;
+          lit[j] = on;
+          k.toggleAttribute("data-on", on);
+          if (on) onLight?.(j);
+        });
       };
 
       // One S-curve per gap between knots, bowing left and right like a string in the wind.
@@ -107,6 +115,24 @@ export function KiteString() {
       render(1); // reduced motion and no-JS-motion default: the whole string, every knot lit
 
       withMotion(() => {
+        // Each stage's text unfolds when the string reaches its knot: the label slides out from the string, the title
+        // rises word by word, then the description and the module chips follow. Plays once, so text never hides again.
+        const md = window.matchMedia("(min-width: 768px)").matches;
+        const cards = gsap.utils.toArray<HTMLElement>("[data-card]", el);
+        const reveals = cards.map((card, j) => {
+          const fromX = md ? (j % 2 ? -20 : 20) : -14; // away from the string: left cards drift left, right cards right
+          const q = gsap.utils.selector(card);
+          return gsap
+            .timeline({ paused: true, defaults: { ease: EASE_OUT } })
+            .from(q("[data-label]"), { autoAlpha: 0, x: fromX, duration: 0.45 })
+            .from(q("[data-word]"), { autoAlpha: 0, yPercent: 60, duration: 0.5, stagger: 0.045 }, "-=0.3")
+            .from(q("[data-body]"), { autoAlpha: 0, x: fromX, duration: 0.5 }, "-=0.35")
+            .from(q("li"), { autoAlpha: 0, y: 6, scale: 0.94, duration: 0.35, stagger: 0.05 }, "-=0.3");
+        });
+        onLight = (j) => {
+          if (!reveals[j].progress()) reveals[j].play();
+        };
+
         render(0);
         const state = { p: 0 };
         gsap.to(state, {
@@ -115,10 +141,10 @@ export function KiteString() {
           onUpdate: () => render(state.p),
           scrollTrigger: { trigger: knots[0], start: HEAD, endTrigger: knots[n - 1], end: HEAD, scrub: 0.3 },
         });
-        gsap.utils.toArray<HTMLElement>("[data-card]", el).forEach((card) => {
-          gsap.from(card, { autoAlpha: 0, y: 16, duration: 0.6, ease: EASE_OUT, scrollTrigger: { trigger: card, start: "top 85%", once: true } });
-        });
-        return () => render(1); // switched to reduced motion mid-visit: show the whole string again
+        return () => {
+          onLight = null;
+          render(1); // switched to reduced motion mid-visit: show the whole string again
+        };
       });
 
       // Anything that moves the layout (fonts, the hero settling, a resize) moves the knots: re-trace and re-measure.
@@ -167,11 +193,22 @@ export function KiteString() {
               </span>
 
               <div data-card>
-                <p className="text-sm font-semibold text-brand-600">
+                <p data-label className="text-sm font-semibold text-brand-600">
                   {s.when} <span className="font-medium text-muted">· {s.level}</span>
                 </p>
-                <h3 className="mt-1.5 text-xl font-semibold tracking-tight sm:text-2xl">{s.title}</h3>
-                <p className="mt-2 text-[15px] leading-relaxed text-muted">{s.text}</p>
+                <h3 className="mt-1.5 text-xl font-semibold tracking-tight sm:text-2xl">
+                  {s.title.split(" ").map((w, k) => (
+                    <Fragment key={k}>
+                      {k > 0 && " "}
+                      <span data-word className="inline-block">
+                        {w}
+                      </span>
+                    </Fragment>
+                  ))}
+                </h3>
+                <p data-body className="mt-2 text-[15px] leading-relaxed text-muted">
+                  {s.text}
+                </p>
                 <ul className={clsx("mt-4 flex flex-wrap gap-1.5", !right && "md:justify-end")}>
                   {s.modules.map((m) => (
                     <li key={m} className="rounded-full border border-line bg-card px-2.5 py-1 text-xs font-medium">

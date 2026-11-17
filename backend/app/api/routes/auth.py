@@ -2,7 +2,7 @@ import uuid
 from datetime import UTC, datetime
 
 import jwt
-from fastapi import APIRouter, Depends, Request, Response
+from fastapi import APIRouter, BackgroundTasks, Depends, Request, Response
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
@@ -12,7 +12,11 @@ from app.core.errors import ApiError
 from app.core.rate_limit import rate_limit
 from app.core.security import create_token, decode_token, hash_password, is_revoked, revoke, verify_password
 from app.models import Role, StudentProfile, User
-from app.schemas.auth import AuthOut, GoogleIn, LoginIn, RefreshIn, RegisterIn, UserOut
+from app.schemas.auth import (
+    AuthOut, GoogleIn, LoginIn, RefreshIn, RegisterIn, ResendIn, UserOut, VerificationOut, VerifyCodeIn, VerifyLinkIn, reject_alias,
+)
+from app.services import email as mailer
+from app.services import verification
 from app.services.firebase import verify_firebase_id_token
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -49,27 +53,100 @@ def issue_session(request: Request, response: Response, user: User, native: bool
     return AuthOut(user=user_out(user))
 
 
-@router.post("/register", response_model=AuthOut, status_code=201, dependencies=[auth_limit])
-def register(body: RegisterIn, request: Request, response: Response, db: DbSession):
-    """Self-registration creates STUDENT accounts only. Teachers/admins are provisioned by an admin."""
+def _send_check(db, user: User, tasks: BackgroundTasks) -> VerificationOut:
+    """Start a new email check (unless one was sent moments ago) and say when the next one may be asked for."""
+    wait = verification.resend_wait(db, user)
+    if wait == 0:
+        tasks.add_task(mailer.send, verification.start(db, user))
+        wait = get_settings().email_resend_seconds
+    db.commit()
+    return VerificationOut(email=user.email, resend_after=wait)
+
+
+def _require_email_service() -> None:
+    s = get_settings()
+    if not s.email_enabled and s.environment == "production":
+        raise ApiError(503, "email_not_configured", "Email sign-up is unavailable right now. Use Continue with Google instead.")
+
+
+@router.post("/register", response_model=VerificationOut, status_code=201, dependencies=[auth_limit])
+def register(body: RegisterIn, tasks: BackgroundTasks, db: DbSession):
+    """Self-registration creates STUDENT accounts only. Teachers/admins are provisioned by an admin.
+    No session yet: the student first proves they own the email with the code or link we send."""
+    _require_email_service()
     email = body.email.lower()
-    if db.scalar(select(User).where(User.email == email)):
-        raise ApiError(409, "email_taken", "An account with this email already exists. Try signing in.")
-    user = User(email=email, full_name=body.full_name, password_hash=hash_password(body.password), role=Role.student)
-    user.student_profile = StudentProfile()
-    user.last_login_at = datetime.now(UTC)
-    db.add(user)
+    taken = ApiError(409, "email_taken", "An account with this email already exists. Try signing in.")
+    user = db.scalar(select(User).where(User.email == email))
+    if user and (user.email_verified_at or user.firebase_uid):
+        raise taken
+    if user:
+        # Never verified, so nobody has proven they own this address: the newest sign-up wins. This stops anyone
+        # from parking an account on someone else's email.
+        user.full_name = body.full_name
+        user.password_hash = hash_password(body.password)
+        user.token_version += 1
+    else:
+        user = User(email=email, full_name=body.full_name, password_hash=hash_password(body.password), role=Role.student)
+        user.student_profile = StudentProfile()
+        db.add(user)
     try:
-        db.commit()
+        db.flush()
     except IntegrityError:  # concurrent registration with the same email
         db.rollback()
-        raise ApiError(409, "email_taken", "An account with this email already exists. Try signing in.")
+        raise taken
+    return _send_check(db, user, tasks)
+
+
+def _finish_verification(request: Request, response: Response, db, user: User) -> AuthOut:
+    verification.complete(db, user)
+    user.last_login_at = datetime.now(UTC)
+    db.commit()
     db.refresh(user)
     return issue_session(request, response, user)
 
 
+_CODE_ERRORS = {
+    "invalid": (400, "invalid_code", "That code is wrong. Check the email and try again."),
+    "expired": (400, "code_expired", "That code has expired. Send a new one."),
+    "locked": (429, "too_many_attempts", "Too many wrong codes. Send a new one."),
+}
+
+
+@router.post("/verify-email", response_model=AuthOut, dependencies=[auth_limit])
+def verify_email(body: VerifyCodeIn, request: Request, response: Response, db: DbSession):
+    """Check the 6-digit code; on success the student is signed in."""
+    user = db.scalar(select(User).where(User.email == body.email.strip().lower()))
+    if not user or user.email_verified_at or not user.is_active:
+        raise ApiError(*_CODE_ERRORS["expired"])
+    problem = verification.check_code(db, user, body.code)
+    if problem:
+        db.commit()  # keep the attempt count
+        raise ApiError(*_CODE_ERRORS[problem])
+    return _finish_verification(request, response, db, user)
+
+
+@router.post("/verify-email/link", response_model=AuthOut, dependencies=[auth_limit])
+def verify_email_link(body: VerifyLinkIn, request: Request, response: Response, db: DbSession):
+    """The link in the email. Signs in whichever browser opened it."""
+    user, problem = verification.user_for_token(db, body.token)
+    if problem or not user or not user.is_active:
+        raise ApiError(400, "link_invalid", "This link has expired or was replaced by a newer email. Send a new code.")
+    return _finish_verification(request, response, db, user)
+
+
+@router.post("/verify-email/resend", response_model=VerificationOut, status_code=202, dependencies=[auth_limit])
+def resend_verification(body: ResendIn, tasks: BackgroundTasks, db: DbSession):
+    """Same answer whether or not the address has a pending account, so it can't be used to find accounts."""
+    _require_email_service()
+    email = body.email.strip().lower()
+    user = db.scalar(select(User).where(User.email == email))
+    if user and user.is_active and not user.email_verified_at and user.password_hash:
+        return _send_check(db, user, tasks)
+    return VerificationOut(email=email, resend_after=get_settings().email_resend_seconds)
+
+
 @router.post("/login", response_model=AuthOut, dependencies=[auth_limit])
-def login(body: LoginIn, request: Request, response: Response, db: DbSession):
+def login(body: LoginIn, request: Request, response: Response, tasks: BackgroundTasks, db: DbSession):
     user = db.scalar(select(User).where(User.email == body.email.lower()))
     # Same error and the same bcrypt cost for an unknown email, a wrong password and a Google-only
     # account, so the response does not reveal whether an email is registered.
@@ -78,6 +155,11 @@ def login(body: LoginIn, request: Request, response: Response, db: DbSession):
         raise ApiError(401, "invalid_credentials", "Email or password is incorrect. If you signed up with Google, use Continue with Google.")
     if not user.is_active:
         raise ApiError(403, "account_disabled", "This account has been disabled. Contact support.")
+    if not user.email_verified_at:
+        # The password is right, so it's safe to say why: send a fresh code and point them to the verify screen.
+        pending = _send_check(db, user, tasks)
+        raise ApiError(403, "email_unverified", "Verify your email to sign in. We sent you a new code.",
+                       details=[{"email": pending.email, "resend_after": pending.resend_after}], background=tasks)
     user.last_login_at = datetime.now(UTC)
     db.commit()
     return issue_session(request, response, user)
@@ -94,19 +176,25 @@ def google(body: GoogleIn, request: Request, response: Response, db: DbSession):
     if not user:
         existing = db.scalar(select(User).where(User.email == ident.email))
         if existing:
-            # Google has verified that this person owns the email. Emails are not verified at
-            # registration, so a password set by someone else may exist: drop it and revoke all
-            # existing sessions, making Google the proof of ownership (prevents account pre-hijacking).
-            if existing.password_hash:
+            # Google has verified that this person owns the email. If we never verified it ourselves, a
+            # password set by someone else may exist: drop it and revoke all existing sessions, making
+            # Google the proof of ownership (prevents account pre-hijacking).
+            if existing.password_hash and not existing.email_verified_at:
                 existing.password_hash = None
                 existing.token_version += 1
+            if not existing.email_verified_at:
+                verification.complete(db, existing)  # also voids any pending code and link
             existing.firebase_uid = ident.uid
             existing.avatar_url = existing.avatar_url or ident.picture
             user = existing
         else:
+            try:
+                reject_alias(ident.email)
+            except ValueError as e:
+                raise ApiError(400, "email_alias", f"{e}.") from None
             user = User(
                 email=ident.email, full_name=(ident.name or ident.email.split("@")[0])[:120],
-                firebase_uid=ident.uid, avatar_url=ident.picture, role=Role.student,
+                firebase_uid=ident.uid, avatar_url=ident.picture, role=Role.student, email_verified_at=datetime.now(UTC),
             )
             user.student_profile = StudentProfile()
             db.add(user)

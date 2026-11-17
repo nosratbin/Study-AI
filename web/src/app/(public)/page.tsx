@@ -116,10 +116,10 @@ export default function HomePage() {
 
       {/* ---------- The string: Class 6 to opportunity ---------- */}
       <section id="path" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-20 sm:px-6 lg:py-28">
-        <div className="mb-14 max-w-2xl md:mx-auto md:text-center">
+        <Reveal className="mb-14 max-w-2xl md:mx-auto md:text-center" stagger={0.08}>
           <h2 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">From Class 6 to your first scholarship</h2>
           <p className="mt-3 text-lg text-muted">Find your stage. Each one lists the modules you&apos;ll use most.</p>
-        </div>
+        </Reveal>
         <KiteString />
         <div className="mt-16 flex justify-center">
           <ButtonLink href="/levels" variant="secondary">

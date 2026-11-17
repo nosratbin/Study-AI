@@ -10,6 +10,13 @@ from app.core.security import MAX_PASSWORD_BYTES
 from app.models.enums import Role
 
 
+def reject_alias(email: str) -> str:
+    """Plus-addressing (name+tag@domain) is an alias of another inbox, so one person could hold many accounts."""
+    if "+" in email.partition("@")[0]:
+        raise ValueError("Email aliases with + aren't allowed. Use your main email address")
+    return email
+
+
 def _check_password(v: str) -> str:
     if len(v.encode("utf-8")) > MAX_PASSWORD_BYTES:
         raise ValueError(f"Password must be at most {MAX_PASSWORD_BYTES} bytes")
@@ -24,6 +31,7 @@ class RegisterIn(BaseModel):
     password: str = Field(min_length=8)
 
     _pw = field_validator("password")(_check_password)
+    _alias = field_validator("email")(reject_alias)
 
     @field_validator("full_name")
     @classmethod
@@ -53,6 +61,26 @@ class LoginIn(BaseModel):
             if demo.endswith("@" + DEMO_EMAIL_DOMAIN) and get_settings().environment != "production":
                 return demo
             raise ValueError(f"value is not a valid email address: {e}") from e
+
+
+class VerifyCodeIn(BaseModel):
+    email: str = Field(min_length=3, max_length=254)
+    code: str = Field(pattern=r"^\d{6}$")
+
+
+class VerifyLinkIn(BaseModel):
+    token: str = Field(min_length=20, max_length=200)
+
+
+class ResendIn(BaseModel):
+    email: str = Field(min_length=3, max_length=254)
+
+
+class VerificationOut(BaseModel):
+    """Registration (and an unverified login) ends here: no session until the email is verified."""
+
+    email: str
+    resend_after: int  # seconds until the student may ask for another email
 
 
 class GoogleIn(BaseModel):

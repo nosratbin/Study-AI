@@ -2,12 +2,12 @@ from app.core.deps import ACCESS_COOKIE, REFRESH_COOKIE
 from app.core.security import create_token
 from app.models import Role, User
 
-from .conftest import register
+from .conftest import last_code, register, register_unverified
 
 
 def test_register_sets_httponly_cookies_and_hides_tokens(client):
     r = register(client)
-    assert r.status_code == 201
+    assert r.status_code == 200
     body = r.json()
     assert body["user"]["role"] == "student"
     assert body["user"]["onboarding_completed"] is False
@@ -20,7 +20,7 @@ def test_register_sets_httponly_cookies_and_hides_tokens(client):
 
 def test_mobile_client_gets_bearer_tokens(client):
     r = register(client, mobile=True)
-    assert r.status_code == 201
+    assert r.status_code == 200
     tokens = r.json()
     client.cookies.clear()
     me = client.get("/api/auth/me", headers={"Authorization": f"Bearer {tokens['access_token']}"})
@@ -47,6 +47,7 @@ def test_register_cannot_choose_role(client):
     r = client.post("/api/auth/register", json={
         "full_name": "Sneaky", "email": "s@example.com", "password": "secret123", "role": "admin"})
     assert r.status_code == 201
+    r = client.post("/api/auth/verify-email", json={"email": "s@example.com", "code": last_code("s@example.com")})
     assert r.json()["user"]["role"] == "student"
 
 
@@ -235,18 +236,19 @@ def test_google_link_revokes_preexisting_password_and_sessions(client, db_sessio
     from app.api.routes import auth as auth_routes
     from app.services.firebase import FirebaseIdentity
 
-    attacker = register(client, mobile=True).json()
+    attacker = register_unverified(client)  # never verified: the attacker doesn't own the inbox
+    assert attacker.status_code == 201
     ident = FirebaseIdentity(uid="fb-v", email="ayesha@example.com", email_verified=True,
                              name="Ayesha", picture=None, sign_in_provider="google.com")
     monkeypatch.setattr(auth_routes, "verify_firebase_id_token", lambda _t: ident)
     client.cookies.clear()
     assert client.post("/api/auth/google", json={"id_token": "x" * 40}).status_code == 200
     client.cookies.clear()
-    # The attacker's password and tokens no longer work.
+    # The attacker's password no longer works, and the pending code can't take the account back.
     r = client.post("/api/auth/login", json={"email": "ayesha@example.com", "password": "secret123"})
     assert r.status_code == 401 and r.json()["error"]["code"] == "invalid_credentials"
-    assert client.get("/api/auth/me", headers={"Authorization": f"Bearer {attacker['access_token']}"}).status_code == 401
-    assert client.post("/api/auth/refresh", json={"refresh_token": attacker["refresh_token"]}).status_code == 401
+    r = client.post("/api/auth/verify-email", json={"email": "ayesha@example.com", "code": last_code("ayesha@example.com")})
+    assert r.status_code == 400
 
 
 def test_cookie_refresh_never_returns_tokens_in_body(client):

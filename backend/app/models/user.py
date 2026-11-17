@@ -20,9 +20,24 @@ class User(IdMixin, TimestampMixin, Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     token_version: Mapped[int] = mapped_column(Integer, default=0)  # bump to revoke all sessions
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Set once the student proves they own the address (email code/link, or Google). Password sign-in needs it.
+    email_verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     student_profile: Mapped["StudentProfile | None"] = relationship(back_populates="user", uselist=False)
     teacher_profile: Mapped["TeacherProfile | None"] = relationship(back_populates="user", uselist=False)
+
+
+class EmailVerification(IdMixin, TimestampMixin, Base):
+    """The one pending email check for a user: a 6-digit code and a link token, both stored only as hashes.
+    Re-sending replaces the row, so only the newest code and link work."""
+
+    __tablename__ = "email_verifications"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), unique=True)
+    code_hash: Mapped[str] = mapped_column(String(64))
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    attempts: Mapped[int] = mapped_column(Integer, default=0)
 
 
 class StudentProfile(IdMixin, TimestampMixin, Base):

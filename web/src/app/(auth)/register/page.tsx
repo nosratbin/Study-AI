@@ -2,45 +2,47 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState } from "react";
 import { Divider, GoogleButton } from "@/components/auth/google-button";
-import { Alert, Button, Card, Field, Input } from "@/components/ui";
+import type { ButtonState } from "@/components/beui/button/stateful";
+import { SignUpForm, type SignUpErrors, type SignUpValues } from "@/components/beui/signup-form";
+import { Alert, Card } from "@/components/ui";
 import { ApiError } from "@/lib/api";
 import { homeFor, useAuth } from "@/lib/auth";
 import { registerSchema, zodErrors } from "@/lib/validation";
 
-const EMPTY = { full_name: "", email: "", password: "", confirm: "" };
+const validate = (values: SignUpValues): SignUpErrors => {
+  const parsed = registerSchema.safeParse(values);
+  return parsed.success ? {} : zodErrors(parsed.error);
+};
 
 export default function RegisterPage() {
   const { user, loading, register } = useAuth();
   const router = useRouter();
-  const [form, setForm] = useState(EMPTY);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [formError, setFormError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [status, setStatus] = useState<ButtonState>("idle");
+  const [formError, setFormError] = useState("");
+  const [serverErrors, setServerErrors] = useState<SignUpErrors>();
+  const [googleError, setGoogleError] = useState("");
 
   useEffect(() => {
     if (!loading && user) router.replace(homeFor(user));
   }, [user, loading, router]);
 
-  const set = (k: keyof typeof EMPTY) => (e: { target: { value: string } }) => setForm((f) => ({ ...f, [k]: e.target.value }));
-
-  async function onSubmit(e: FormEvent) {
-    e.preventDefault();
-    setFormError(null);
-    const parsed = registerSchema.safeParse(form);
-    if (!parsed.success) return setErrors(zodErrors(parsed.error));
-    setErrors({});
-    setBusy(true);
+  async function onSubmit(values: SignUpValues) {
+    const { full_name, email, password } = registerSchema.parse(values);
+    setFormError("");
+    setStatus("loading");
     try {
-      const u = await register(parsed.data.full_name, parsed.data.email, parsed.data.password);
-      router.replace(homeFor(u));
+      await register(full_name, email, password);
+      setStatus("success");
+      router.push("/verify-email");
     } catch (err) {
+      setStatus("error");
       if (err instanceof ApiError) {
-        setErrors(err.fieldErrors());
-        setFormError(err.message);
+        const fields = err.fieldErrors();
+        setServerErrors(err.code === "email_taken" ? { email: err.message } : fields);
+        if (err.code !== "email_taken" && !Object.keys(fields).length) setFormError(err.message);
       } else setFormError("Registration failed. Please try again.");
-      setBusy(false);
     }
   }
 
@@ -48,29 +50,19 @@ export default function RegisterPage() {
     <Card className="p-6 sm:p-8">
       <h1 className="text-2xl font-bold tracking-tight">Create your student account</h1>
       <p className="mt-1 text-sm text-muted">Free. Takes less than a minute.</p>
-      <div className="mt-6">
-        <GoogleButton onError={setFormError} />
+      <div className="mt-6 space-y-3">
+        <GoogleButton onError={setGoogleError} />
+        {googleError && <Alert>{googleError}</Alert>}
       </div>
       <Divider />
-      <form onSubmit={onSubmit} noValidate className="space-y-4">
-        {formError && <Alert>{formError}</Alert>}
-        <Field label="Full name" htmlFor="full_name" error={errors.full_name}>
-          <Input id="full_name" autoComplete="name" value={form.full_name} onChange={set("full_name")} invalid={!!errors.full_name} />
-        </Field>
-        <Field label="Email" htmlFor="email" error={errors.email}>
-          <Input id="email" type="email" autoComplete="email" value={form.email} onChange={set("email")} invalid={!!errors.email} />
-        </Field>
-        <Field label="Password" htmlFor="password" error={errors.password} hint="At least 8 characters, with a letter and a number.">
-          <Input id="password" type="password" autoComplete="new-password" value={form.password} onChange={set("password")} invalid={!!errors.password} />
-        </Field>
-        <Field label="Confirm password" htmlFor="confirm" error={errors.confirm}>
-          <Input id="confirm" type="password" autoComplete="new-password" value={form.confirm} onChange={set("confirm")} invalid={!!errors.confirm} />
-        </Field>
-        <Button type="submit" loading={busy} className="w-full">
-          Create account
-        </Button>
-        <p className="text-center text-xs text-muted">Teacher or mentor? Accounts are set up by a IccheGhuri admin.</p>
-      </form>
+      <SignUpForm
+        validate={validate}
+        onSubmit={onSubmit}
+        status={status}
+        errorMessage={formError}
+        serverErrors={serverErrors}
+        footer={<>Teacher or mentor? Accounts are set up by an IccheGhuri admin.</>}
+      />
       <p className="mt-6 text-center text-sm text-muted">
         Already have an account?{" "}
         <Link href="/login" className="font-semibold text-brand-600 hover:underline">

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { contactSchema, isMinor, loginSchema, onboardingSchema, registerSchema, zodErrors } from "./validation";
+import { contactSchema, EMAIL_ALIAS_MESSAGE, isMinor, loginSchema, onboardingSchema, registerSchema, zodErrors } from "./validation";
 
 describe("registerSchema", () => {
   const ok = { full_name: "  Ayesha   Rahman ", email: " Ayesha@Example.com ", password: "secret123", confirm: "secret123" };
@@ -22,7 +22,14 @@ describe("registerSchema", () => {
   it("requires matching confirmation", () => {
     const r = registerSchema.safeParse({ ...ok, confirm: "other123" });
     expect(r.success).toBe(false);
-    if (!r.success) expect(zodErrors(r.error).confirm).toBeDefined();
+    if (!r.success) expect(zodErrors(r.error).confirm).toBe("Passwords don't match");
+  });
+
+  it("rejects plus aliases with the backend's message", () => {
+    const r = registerSchema.safeParse({ ...ok, email: "ayesha+school@example.com" });
+    expect(r.success).toBe(false);
+    if (!r.success) expect(zodErrors(r.error).email).toBe(EMAIL_ALIAS_MESSAGE);
+    expect(registerSchema.safeParse({ ...ok, email: "a.yesha@example.com" }).success).toBe(true);
   });
 });
 
