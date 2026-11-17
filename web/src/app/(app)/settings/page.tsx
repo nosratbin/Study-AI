@@ -3,8 +3,10 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { Alert, Button, Card, Field, Input, Select, Spinner } from "@/components/ui";
+import { Combobox } from "@/components/ui/combobox";
 import { api, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { districtSearch, institutionSearch } from "@/lib/edu-directory";
 import { LEVELS, type EducationLevel, type Language, type StudentProfile } from "@/lib/types";
 
 export default function SettingsPage() {
@@ -92,13 +94,15 @@ export default function SettingsPage() {
                   </Select>
                 </Field>
                 <Field label="Institution" htmlFor="institution" optional>
-                  <Input id="institution" value={form.institution} onChange={(e) => setForm({ ...form, institution: e.target.value })} />
+                  <Combobox id="institution" placeholder="Dhaka University" value={form.institution} search={institutionSearch(form.education_level)}
+                    onChange={(v) => setForm((f) => ({ ...f, institution: v }))} />
                 </Field>
                 <Field label="Class or year" htmlFor="class_or_year" optional>
                   <Input id="class_or_year" value={form.class_or_year} onChange={(e) => setForm({ ...form, class_or_year: e.target.value })} />
                 </Field>
                 <Field label="District" htmlFor="district" optional>
-                  <Input id="district" value={form.district} onChange={(e) => setForm({ ...form, district: e.target.value })} />
+                  <Combobox id="district" placeholder="Dhaka" minChars={1} value={form.district} search={districtSearch}
+                    onChange={(v) => setForm((f) => ({ ...f, district: v }))} />
                 </Field>
               </div>
               {profile.is_minor && (

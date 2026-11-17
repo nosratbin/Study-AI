@@ -55,6 +55,7 @@ pnpm vitest run src/lib/validation.test.ts -t "name"             # single test
 - **Encryption at rest**: `app/core/crypto.py` `seal`/`unseal` (Fernet, `DATA_ENCRYPTION_KEY`; production refuses to start without it). Use it for MindCare notes and support requests. Mood numbers stay plain.
 - **AI**: `app/services/llm.py` (Gemini REST with a model fallback chain `GEMINI_MODEL` + `GEMINI_FALLBACK_MODELS`; tests override `get_llm` with `tests/fakes.py:FakeLLM`), `rag.py` (chunk, embed, pgvector cosine retrieve), `tutor.py` (prompts). Tutor quizzes are practice-only, never stored.
 - **Module availability**: unreleased modules show as disabled nav items. Flip `available` in `NAV`/`BOTTOM` (`app-shell.tsx`) and `MODULES`/`CURRENT_PHASE` (`backend/app/services/dashboard.py`) when a phase ships.
+- **Institution and district suggestions**: `GET /api/meta/institutions?q=&level=` and `/api/meta/districts` (public) search `backend/app/data/*.json` via `services/edu_directory.py`. `python scripts/build_edu_data.py` regenerates the JSON from Wikidata, Hipo and nuhil/bangladesh-geocode. The web `Combobox` (`components/ui/combobox.tsx`) only suggests; any typed value is still saved.
 - **Client and server validation**: they are mirrored. `web/src/lib/validation.ts` (zod) must match the backend Pydantic schemas: password rules and the minor rule `currentYear - birth_year <= 18`.
 
 ## Product rules that constrain code

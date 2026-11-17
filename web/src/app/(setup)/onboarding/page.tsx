@@ -6,15 +6,15 @@ import clsx from "clsx";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { RequireAuth } from "@/components/layout/app-shell";
 import { Alert, Button, Card, Field, Input, Logo, Select, Textarea } from "@/components/ui";
+import { Combobox } from "@/components/ui/combobox";
 import { api, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { districtSearch, institutionSearch } from "@/lib/edu-directory";
 import { LEVELS, type EducationLevel, type StudentProfile } from "@/lib/types";
 import { isMinor, onboardingSchema, zodErrors } from "@/lib/validation";
 
 const INTERESTS = ["Python", "Machine Learning", "Robotics", "Data Science", "Web Development", "Mathematics",
   "Research", "Entrepreneurship", "Design", "Competitions", "Study Abroad", "Sports", "Culture"];
-
-const DISTRICTS_HINT = "e.g. Dhaka, Chattogram, Rajshahi, Sylhet";
 
 type Form = {
   education_level: EducationLevel | "";
@@ -157,13 +157,15 @@ function Onboarding() {
                   </Select>
                 </Field>
                 <Field label="School / college / university" htmlFor="institution" optional error={errors.institution}>
-                  <Input id="institution" value={form.institution} onChange={(e) => set("institution", e.target.value)} />
+                  <Combobox id="institution" placeholder="Dhaka University" value={form.institution} invalid={!!errors.institution}
+                    search={institutionSearch(form.education_level)} onChange={(v) => set("institution", v)} />
                 </Field>
                 <Field label="Class or year" htmlFor="class_or_year" optional error={errors.class_or_year}>
                   <Input id="class_or_year" placeholder="Class 9 / HSC 1st year / 3rd year" value={form.class_or_year} onChange={(e) => set("class_or_year", e.target.value)} />
                 </Field>
-                <Field label="District" htmlFor="district" optional hint={DISTRICTS_HINT} error={errors.district}>
-                  <Input id="district" value={form.district} onChange={(e) => set("district", e.target.value)} />
+                <Field label="District" htmlFor="district" optional error={errors.district}>
+                  <Combobox id="district" placeholder="Dhaka" minChars={1} value={form.district} invalid={!!errors.district}
+                    search={districtSearch} onChange={(v) => set("district", v)} />
                 </Field>
               </div>
               {minor && (

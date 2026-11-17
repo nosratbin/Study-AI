@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends
+from typing import Annotated, Literal
+
+from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy import text
 
 from app.core.config import get_settings
@@ -6,6 +8,7 @@ from app.core.deps import DbSession
 from app.core.rate_limit import rate_limit
 from app.models import ContactMessage
 from app.schemas.student import ContactIn
+from app.services import edu_directory
 
 router = APIRouter(tags=["public"])
 
@@ -31,3 +34,19 @@ def contact(body: ContactIn, db: DbSession):
     db.add(ContactMessage(**body.model_dump()))
     db.commit()
     return {"ok": True}
+
+
+# Onboarding and settings suggestions. Public and cheap (in-memory lists), so the Expo app can use them before sign-in too.
+@router.get("/meta/institutions", dependencies=[Depends(rate_limit("meta", 120, 60))])
+def institutions(
+    q: Annotated[str, Query(max_length=100)] = "",
+    level: Literal["school", "college", "university"] | None = None,
+    limit: Annotated[int, Query(ge=1, le=20)] = 8,
+):
+    return {"items": edu_directory.search_institutions(q, level, limit)}
+
+
+@router.get("/meta/districts")
+def districts(response: Response):
+    response.headers["Cache-Control"] = "public, max-age=86400"
+    return {"items": edu_directory.districts()}

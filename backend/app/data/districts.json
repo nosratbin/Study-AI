@@ -1,0 +1,264 @@
+{
+ "generated": "2026-11-17",
+ "sources": [
+  "nuhil/bangladesh-geocode (MIT)"
+ ],
+ "items": [
+  {
+   "name": "Bagerhat",
+   "bn": "বাগেরহাট"
+  },
+  {
+   "name": "Bandarban",
+   "bn": "বান্দরবান"
+  },
+  {
+   "name": "Barguna",
+   "bn": "বরগুনা"
+  },
+  {
+   "name": "Barishal",
+   "bn": "বরিশাল"
+  },
+  {
+   "name": "Bhola",
+   "bn": "ভোলা"
+  },
+  {
+   "name": "Bogura",
+   "bn": "বগুড়া"
+  },
+  {
+   "name": "Brahmanbaria",
+   "bn": "ব্রাহ্মণবাড়িয়া"
+  },
+  {
+   "name": "Chandpur",
+   "bn": "চাঁদপুর"
+  },
+  {
+   "name": "Chapainababganj",
+   "bn": "চাঁপাইনবাবগঞ্জ"
+  },
+  {
+   "name": "Chattogram",
+   "bn": "চট্টগ্রাম"
+  },
+  {
+   "name": "Chuadanga",
+   "bn": "চুয়াডাঙ্গা"
+  },
+  {
+   "name": "Cox's Bazar",
+   "bn": "কক্সবাজার"
+  },
+  {
+   "name": "Cumilla",
+   "bn": "কুমিল্লা"
+  },
+  {
+   "name": "Dhaka",
+   "bn": "ঢাকা"
+  },
+  {
+   "name": "Dinajpur",
+   "bn": "দিনাজপুর"
+  },
+  {
+   "name": "Faridpur",
+   "bn": "ফরিদপুর"
+  },
+  {
+   "name": "Feni",
+   "bn": "ফেনী"
+  },
+  {
+   "name": "Gaibandha",
+   "bn": "গাইবান্ধা"
+  },
+  {
+   "name": "Gazipur",
+   "bn": "গাজীপুর"
+  },
+  {
+   "name": "Gopalganj",
+   "bn": "গোপালগঞ্জ"
+  },
+  {
+   "name": "Habiganj",
+   "bn": "হবিগঞ্জ"
+  },
+  {
+   "name": "Jamalpur",
+   "bn": "জামালপুর"
+  },
+  {
+   "name": "Jashore",
+   "bn": "যশোর"
+  },
+  {
+   "name": "Jhalokati",
+   "bn": "ঝালকাঠি"
+  },
+  {
+   "name": "Jhenaidah",
+   "bn": "ঝিনাইদহ"
+  },
+  {
+   "name": "Joypurhat",
+   "bn": "জয়পুরহাট"
+  },
+  {
+   "name": "Khagrachhari",
+   "bn": "খাগড়াছড়ি"
+  },
+  {
+   "name": "Khulna",
+   "bn": "খুলনা"
+  },
+  {
+   "name": "Kishoreganj",
+   "bn": "কিশোরগঞ্জ"
+  },
+  {
+   "name": "Kurigram",
+   "bn": "কুড়িগ্রাম"
+  },
+  {
+   "name": "Kushtia",
+   "bn": "কুষ্টিয়া"
+  },
+  {
+   "name": "Lakshmipur",
+   "bn": "লক্ষ্মীপুর"
+  },
+  {
+   "name": "Lalmonirhat",
+   "bn": "লালমনিরহাট"
+  },
+  {
+   "name": "Madaripur",
+   "bn": "মাদারীপুর"
+  },
+  {
+   "name": "Magura",
+   "bn": "মাগুরা"
+  },
+  {
+   "name": "Manikganj",
+   "bn": "মানিকগঞ্জ"
+  },
+  {
+   "name": "Meherpur",
+   "bn": "মেহেরপুর"
+  },
+  {
+   "name": "Moulvibazar",
+   "bn": "মৌলভীবাজার"
+  },
+  {
+   "name": "Munshiganj",
+   "bn": "মুন্সিগঞ্জ"
+  },
+  {
+   "name": "Mymensingh",
+   "bn": "ময়মনসিংহ"
+  },
+  {
+   "name": "Naogaon",
+   "bn": "নওগাঁ"
+  },
+  {
+   "name": "Narail",
+   "bn": "নড়াইল"
+  },
+  {
+   "name": "Narayanganj",
+   "bn": "নারায়ণগঞ্জ"
+  },
+  {
+   "name": "Narsingdi",
+   "bn": "নরসিংদী"
+  },
+  {
+   "name": "Natore",
+   "bn": "নাটোর"
+  },
+  {
+   "name": "Netrakona",
+   "bn": "নেত্রকোণা"
+  },
+  {
+   "name": "Nilphamari",
+   "bn": "নীলফামারী"
+  },
+  {
+   "name": "Noakhali",
+   "bn": "নোয়াখালী"
+  },
+  {
+   "name": "Pabna",
+   "bn": "পাবনা"
+  },
+  {
+   "name": "Panchagarh",
+   "bn": "পঞ্চগড়"
+  },
+  {
+   "name": "Patuakhali",
+   "bn": "পটুয়াখালী"
+  },
+  {
+   "name": "Pirojpur",
+   "bn": "পিরোজপুর"
+  },
+  {
+   "name": "Rajbari",
+   "bn": "রাজবাড়ী"
+  },
+  {
+   "name": "Rajshahi",
+   "bn": "রাজশাহী"
+  },
+  {
+   "name": "Rangamati",
+   "bn": "রাঙ্গামাটি"
+  },
+  {
+   "name": "Rangpur",
+   "bn": "রংপুর"
+  },
+  {
+   "name": "Satkhira",
+   "bn": "সাতক্ষীরা"
+  },
+  {
+   "name": "Shariatpur",
+   "bn": "শরীয়তপুর"
+  },
+  {
+   "name": "Sherpur",
+   "bn": "শেরপুর"
+  },
+  {
+   "name": "Sirajganj",
+   "bn": "সিরাজগঞ্জ"
+  },
+  {
+   "name": "Sunamganj",
+   "bn": "সুনামগঞ্জ"
+  },
+  {
+   "name": "Sylhet",
+   "bn": "সিলেট"
+  },
+  {
+   "name": "Tangail",
+   "bn": "টাঙ্গাইল"
+  },
+  {
+   "name": "Thakurgaon",
+   "bn": "ঠাকুরগাঁও"
+  }
+ ]
+}

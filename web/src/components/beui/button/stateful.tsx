@@ -1,7 +1,8 @@
 "use client";
 // beui.dev/components/motion/button
 
-import { Check, Loader2, X } from "lucide-react";
+// IccheGhuri: no icon in the error state; an "×" beside "Try again" reads as cancel/close.
+import { Check, Loader2 } from "lucide-react";
 import {
   AnimatePresence,
   motion,
@@ -11,6 +12,7 @@ import {
 import {
   forwardRef,
   type ReactNode,
+  useEffect,
   useLayoutEffect,
   useRef,
   useState,
@@ -37,6 +39,11 @@ export interface StatefulButtonProps extends Omit<ButtonProps, "children"> {
   successText?: ReactNode;
   errorText?: ReactNode;
   icon?: ReactNode;
+  /**
+   * How long the error label stays before the button shows its normal label again (ms). The error itself belongs in
+   * the form's alert; a submit button stuck on "Try again" reads like a cancel action. 0 keeps it until `state` changes.
+   */
+  errorDuration?: number;
   /** Override any built-in string. */
   labels?: Partial<StatefulButtonMessages>;
 }
@@ -197,12 +204,13 @@ function TextSlot({
 
 export const StatefulButton = forwardRef<HTMLButtonElement, StatefulButtonProps>(function StatefulButton(
   {
-    state = "idle",
+    state: requested = "idle",
     children,
     loadingText,
     successText,
     errorText,
     icon,
+    errorDuration = 1800,
     labels,
     disabled,
     ...rest
@@ -210,6 +218,20 @@ export const StatefulButton = forwardRef<HTMLButtonElement, StatefulButtonProps>
   ref,
 ) {
   const t = useMessages("statefulButton", statefulButtonMessages, labels);
+  // Each new error shows in full: reset the expiry whenever the caller's state changes.
+  const [errorExpired, setErrorExpired] = useState(false);
+  const [lastState, setLastState] = useState(requested);
+  if (requested !== lastState) {
+    setLastState(requested);
+    setErrorExpired(false);
+  }
+  useEffect(() => {
+    if (requested !== "error" || !errorDuration) return;
+    const timer = setTimeout(() => setErrorExpired(true), errorDuration);
+    return () => clearTimeout(timer);
+  }, [requested, errorDuration]);
+  const state: ButtonState = requested === "error" && errorExpired ? "idle" : requested;
+
   const isBusy = state === "loading";
   const stateText =
     state === "loading"
@@ -237,11 +259,6 @@ export const StatefulButton = forwardRef<HTMLButtonElement, StatefulButtonProps>
           {state === "success" ? (
             <IconSlot keyId="success-icon">
               <Check className="h-4 w-4" />
-            </IconSlot>
-          ) : null}
-          {state === "error" ? (
-            <IconSlot keyId="error-icon">
-              <X className="h-4 w-4" />
             </IconSlot>
           ) : null}
         </AnimatePresence>
