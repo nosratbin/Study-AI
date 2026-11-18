@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { BookOpen, Bot, Info, Languages, ListChecks, MessageSquare, MessageSquarePlus, MessagesSquare, PanelLeft, Search, Trash2, X } from "lucide-react";
 import { Alert, Badge, Spinner } from "@/components/ui";
@@ -66,12 +66,31 @@ export default function TutorPage() {
   const [freshIds, setFreshIds] = useState<Set<string>>(() => new Set());
   const pendingSeq = useRef(0);
   const [query, setQuery] = useState("");
+  // Pin to the bottom while loading history and waiting for a reply. When the reply lands, stop following and bring
+  // the question to the top instead, so the answer reads from its start rather than its end.
+  const [follow, setFollow] = useState(true);
+  const anchorRef = useRef<string | null>(null);
+  const viewportRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const anchorId = anchorRef.current;
+    if (!anchorId) return;
+    anchorRef.current = null;
+    const viewport = viewportRef.current;
+    const el = viewport?.querySelector<HTMLElement>(`[data-msg-id="${anchorId}"]`);
+    if (viewport && el) {
+      const top = el.getBoundingClientRect().top - viewport.getBoundingClientRect().top + viewport.scrollTop - 16;
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      viewport.scrollTo({ top, behavior: reduce ? "auto" : "smooth" });
+    }
+  }, [messages]);
 
   const lesson = lessonParam ? lessonCtx.data : null;
   const configured = status.data?.configured ?? true;
   const remaining = status.data ? Math.max(0, status.data.daily_limit - status.data.used_today) : null;
 
   const openConversation = useCallback(async (id: string) => {
+    setFollow(true);
     setActiveId(id);
     setMode("chat");
     setError(null);
@@ -87,6 +106,7 @@ export default function TutorPage() {
   }, []);
 
   function newChat() {
+    setFollow(true);
     setActiveId(null);
     setMessages([]);
     setError(null);
@@ -109,6 +129,7 @@ export default function TutorPage() {
     if (!message || sending) return;
     setError(null);
     setSending(true);
+    setFollow(true);
     setInput("");
     const pending: ChatMessage = { id: `pending-${++pendingSeq.current}`, role: "user", content: message, sources: [], created_at: "" };
     setMessages((m) => [...m, pending]);
@@ -121,6 +142,8 @@ export default function TutorPage() {
       // The saved user message replaces the pending one under the same key, so it doesn't pop in twice.
       setMessages((m) => [...m.filter((x) => x.id !== pending.id), { ...res.user_message, id: pending.id }, res.assistant_message]);
       setFreshIds((s) => new Set(s).add(res.assistant_message.id));
+      setFollow(false);
+      anchorRef.current = pending.id;
       setActiveId(res.conversation.id);
       convs.setData((list) => [res.conversation, ...(list ?? []).filter((c) => c.id !== res.conversation.id)]);
       status.setData((s) => (s ? { ...s, used_today: s.used_today + 1 } : s));
@@ -146,7 +169,7 @@ export default function TutorPage() {
       labels={{ label: "Conversation history", toggle: "Show or hide conversation history", close: "Close conversation history" }}
       className="h-[calc(100dvh-12.5rem)] min-h-[480px] border-line bg-card lg:h-[calc(100dvh-4.5rem)]"
     >
-      <AnimatedSidebar collapsible="offcanvas" ariaLabel="Conversation history" className="border-r border-line bg-surface/60">
+      <AnimatedSidebar collapsible="offcanvas" ariaLabel="Conversation history" className="border-r border-line bg-card md:bg-surface/60">
         <AnimatedSidebarHeader>
           <button
             type="button"
@@ -289,6 +312,8 @@ export default function TutorPage() {
               <MessageScroller
                 label="Conversation with the AI Tutor"
                 busy={sending}
+                followOutput={follow}
+                viewportRef={viewportRef}
                 className="min-h-0 flex-1"
                 contentClassName="mx-auto flex w-full max-w-3xl flex-col gap-5 px-4 py-5 sm:px-6"
               >
@@ -343,7 +368,7 @@ export default function TutorPage() {
 function ChatRow({ message: m, fresh }: { message: ChatMessage; fresh: boolean }) {
   if (m.role === "user")
     return (
-      <Message from="user" animateIn={fresh}>
+      <Message from="user" animateIn={fresh} data-msg-id={m.id}>
         <MessageContent>
           <MessageBubble animateIn={fresh} className="max-w-[85%]">
             <MessageBubbleContent className="text-[15px] whitespace-pre-wrap">{m.content}</MessageBubbleContent>

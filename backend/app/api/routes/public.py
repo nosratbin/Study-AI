@@ -25,7 +25,7 @@ def health(db: DbSession):
         "status": "ok" if db_ok else "degraded",
         "database": "ok" if db_ok else "unreachable",
         "database_engine": db.get_bind().dialect.name,
-        "integrations": {"google_signin": s.firebase_enabled, "gemini": s.ai_enabled, "google_workspace": s.google_enabled, "email": s.email_enabled},
+        "integrations": {"google_signin": s.firebase_enabled, "gemini": s.ai_enabled, "groq": bool(s.groq_api_key), "zai": bool(s.zai_api_key), "google_workspace": s.google_enabled, "email": s.email_enabled},
     }
 
 

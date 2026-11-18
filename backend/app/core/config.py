@@ -48,6 +48,12 @@ class Settings(BaseSettings):
     # Comma-separated models tried in order when the primary is overloaded (429/503) or retired (404).
     gemini_fallback_models: str = "gemini-flash-latest,gemini-3.1-flash-lite"
     gemini_embedding_model: str = "gemini-embedding-001"
+    # Optional chat providers tried before (Groq) and after (Z.ai) Gemini. Each Groq model has its own free quota
+    # (30 requests and 8,000 tokens a minute), so listing several stretches it. Embeddings always use Gemini.
+    groq_api_key: str = ""
+    groq_models: str = "openai/gpt-oss-120b,qwen/qwen3.8-27b,openai/gpt-oss-20b"
+    zai_api_key: str = ""
+    zai_models: str = "glm-4.5-flash"
     embedding_dim: int = 768
     ai_timeout_seconds: float = 45.0
     ai_messages_per_minute: int = 12   # per user
