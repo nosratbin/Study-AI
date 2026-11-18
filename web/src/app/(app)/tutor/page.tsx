@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useRef, useState } from "react";
 import clsx from "clsx";
-import { BookOpen, Bot, Info, Languages, ListChecks, MessageSquare, MessageSquarePlus, MessagesSquare, PanelLeft, Trash2, X } from "lucide-react";
+import { BookOpen, Bot, Info, Languages, ListChecks, MessageSquare, MessageSquarePlus, MessagesSquare, PanelLeft, Search, Trash2, X } from "lucide-react";
 import { Alert, Badge, Spinner } from "@/components/ui";
 import { BorderBeam } from "@/components/vengeance/border-beam";
 import { Markdown } from "@/components/learning/markdown";
@@ -65,6 +65,7 @@ export default function TutorPage() {
   // Only messages sent in this visit pop in; history loads still.
   const [freshIds, setFreshIds] = useState<Set<string>>(() => new Set());
   const pendingSeq = useRef(0);
+  const [query, setQuery] = useState("");
 
   const lesson = lessonParam ? lessonCtx.data : null;
   const configured = status.data?.configured ?? true;
@@ -132,6 +133,9 @@ export default function TutorPage() {
     }
   }
 
+  const q = query.trim().toLocaleLowerCase();
+  const shown = q ? (convs.data ?? []).filter((c) => c.title.toLocaleLowerCase().includes(q)) : (convs.data ?? []);
+
   const starters = lesson
     ? [`Explain “${lesson.title}” in simple words.`, "Give me an example from everyday life.", "এই পাঠের মূল বিষয়গুলো বাংলায় বুঝিয়ে দাও।", "Quiz me with 3 quick questions on this."]
     : STARTERS;
@@ -151,6 +155,17 @@ export default function TutorPage() {
           >
             <MessageSquarePlus className="size-4" aria-hidden /> New chat
           </button>
+          <label className="relative block">
+            <span className="sr-only">Search conversations</span>
+            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted" aria-hidden />
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search chats"
+              className="h-9 w-full rounded-xl border border-line bg-card pr-3 pl-9 text-sm placeholder:text-muted/80 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30 focus:outline-none"
+            />
+          </label>
         </AnimatedSidebarHeader>
         <AnimatedSidebarContent>
           <AnimatedSidebarGroup>
@@ -163,9 +178,11 @@ export default function TutorPage() {
               </div>
             ) : convs.data.length === 0 ? (
               <p className="px-2 text-sm text-muted">Your conversations will appear here.</p>
+            ) : shown.length === 0 ? (
+              <p className="px-2 text-sm text-muted">No chats match “{query.trim()}”.</p>
             ) : (
               <AnimatedSidebarMenu>
-                {convs.data.map((c) => (
+                {shown.map((c) => (
                   <AnimatedSidebarMenuItem key={c.id} className="group/conv">
                     <AnimatedSidebarMenuButton icon={<MessageSquare />} isActive={c.id === activeId} onSelect={() => openConversation(c.id)} className="pr-9">
                       <span lang={c.language}>{c.title}</span>
@@ -272,7 +289,6 @@ export default function TutorPage() {
               <MessageScroller
                 label="Conversation with the AI Tutor"
                 busy={sending}
-                navigation="rail"
                 className="min-h-0 flex-1"
                 contentClassName="mx-auto flex w-full max-w-3xl flex-col gap-5 px-4 py-5 sm:px-6"
               >

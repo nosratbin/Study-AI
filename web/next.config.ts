@@ -6,6 +6,11 @@ const BACKEND_URL = process.env.BACKEND_URL ?? "http://127.0.0.1:8000";
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
+  experimental: {
+    // The /api rewrite proxy gives up after 30s by default, but a tutor reply (RAG + Gemini with model fallbacks) can
+    // take longer: the backend saved the answer while the browser was told the request failed.
+    proxyTimeout: 120_000,
+  },
   partialPrefetching: true,
   turbopack: {
     rules: {

@@ -198,6 +198,14 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Hidden scrollbar that still scrolls (the BeUI composer grows to 8 rows, then scrolls). */
+@utility scrollbar-hide {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 :focus-visible {
   outline: 2px solid var(--color-brand-500);
   outline-offset: 2px;

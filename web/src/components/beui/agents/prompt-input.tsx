@@ -193,7 +193,7 @@ export function PromptInput({
       <div
         ref={measurementRef}
         aria-hidden="true"
-        className="pointer-events-none invisible absolute inset-x-2 top-0 whitespace-pre-wrap px-2 text-sm leading-6 [overflow-wrap:break-word]"
+        className="pointer-events-none invisible absolute inset-x-2 top-0 whitespace-pre-wrap px-2 pt-1.5 text-sm leading-6 [overflow-wrap:break-word]"
       >
         {`${currentValue}\u200b`}
       </div>
@@ -207,6 +207,8 @@ export function PromptInput({
         {...textareaProps}
         onChange={(event) => setValue(event.target.value)}
         onKeyDown={handleKeyDown}
+        // IccheGhuri: the form shows focus (focus-within); the global :focus-visible outline would draw a second box.
+        style={{ outline: "none" }}
         className="scrollbar-hide block w-full resize-none overflow-y-auto bg-transparent px-2 pt-1.5 text-sm leading-6 text-foreground outline-none placeholder:text-muted-foreground/55"
       />
 
