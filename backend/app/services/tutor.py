@@ -79,9 +79,53 @@ def system_prompt(level: EducationLevel | None, language: Language, is_minor: bo
     return "\n\n".join(parts)
 
 
+# Openers that say nothing about the topic. Matched repeatedly at the start, so "Hi! Can you please explain ..." loses
+# all three before the title is taken.
+_FILLER = re.compile(
+    r"^(?:(?:hi+|hello+|hey+|hiya|yo|salam|assalamu ?alaikum|good (?:morning|afternoon|evening)|ok(?:ay)?|so|um+|"
+    r"please|pls|plz|sir|madam|teacher|tutor|bro|"
+    r"(?:can|could|would|will) you(?: please| pls| plz)?(?: help me(?: to| with| understand)?)?(?: to)?|"
+    r"i (?:want|need|would like) (?:you )?to(?: know| learn| understand)?(?: about)?|"
+    r"help me(?: to)?(?: understand| with)?|tell me(?: about)?|teach me(?: about)?|"
+    r"আচ্ছা|হাই|হ্যালো|সালাম|আসসালামু আলাইকুম|প্লিজ|দয়া করে|দয়া করে|একটু|আমাকে|ভাই|ভাইয়া|আপু|স্যার|আমি জানতে চাই|"
+    # Banglish (Bangla in Latin letters), spelled the many ways students type it.
+    r"bh?ai(?:ya|a)?|vai(?:ya|a)?|apu|apa|acc?h?h?a|asc?h?h?a|ektu|aktu|amake|amk|ami jan[te]+ chai|"
+    r"doya kore|doia kore|daya kore|help kor(?:o|en|ben|un)(?: na)?)"
+    # Whole words only ("so" must not eat the start of "some"); Bangla vowel signs aren't \w, hence the block range.
+    r"(?![\wঀ-৿])[\s,!.:;\-–—]*)+",
+    re.IGNORECASE,
+)
+# Trailing "please explain" requests, which carry no topic: "... ektu bujhiye dao plz", "... বুঝিয়ে দাও".
+_REQUEST_TAIL = re.compile(
+    r"(?:[\s,]+(?:ta|ti|টা|টি|ektu|aktu|একটু|amake|amk|আমাকে|plz|pls|please|প্লিজ))*[\s,]+"
+    r"(?:bujh(?:iy|ay|ai|a)e?|bujhai(?:ya)?|bujhao|buzhiye|বুঝিয়ে|বুঝিয়ে|বোঝাও|explain|bolo|bolen|বলো|বলুন|"
+    r"shikhao|sekhao|শেখাও|শিখিয়ে)"
+    r"(?:\s+(?:dao|daw|dau|den|din|dite paren|দাও|দিন|দেন|koro|korun|করো|করুন))?"
+    r"(?:[\s,]+(?:plz|pls|please|প্লিজ|to|তো))*\s*[?!.।]*$",
+    re.IGNORECASE,
+)
+_SENTENCE_END = re.compile(r"(?<=[?!।.])\s")
+TITLE_WORDS = 8
+TITLE_CHARS = 60
+
+
 def title_from(message: str) -> str:
-    t = " ".join(message.split())
-    return (t[:57] + "…") if len(t) > 60 else t or "New conversation"
+    """A short chat title from the first message, without calling a model: drop greetings and filler, keep the first
+    sentence, cut at a word boundary."""
+    text = " ".join(message.split())
+    stripped = _FILLER.sub("", text) or text
+    first = _SENTENCE_END.split(stripped, maxsplit=1)[0].strip() or stripped
+    first = _REQUEST_TAIL.sub("", first).strip() or first
+    words = first.split()
+    title = " ".join(words[:TITLE_WORDS])
+    if len(title) > TITLE_CHARS:
+        title = title[:TITLE_CHARS].rsplit(" ", 1)[0] or title[:TITLE_CHARS]
+    cut = len(words) > TITLE_WORDS or len(title) < len(" ".join(words))
+    title = title.rstrip(" ,;:-–—.।!?")
+    if not title:
+        return "New conversation"
+    title = title[0].upper() + title[1:]
+    return title + "…" if cut else title
 
 
 QUIZ_SCHEMA = {

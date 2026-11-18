@@ -7,7 +7,7 @@ from app.models import AIMessage, Course, KnowledgeChunk
 from app.seed import seed_courses
 from app.services.llm import get_llm
 from app.services.rag import chunk_text, ingest_lessons, retrieve, vector_distance
-from app.services.tutor import detect_language, system_prompt
+from app.services.tutor import detect_language, system_prompt, title_from
 from app.models.enums import Language
 from tests.conftest import ONBOARDING, register
 from tests.fakes import FakeLLM
@@ -234,3 +234,24 @@ def test_detect_language():
     assert detect_language("পাইথন কী?", Language.en) == Language.bn
     assert detect_language("What is Python?", Language.bn) == Language.bn  # falls back to preference
     assert detect_language("What is Python?", Language.en) == Language.en
+
+
+@pytest.mark.parametrize(("message", "title"), [
+    ("Explain a Python loop", "Explain a Python loop"),
+    ("hi! can you please explain how a python for loop works? im confused", "Explain how a python for loop works"),
+    ("Hello teacher, what is photosynthesis?", "What is photosynthesis"),
+    ("some history of Bangladesh", "Some history of Bangladesh"),
+    ("আচ্ছা, সালোকসংশ্লেষণ কী? একটু বুঝিয়ে দাও", "সালোকসংশ্লেষণ কী"),
+    ("ok so I want to learn about recursion in C and also pointers and memory please", "Recursion in C and also pointers and memory…"),
+    ("আমাকে নিউটনের দ্বিতীয় সূত্র বুঝিয়ে দাও", "নিউটনের দ্বিতীয় সূত্র"),
+    # Banglish
+    ("bhai photosynthesis ki? ektu bujhiye dao", "Photosynthesis ki"),
+    ("vai newton er 2nd law ta bujhay den plz", "Newton er 2nd law"),
+    ("apu HSC physics er vector chapter ta explain koro", "HSC physics er vector chapter"),
+    ("ami jante chai mitochondria ki kore kaj kore", "Mitochondria ki kore kaj kore"),
+    ("explain koro", "Explain koro"),
+    ("achievements of Bangabandhu", "Achievements of Bangabandhu"),
+    ("????", "New conversation"),
+])
+def test_chat_title_drops_greetings_and_keeps_the_topic(message, title):
+    assert title_from(message) == title

@@ -390,8 +390,19 @@ export function SelectContent({ className, children }: SelectContentProps) {
     if (!trigger || !node) return;
     const rect = trigger.getBoundingClientRect();
     const h = node.offsetHeight;
-    const below = window.innerHeight - rect.bottom;
-    const above = rect.top;
+    // IccheGhuri: measure against the visible area, not just the window. A select inside a clipping container (the
+    // tutor's chat box on a phone) had window room below, so it opened downward and was cut off.
+    let top = 0;
+    let bottom = window.innerHeight;
+    for (let el = trigger.parentElement; el && el !== document.body; el = el.parentElement) {
+      const { overflowX, overflowY } = getComputedStyle(el);
+      if (overflowX === "visible" && overflowY === "visible") continue;
+      const box = el.getBoundingClientRect();
+      top = Math.max(top, box.top);
+      bottom = Math.min(bottom, box.bottom);
+    }
+    const below = bottom - rect.bottom;
+    const above = rect.top - top;
     setPlacement(below < h + 16 && above > below ? "top" : "bottom");
   }, [open, ctx.triggerId, setPlacement]);
 
