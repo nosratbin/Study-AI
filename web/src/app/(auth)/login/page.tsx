@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Divider, GoogleButton } from "@/components/auth/google-button";
+import { GuestAccess } from "@/components/auth/guest-access";
 import type { ButtonState } from "@/components/beui/button/stateful";
 import { SignInForm, type SignInErrors, type SignInValues } from "@/components/beui/signin-form";
 import { Alert, Card } from "@/components/ui";
@@ -64,6 +65,7 @@ export default function LoginPage() {
           Create an account
         </Link>
       </p>
+      <GuestAccess />
     </Card>
   );
 }

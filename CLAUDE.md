@@ -48,7 +48,8 @@ pnpm vitest run src/lib/validation.test.ts -t "name"             # single test
   - Brand: the product was renamed from LEARN AI to IccheGhuri. `python brand/src/build.py` regenerates the outlined logo masters in `brand/logo/` (the guide is `brand/brand-guide.html`, built by `brand/src/guide.py`). The web app uses copies in `web/public/brand/` through `Logo` in `components/ui`, plus `src/app/icon.svg`, `apple-icon.png`, `favicon.ico` and `manifest.ts`. After rebuilding, copy the changed SVGs over. A few internal keys keep the old prefix on purpose: the `la_*` cookies, the dev data-key seed in `core/crypto.py` and the Drive `learnai_lesson` property.
   - `src/components/vengeance/` is the vendored VengeanceUI registry (all components, lint-ignored). Its shadcn vars map to the brand in `globals.css`. Use `bg-muted-bg` for shadcn's muted background, because `text-muted` is our secondary text colour. `dark:` only applies under a `.dark` ancestor.
   - `(app)/layout.tsx` wraps everything in `<Suspense>`, because with `cacheComponents` the `usePathname`/`useParams`/`useSearchParams` hooks suspend on dynamic routes and the build fails without a boundary.
-- **Opportunities**: student routes (`opportunities.py`) must only use `verified_query()`/`get_verified()` from `app/services/opportunities.py`. Admin CRUD/verify lives in `admin.py` and writes `AuditLog`. The matcher is rule-based (no LLM).
+- **Opportunities**: student routes (`opportunities.py`) must only use `verified_query()`/`get_verified()` from `app/services/opportunities.py`. Admin CRUD/verify lives in `admin.py` and writes `AuditLog`. The matcher is rule-based (no LLM). `Opportunity.tags` share the course skill vocabulary (`machine-learning`) and link opportunities to courses.
+- **Course catalogue**: `app/catalog.py` lists the 22 catalogue courses (skills, digital-library `resources`, and an `outline` for courses without lessons). `seed_catalog` in `seed_full_courses.py` syncs it idempotently: a course gets lessons from `app/content/courses/<slug>.md` once that file exists, otherwise it shows as "Coming soon" (`CourseCard.coming_soon`) with its outline. Old demo courses in `RETIRED_DEMO_SLUGS` are unpublished, not deleted. `services/course_links.py` links a course to projects, careers and verified opportunities by shared tags. The roadmap never makes an empty stage current. `python scripts/check_library_links.py` checks every library URL.
 - **Google Workspace**: `app/services/google.py` does OAuth (PKCE, a signed `la_gstate` cookie on path `/api/google`) and Drive/Docs/Calendar REST over httpx. Tests patch `google._client` with `httpx.MockTransport` and `google.verify_id_token`. Tokens are Fernet-encrypted (`GOOGLE_TOKEN_KEY`). Only an `invalid_grant` refresh error deletes a connection.
 - **Sessions**: tokens carry `jti` and `sid`. Logout writes both to `revoked_tokens` (`sid:<id>` keys); `is_revoked(db, payload)` checks both.
 - **Phase 4 modules**: `growth.py` models (challenges, study tasks, support directory/requests). Routes: `projects.py`, `skills.py` (passport, plus `public_router` for `/api/public/*`), `mindcare.py`, `planner.py`, and `admin_care.py`. Certificates are issued in `services/passport.py` when a course's lessons are all completed.
@@ -61,11 +62,43 @@ pnpm vitest run src/lib/validation.test.ts -t "name"             # single test
 ## Product rules that constrain code
 
 - Assessment scores come only from stored answer keys (`assessment_questions.correct_option`, never sent to students). The LLM must not produce official scores.
-- Only `verification_status == verified` opportunities are shown to students. Never seed or invent scholarships, deadlines or application URLs.
+- Only `verification_status == verified` opportunities are shown to students. Never invent scholarships, deadlines or application URLs. The only seeded ones are in `app/seed_opportunities.py`, each read on its official page (date and finding in `source_note`); unannounced dates stay `deadline=None`.
 - MindCare tables (`mood_checkins`) must never be read by academic or dashboard code (there is a test for this).
-- Seeded content is flagged `is_demo=True` and labelled "Demo" in the UI.
+- Seeded demo content is flagged `is_demo=True` and labelled "Demo" in the UI. Full courses are the exception: `app/seed_full_courses.py` loads real lessons from `app/content/courses/<slug>.md` (`@module` / `@lesson Title | minutes` markers) with `is_demo=False`. Lessons have an optional `module` heading that groups them on the course page.
+- Deploys never migrate or seed: `app.serve` only starts the server. After adding a migration or seed content, run `alembic upgrade head`, `python -m app.seed` and `python -m app.services.rag` against the live database (local config points at it). Re-run rag after a Gemini 429; finished lessons are skipped.
 - API keys (Gemini, Google OAuth secrets) stay server-side only. Google tokens are stored encrypted in `google_connections`.
 - Don't claim an integration works until it has been configured and tested. `/api/health` reports which integrations are configured.
 
 ## For unfamiliar features
 For unfamiliar features, don't write from scratch - first search GitHub for open-sorce projects, compare approaches, then get started
+
+<!-- ASTRYX:START -->
+Astryx v0.7.16 · 90+ components
+CLI: run every command as `astryx <cmd>` (shown below as `astryx ...`).
+
+SETUP (once, in app entry e.g. main.tsx) — without these, components render unstyled:
+  import "@astryxdesign/core/reset.css";
+  import "@astryxdesign/core/astryx.css";
+
+WORKFLOW — start every page from a template, never from scratch:
+1. `astryx build "<idea>"` — names the template to scaffold from and the parts it lacks.
+2. `astryx template <name> <path>` — scaffold it; keep its frame, gap and padding; replace the content.
+3. `astryx template <Block>` for parts it lacks; `astryx component <Name>` to read props before using one.
+Changing an existing page? Keep it: skip step 2 and add blocks/components inside its sections.
+
+RULES:
+- No <div> — components handle all layout and spacing.
+- Read `astryx docs layout` before changing a template's frame.
+- Dense data = rows (Table, List/Item), not Card-wrapped lists. Badge = counts only.
+- Style with component props first, then tokens (var(--color-*|--spacing-*|--radius-*)). No raw hex/px. No StyleX/Tailwind compiler here — don't use xstyle/utility classes directly. Some templates use StyleX and need a compiler plugin; see `astryx docs styling-overview`.
+- THEMES: palettes and custom colors go through the theme, never :root overrides. To make or change a theme (colors, fonts, corners, spacing, a look from a picture), prefer the experimental theme editor over hand-written theme files: `astryx experimental theme editor new <name> --like neutral`, then `editor set <name> <thing> <value>` or `editor how "<what you want>"`; wire it with `astryx theme add <name>`; after each change look at it with `astryx experimental theme editor show <name> --png` and open the PNGs it writes (changes nothing in the app); a theme change is not done until you have looked at the pictures. In code, extend an imported theme to customize it; `theme eject <slug>` only forks source. See `astryx docs theme`.
+- SELF-CHECK: re-read the file; replace any raw <div>/<span>, imported .css/@apply, or hardcoded #hex/px with the component or a token.
+
+`astryx help` lists every command. Key ones beyond the workflow:
+  search "<query>"   find any component / hook / doc / template
+  discover <words>   integrations you could add
+  docs <topic>       getting-started, principles, tokens, theme … (`astryx docs` lists all)
+  docs cli           commands and API reference
+  docs authoring     build an integration package, and every field it holds
+  upgrade --from <old version> --apply   run after a dependency bump
+<!-- ASTRYX:END -->

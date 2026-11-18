@@ -7,7 +7,7 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 from app.core.config import get_settings
 from app.core.security import MAX_PASSWORD_BYTES
-from app.models.enums import Role
+from app.models.enums import EducationLevel, Role
 
 
 def reject_alias(email: str) -> str:
@@ -45,6 +45,12 @@ class RegisterIn(BaseModel):
 # Seeded demo accounts (app/seed.py) use this reserved domain so they can never receive mail or exist in the wild.
 # Login accepts it only outside production; registration never does.
 DEMO_EMAIL_DOMAIN = "demo.iccheghuri.local"
+
+
+class GuestIn(BaseModel):
+    role: Role
+    # Guest students start at this level (they can change it in settings).
+    level: EducationLevel = EducationLevel.college
 
 
 class LoginIn(BaseModel):
@@ -100,6 +106,7 @@ class UserOut(BaseModel):
     role: Role
     avatar_url: str | None
     onboarding_completed: bool = False
+    is_guest: bool = False
     created_at: datetime
 
 

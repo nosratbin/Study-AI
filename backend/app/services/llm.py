@@ -19,6 +19,9 @@ log = logging.getLogger("iccheghuri.llm")
 GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta"
 # Statuses that mean "this model can't serve right now" (overloaded, rate-limited, retired), so try the next one.
 FALLBACK_STATUSES = {404, 429, 500, 503}
+# An overloaded model sometimes hangs instead of answering 503. Attempts that still have a fallback get this much time
+# (capped by AI_TIMEOUT_SECONDS) before the next model is tried; the last model gets the full timeout.
+FALLBACK_ATTEMPT_SECONDS = 15.0
 
 
 class _ModelUnavailable(Exception):
@@ -58,12 +61,17 @@ class GeminiProvider:
         self.fallback_models = tuple(m for m in fallback_models if m and m != model)
         self.embedding_model = embedding_model
         self.dim = dim
+        self.timeout = timeout
         self._client = httpx.Client(timeout=timeout, headers={"x-goog-api-key": api_key})
 
     def _post(self, url: str, body: dict, *, allow_fallback: bool = False) -> dict:
+        timeout = min(FALLBACK_ATTEMPT_SECONDS, self.timeout) if allow_fallback else self.timeout
         try:
-            r = self._client.post(url, json=body)
+            r = self._client.post(url, json=body, timeout=timeout)
         except httpx.TimeoutException:
+            log.warning("gemini timeout after %ss on %s", timeout, url.rsplit("/", 1)[-1])
+            if allow_fallback:
+                raise _ModelUnavailable(504)
             raise ApiError(504, "ai_timeout", "The AI tutor took too long to respond. Please try again.")
         except httpx.HTTPError:
             raise ApiError(502, "ai_unavailable", "The AI service is unreachable right now. Please try again.")

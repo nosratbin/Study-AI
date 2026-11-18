@@ -37,7 +37,23 @@ def get_current_user(request: Request, db: DbSession) -> User:
     if not user or not user.is_active or payload.get("ver") != user.token_version or is_revoked(db, payload):
         raise ApiError(401, "invalid_token", "Your session has expired. Please sign in again.")
     request.state.user_id = str(user.id)
+    if user.is_guest and request.method not in SAFE_METHODS and _guest_blocked(user, request.url.path):
+        raise ApiError(403, "guest_read_only", "Guest accounts can look around but can't make changes. Create a free account to try this.")
     return user
+
+
+SAFE_METHODS = {"GET", "HEAD", "OPTIONS"}
+# Sign-out and token refresh stay open; "sign out everywhere" would log out every visitor sharing a guest account.
+_GUEST_OPEN_PATHS = ("/api/auth/logout", "/api/auth/refresh")
+
+
+def _guest_blocked(user: User, path: str) -> bool:
+    """Guest teacher/admin are shared, so they are read-only. Guest students own a throwaway account and may use it fully."""
+    if path.startswith("/api/auth/logout-all"):
+        return user.role != Role.student
+    if path.startswith(_GUEST_OPEN_PATHS):
+        return False
+    return user.role != Role.student
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]

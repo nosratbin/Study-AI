@@ -1,5 +1,7 @@
 """Learning roadmap: Python -> AI Fundamentals -> Machine Learning -> Deep Learning -> AI Projects.
 
+Each stage collects published courses by category (see app/catalog.py).
+
 Stage status is derived from real lesson progress; a stage can also be skipped by
 scoring >= SKIP_STAGE_PCT on a published topic assessment for that stage.
 """
@@ -17,9 +19,10 @@ STAGES: list[tuple[str, str, str, list[str], int | None]] = [
     ("python", "Python Programming", "Variables, control flow, functions and data structures — the base for everything else.",
      ["programming", "python"], None),
     ("ai_fundamentals", "AI Fundamentals", "What AI is, types of machine learning, features, labels and evaluation.",
-     ["ai_fundamentals"], None),
+     ["ai_fundamentals", "data_science"], None),
     ("machine_learning", "Machine Learning", "Build, validate and tune models with real data.", ["machine_learning"], None),
-    ("deep_learning", "Deep Learning", "Neural networks, backpropagation and transfer learning.", ["deep_learning"], None),
+    ("deep_learning", "Deep Learning", "Neural networks, transformers, language models and agents.",
+     ["deep_learning", "nlp", "ai_agents"], None),
     ("projects", "AI Project Development", "Build and present real AI projects in the AI Project Lab.", [], 4),
 ]
 
@@ -73,7 +76,9 @@ def build_roadmap(db: Session, user: User) -> RoadmapOut:
                                        skipped_by_assessment=False, courses=[], next_lesson=None,
                                        available_in_phase=phase))
             continue
-        chosen = _pick_courses([c for c in published if c.category in categories], level)
+        in_stage = [c for c in published if c.category in categories]
+        # Courses with lessons first; if a stage only has "Coming soon" courses, show those so the plan is visible.
+        chosen = _pick_courses([c for c in in_stage if c.lessons], level) or _pick_courses(in_stage, level)
         cards = [course_card(c, counts, progress) for c in chosen]
         total = sum(c.lesson_count for c in cards)
         done = sum(c.completed_lessons for c in cards)
@@ -88,6 +93,8 @@ def build_roadmap(db: Session, user: User) -> RoadmapOut:
                     break
         if completed:
             status = "completed"
+        elif total == 0:  # nothing to study yet: never blocks the roadmap
+            status = "upcoming"
         elif current is None:
             status, current = "current", key
         else:
@@ -95,7 +102,8 @@ def build_roadmap(db: Session, user: User) -> RoadmapOut:
         stages.append(RoadmapStage(key=key, title=title, description=desc, status=status,
                                    percent=100 if completed else percent, skipped_by_assessment=skipped and done < total,
                                    courses=cards, next_lesson=nxt))
-        weights.append(100 if completed else percent)
+        if total or skipped:
+            weights.append(100 if completed else percent)
 
     overall = round(sum(weights) / len(weights)) if weights else 0
     return RoadmapOut(education_level=level, overall_percent=overall, current_stage=current, stages=stages)

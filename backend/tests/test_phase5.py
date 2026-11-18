@@ -8,6 +8,7 @@ from app.models import AuditLog, Career, Notification, Opportunity, Role, SavedO
 from app.models.enums import OpportunityCategory, VerificationStatus
 from app.seed import seed_courses
 from app.seed_careers import seed_careers
+from app.seed_full_courses import seed_catalog
 from app.services.llm import get_llm
 
 from .fakes import FakeLLM
@@ -230,7 +231,7 @@ def test_admin_dashboard_and_user_management(client, db_session):
 
 
 def test_careers_match_gap_goals_and_plan(client, db_session):
-    seed_courses(db_session)
+    seed_catalog(db_session)
     seed_careers(db_session)
     db_session.add(Career(slug="hidden", title="Hidden", field="x", summary="s", is_published=False))
     student(client)  # interests: python, ai
@@ -243,13 +244,13 @@ def test_careers_match_gap_goals_and_plan(client, db_session):
 
     d = client.get("/api/careers/ai-ml-engineer").json()
     assert not any(s["have"] for s in d["skills"])
-    lessons = client.get("/api/courses/python-fundamentals-college").json()["lessons"]
+    lessons = client.get("/api/courses/python-oop-college").json()["lessons"]
     for lesson in lessons:
         client.post("/api/learning/progress", json={"lesson_id": lesson["id"], "status": "completed"})
     d2 = client.get("/api/careers/ai-ml-engineer").json()
     py = next(s for s in d2["skills"] if s["name"] == "Python programming")
-    assert py["have"] and "Python Fundamentals" in py["evidence"] and d2["match"] > d["match"]
-    assert next(c for c in d2["courses"] if c["slug"] == "python-fundamentals-college")["status"] == "completed"
+    assert py["have"] and "Python Programming & OOP" in py["evidence"] and d2["match"] > d["match"]
+    assert next(c for c in d2["courses"] if c["slug"] == "python-oop-college")["status"] == "completed"
 
     for slug in ("ai-ml-engineer", "data-analyst", "software-developer"):
         assert client.put(f"/api/careers/{slug}/goal", json={"note": "maybe"}).status_code == 200

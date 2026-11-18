@@ -10,6 +10,7 @@ from datetime import UTC, date, datetime, timedelta
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
 
+from app.services.guest import audience
 from app.models import (
     AIConversation,
     AIMessage,
@@ -125,7 +126,7 @@ def course_stats(db: Session, courses: list[Course]) -> list[CourseStat]:
 
 def build_teacher_dashboard(db: Session, teacher: User) -> TeacherDashboardOut:
     since7 = _since(7)
-    students = _count(db, select(func.count()).select_from(User).where(User.role == Role.student, User.is_active.is_(True)))
+    students = _count(db, select(func.count()).select_from(User).where(User.role == Role.student, User.is_active.is_(True), audience(teacher)))
     active = _count(db, select(func.count(func.distinct(LearningProgress.user_id))).where(LearningProgress.updated_at >= since7))
     completed_ts = db.scalars(select(LearningProgress.completed_at).where(
         LearningProgress.status == ProgressStatus.completed, LearningProgress.completed_at >= _since(14))).all()
@@ -203,8 +204,9 @@ def _student_rows(db: Session, users: list[User]) -> list[StudentRow]:
     return rows
 
 
-def list_students(db: Session, q: str | None, level: EducationLevel | None, limit: int, offset: int) -> tuple[list[StudentRow], int]:
-    stmt = select(User).outerjoin(StudentProfile, StudentProfile.user_id == User.id).where(User.role == Role.student, User.is_active.is_(True))
+def list_students(db: Session, viewer: User, q: str | None, level: EducationLevel | None, limit: int, offset: int) -> tuple[list[StudentRow], int]:
+    stmt = select(User).outerjoin(StudentProfile, StudentProfile.user_id == User.id).where(
+        User.role == Role.student, User.is_active.is_(True), audience(viewer))
     if q and q.strip():
         like = f"%{escape_like(q.strip())}%"
         stmt = stmt.where(User.full_name.ilike(like, escape="\\") | func.coalesce(StudentProfile.institution, "").ilike(like, escape="\\"))
@@ -261,7 +263,7 @@ def audit_out(db: Session, rows: list[AuditLog]) -> list[AuditOut]:
                      target_id=r.target_id, details=r.details or {}, ip=r.ip, created_at=aware(r.created_at)) for r in rows]
 
 
-def build_admin_dashboard(db: Session) -> AdminDashboardOut:
+def build_admin_dashboard(db: Session, viewer: User) -> AdminDashboardOut:
     roles = dict(db.execute(select(User.role, func.count(User.id)).where(User.is_active.is_(True)).group_by(User.role)).all())
     since7, since14, since30 = _since(7), _since(14), _since(30)
     stats = AdminStats(
@@ -301,7 +303,8 @@ def build_admin_dashboard(db: Session) -> AdminDashboardOut:
             SkillRecord.verification_status == VerificationStatus.unverified)),
         projects_submitted=_count(db, select(func.count()).select_from(Project).where(Project.status == ProjectStatus.submitted)),
     )
-    recent = db.scalars(select(AuditLog).order_by(AuditLog.created_at.desc()).limit(8)).all()
+    # Guest admins are read-only and must not see real staff actions; real admins see everything.
+    recent = [] if viewer.is_guest else db.scalars(select(AuditLog).order_by(AuditLog.created_at.desc()).limit(8)).all()
     return AdminDashboardOut(
         stats=stats, students_by_level=levels, signups=_series(list(signups), 30),
         lessons_completed=_series(list(lessons), 14), ai_messages=_series(list(ai), 14),

@@ -21,9 +21,36 @@ class LessonSummary(BaseModel):
     status: ProgressStatus
 
 
+class OutlineModule(BaseModel):
+    module: str
+    lessons: list[str]
+
+
+class LibraryItem(BaseModel):
+    title: str
+    url: str
+    source: str
+    kind: str  # course | docs | book | video | tool | data | activity | article
+
+
+class RelatedLink(BaseModel):
+    """A related project challenge, career or opportunity, shown on the course page."""
+
+    id: str
+    slug: str | None = None
+    title: str
+    detail: str | None = None
+
+
 class CourseDetail(CourseCard):
     category: str
     lessons: list[LessonSummary]
+    outline: list[OutlineModule] = []
+    skills: list[str] = []
+    resources: list[LibraryItem] = []
+    related_projects: list[RelatedLink] = []
+    related_careers: list[RelatedLink] = []
+    related_opportunities: list[RelatedLink] = []
 
 
 class LessonOut(BaseModel):

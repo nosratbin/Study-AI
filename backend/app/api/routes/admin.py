@@ -29,7 +29,7 @@ def _out(db, o: Opportunity) -> OpportunityAdminOut:
         id=str(o.id), title=o.title, description=o.description, category=o.category,
         category_label=CATEGORY_LABELS[o.category], provider=o.provider, eligibility=o.eligibility,
         education_levels=list(o.education_levels or []), deadline=aware(o.deadline),
-        required_documents=list(o.required_documents or []), official_url=o.official_url,
+        required_documents=list(o.required_documents or []), official_url=o.official_url, tags=list(o.tags or []),
         verification_status=o.verification_status, verified_by_name=verifier.full_name if verifier else None,
         verified_at=aware(o.verified_at), source_note=o.source_note, saved_count=saved_count,
         created_at=aware(o.created_at), updated_at=aware(o.updated_at),
@@ -55,6 +55,7 @@ def list_all(admin: AdminUser, db: DbSession, status: VerificationStatus | None 
 def create(body: OpportunityIn, request: Request, admin: AdminUser, db: DbSession):
     data = body.model_dump()
     data["education_levels"] = [lv.value for lv in body.education_levels]
+    data["tags"] = list(dict.fromkeys(body.tags))
     o = Opportunity(**data, verification_status=VerificationStatus.unverified)
     db.add(o)
     db.flush()
@@ -79,6 +80,8 @@ def update(opportunity_id: uuid.UUID, body: OpportunityUpdate, request: Request,
         data["education_levels"] = [lv.value for lv in (body.education_levels or [])]
     if "required_documents" in data and data["required_documents"] is None:
         data["required_documents"] = []
+    if "tags" in data:
+        data["tags"] = list(dict.fromkeys(data["tags"] or []))
     current = lambda k: aware(getattr(o, k)) if k == "deadline" else getattr(o, k)  # noqa: E731
     changed = {k: v for k, v in data.items() if current(k) != v}
     if not changed:

@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import { Logo, Spinner } from "@/components/ui";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { GuestNotice } from "@/components/auth/guest-access";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/vengeance/sheet";
 import { useAuth } from "@/lib/auth";
@@ -182,7 +183,10 @@ export function AppShell({ children }: { children: ReactNode }) {
             </button>
           </div>
         </header>
-        <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-28 pt-6 sm:px-6 lg:pb-10 lg:pt-8">{children}</main>
+        <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-28 pt-6 sm:px-6 lg:pb-10 lg:pt-8">
+          <GuestNotice />
+          {children}
+        </main>
       </div>
 
       <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-card pb-[env(safe-area-inset-bottom)] lg:hidden" aria-label="Bottom">

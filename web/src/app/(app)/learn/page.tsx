@@ -21,7 +21,8 @@ export default function LearnPage() {
   // Default to the student's own level once the profile arrives; an explicit pick always wins.
   const tab: Tab = picked ?? profile.data?.education_level ?? "all";
   const tabs: { value: Tab; label: string }[] = [{ value: "all", label: "All levels" }, ...LEVELS.map((l) => ({ value: l.value, label: l.label }))];
-  const shown = (courses.data ?? []).filter((c) => tab === "all" || c.level === tab);
+  // Courses you can start now come first; "Coming soon" ones keep their catalogue order after them.
+  const shown = (courses.data ?? []).filter((c) => tab === "all" || c.level === tab).sort((a, b) => Number(!!a.coming_soon) - Number(!!b.coming_soon));
   const ownLevel = profile.data?.education_level;
 
   return (

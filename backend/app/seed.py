@@ -5,8 +5,8 @@
 
 Demo courses are flagged is_demo=True and shown with a "Demo" label. Full courses (seed_full_courses.py,
 lesson text in app/content/courses/*.md) are real content and are not flagged.
-No opportunities are seeded: scholarship/competition data must be entered and
-verified by an admin from official sources (Phase 3).
+Opportunities: only the few in seed_opportunities.py, each checked on its official page (see its source_note).
+Everything else is entered and verified by an admin from official sources.
 Demo account passwords come from SEED_DEMO_PASSWORD or are generated and printed once.
 """
 
@@ -25,8 +25,9 @@ from app.schemas.auth import DEMO_EMAIL_DOMAIN
 from app.models import Course, EducationLevel, Lesson, Role, StudentProfile, TeacherProfile, User
 from app.seed_assessments import seed_assessments
 from app.seed_careers import seed_careers
+from app.seed_opportunities import seed_opportunities
 from app.seed_challenges import seed_challenges
-from app.seed_full_courses import seed_full_courses
+from app.seed_full_courses import seed_catalog, seed_full_courses
 
 L = EducationLevel
 
@@ -99,6 +100,7 @@ COURSES: list[dict] = [
 
 
 def seed_courses(db: Session) -> int:
+    """The first MVP's demo courses. Retired from `main` (seed_catalog unpublishes them); kept as small test fixtures."""
     created = 0
     for i, c in enumerate(COURSES):
         if db.scalar(select(Course).where(Course.slug == c["slug"])):
@@ -146,11 +148,12 @@ def main() -> None:
     if get_settings().environment == "production" and args.demo_users:
         raise SystemExit("Refusing to create demo accounts in production.")
     with SessionLocal() as db:
-        print(f"courses created: {seed_courses(db)}")
         print(f"full courses created: {seed_full_courses(db)}")
+        print(f"catalogue: {seed_catalog(db)}")
         print(f"assessments created: {seed_assessments(db)}")
         print(f"project challenges created: {seed_challenges(db)}")
         print(f"demo careers created: {seed_careers(db)}")
+        print(f"verified opportunities created: {seed_opportunities(db)}")
         if args.demo_users:
             seed_demo_users(db)
 

@@ -22,6 +22,12 @@ class Course(IdMixin, TimestampMixin, Base):
     is_demo: Mapped[bool] = mapped_column(Boolean, default=False)  # seeded demo content is labelled
     estimated_hours: Mapped[float] = mapped_column(Float, default=1.0)
     order_index: Mapped[int] = mapped_column(Integer, default=0)
+    # Planned modules for a course whose lessons aren't written yet ("Coming soon"): [{"module": str, "lessons": [str]}].
+    outline: Mapped[list[dict] | None] = mapped_column(JSON)
+    # Skill tags (lower-case) shared with project challenges, careers and opportunities, e.g. ["python", "pandas"].
+    skills: Mapped[list[str]] = mapped_column(JSON, default=list, server_default="[]")
+    # Digital library: free official or openly licensed resources [{"title", "url", "source", "kind"}].
+    resources: Mapped[list[dict]] = mapped_column(JSON, default=list, server_default="[]")
 
     lessons: Mapped[list["Lesson"]] = relationship(back_populates="course", order_by="Lesson.order_index", cascade="all, delete-orphan")
 

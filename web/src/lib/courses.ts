@@ -10,6 +10,14 @@ export const COURSE_CATEGORIES = [
   { value: "business", label: "Business" },
   { value: "developer_tools", label: "Developer tools" },
   { value: "science", label: "Science" },
+  { value: "digital_literacy", label: "Digital literacy" },
+  { value: "mathematics", label: "Mathematics" },
+  { value: "databases", label: "Databases" },
+  { value: "security", label: "Security" },
+  { value: "nlp", label: "NLP & LLMs" },
+  { value: "ai_agents", label: "AI agents" },
+  { value: "mlops", label: "MLOps" },
+  { value: "research", label: "Research & product" },
 ] as const;
 
 export function categoryLabel(value: string) {

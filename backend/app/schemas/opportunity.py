@@ -49,6 +49,7 @@ class OpportunityOut(BaseModel):
     is_closed: bool
     required_documents: list[str]
     official_url: str
+    tags: list[str]
     verified_at: datetime | None
     saved: bool
     application: ApplicationOut | None
@@ -74,6 +75,8 @@ class TrackedApplication(BaseModel):
 
 Title = Annotated[str, StringConstraints(strip_whitespace=True, min_length=5, max_length=250)]
 Doc = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
+# Skill tags shared with courses ("machine-learning"), used to link opportunities to related courses.
+Tag = Annotated[str, StringConstraints(strip_whitespace=True, to_lower=True, min_length=2, max_length=40, pattern=r"^[a-z0-9]+(-[a-z0-9]+)*$")]
 
 
 def _official_url(v: str) -> str:
@@ -94,6 +97,7 @@ class OpportunityIn(BaseModel):
     deadline: datetime | None = None  # None = rolling / not announced
     required_documents: list[Doc] = Field(default_factory=list, max_length=25)
     official_url: Annotated[str, StringConstraints(max_length=500)]
+    tags: list[Tag] = Field(default_factory=list, max_length=12)
 
     _url = field_validator("official_url")(_official_url)
 
@@ -122,6 +126,7 @@ class OpportunityUpdate(BaseModel):
     deadline: datetime | None = None
     required_documents: list[Doc] | None = Field(default=None, max_length=25)
     official_url: Annotated[str, StringConstraints(max_length=500)] | None = None
+    tags: list[Tag] | None = Field(default=None, max_length=12)
 
     @field_validator("official_url")
     @classmethod
@@ -159,6 +164,7 @@ class OpportunityAdminOut(BaseModel):
     deadline: datetime | None
     required_documents: list[str]
     official_url: str
+    tags: list[str]
     verification_status: VerificationStatus
     verified_by_name: str | None
     verified_at: datetime | None

@@ -79,6 +79,9 @@ class Settings(BaseSettings):
     resend_api_key: str = ""
     email_code_minutes: int = 15
     email_resend_seconds: int = 60
+    # Competition guest mode: one-click Student / Teacher / Admin sign-in (services/guest.py).
+    guest_access_enabled: bool = True
+    guest_student_hours: int = 24
 
     # Fernet key for sensitive student text at rest (MindCare journal notes, support requests).
     # Required in production. Changing it makes existing journal notes unreadable.

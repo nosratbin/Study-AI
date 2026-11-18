@@ -71,6 +71,8 @@ class CourseCard(BaseModel):
     completed_lessons: int
     percent: int
     is_demo: bool
+    # No lessons yet, only a planned outline: shown as "Coming soon".
+    coming_soon: bool = False
 
 
 class NextLesson(BaseModel):

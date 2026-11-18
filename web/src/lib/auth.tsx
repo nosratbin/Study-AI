@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { api, ApiError, SESSION_EXPIRED_EVENT } from "./api";
 import { getGoogleIdToken } from "./firebase";
-import type { User } from "./types";
+import type { EducationLevel, Role, User } from "./types";
 import { rememberPending, type PendingVerification } from "./verification";
 
 interface AuthState {
@@ -15,6 +15,8 @@ interface AuthState {
   verifyEmail: (email: string, code: string) => Promise<User>;
   verifyEmailLink: (token: string) => Promise<User>;
   loginWithGoogle: () => Promise<User>;
+  /** One-click guest visit. Students get a throwaway account; teacher and admin guests are shared and read-only. */
+  loginAsGuest: (role: Role, level?: EducationLevel) => Promise<User>;
   logout: () => Promise<void>;
   reload: () => Promise<void>;
 }
@@ -98,6 +100,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       async loginWithGoogle() {
         const id_token = await getGoogleIdToken();
         const r = await api<{ user: User }>("/auth/google", { method: "POST", body: { id_token } });
+        setUser(r.user);
+        return r.user;
+      },
+      async loginAsGuest(role, level) {
+        const r = await api<{ user: User }>("/auth/guest", { method: "POST", body: { role, ...(level ? { level } : {}) } });
         setUser(r.user);
         return r.user;
       },

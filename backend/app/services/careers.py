@@ -56,12 +56,15 @@ def load_evidence(db: Session, user: User) -> Evidence:
     p = user.student_profile
     ev = Evidence(level=p.education_level if p else None, interests={i.lower() for i in (p.interests or [])} if p else set())
 
-    for slug, title, category in db.execute(
-        select(Course.slug, Course.title, Course.category).join(Certificate, Certificate.course_id == Course.id)
+    for slug, title, category, skills in db.execute(
+        select(Course.slug, Course.title, Course.category, Course.skills).join(Certificate, Certificate.course_id == Course.id)
         .where(Certificate.user_id == user.id)
     ).all():
         ev.completed_courses[slug] = title
         ev.course_categories.add(category)
+        # Course skill tags count too ("machine-learning" also as "machine_learning"), so career skills can match them.
+        for tag in skills or []:
+            ev.course_categories.update({tag, tag.replace("-", "_")})
 
     lesson_counts = dict(db.execute(select(Lesson.course_id, func.count(Lesson.id)).group_by(Lesson.course_id)).all())
     rows = db.execute(

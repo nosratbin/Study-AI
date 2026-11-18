@@ -25,6 +25,7 @@ from app.schemas.growth import (
     ProjectUpdate,
     ReviewIn,
 )
+from app.services.guest import audience
 from app.services.llm import ChatTurn, LLMProvider, get_llm, parse_json
 from app.services.notify import notify
 from app.services.opportunities import aware
@@ -87,7 +88,8 @@ def challenge(slug: str, user: StudentUser, db: DbSession):
 
 @router.get("/review-queue", response_model=list[ProjectOut])
 def review_queue(staff: VerifiedTeacherUser, db: DbSession):
-    rows = db.scalars(select(Project).where(Project.status == ProjectStatus.submitted).order_by(Project.submitted_at)).all()
+    rows = db.scalars(select(Project).join(User, User.id == Project.user_id)
+                      .where(Project.status == ProjectStatus.submitted, audience(staff)).order_by(Project.submitted_at)).all()
     return [project_out(db, p, with_owner=True) for p in rows]
 
 

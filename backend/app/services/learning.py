@@ -45,7 +45,7 @@ def course_card(c: Course, counts: dict, progress: UserProgress) -> CourseCard:
     return CourseCard(
         id=str(c.id), title=c.title, slug=c.slug, description=c.description, level=c.level,
         estimated_hours=c.estimated_hours, lesson_count=total, completed_lessons=done,
-        percent=round(100 * done / total) if total else 0, is_demo=c.is_demo,
+        percent=round(100 * done / total) if total else 0, is_demo=c.is_demo, coming_soon=total == 0 and bool(c.outline),
     )
 
 

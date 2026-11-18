@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Integer, SmallInteger, String, Text
+from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Integer, SmallInteger, String, Text, false
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, IdMixin, TimestampMixin
@@ -22,6 +22,9 @@ class User(IdMixin, TimestampMixin, Base):
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     # Set once the student proves they own the address (email code/link, or Google). Password sign-in needs it.
     email_verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Guest-mode account (competition demo, services/guest.py). Guest staff are read-only and only ever see guest
+    # students; real staff never see guests. Guest students are throwaway and deleted after GUEST_STUDENT_HOURS.
+    is_guest: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false(), index=True)
 
     student_profile: Mapped["StudentProfile | None"] = relationship(back_populates="user", uselist=False)
     teacher_profile: Mapped["TeacherProfile | None"] = relationship(back_populates="user", uselist=False)

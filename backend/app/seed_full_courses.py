@@ -85,6 +85,44 @@ def load_lessons(slug: str) -> list[ParsedLesson]:
     return parse_course_file((CONTENT_DIR / f"{slug}.md").read_text(encoding="utf-8"))
 
 
+def _lessons_from_file(course: Course) -> None:
+    for j, lesson in enumerate(load_lessons(course.slug)):
+        course.lessons.append(Lesson(title=lesson.title, module=lesson.module, content_md=lesson.content_md,
+                                     order_index=j, duration_min=lesson.minutes))
+
+
+def seed_catalog(db: Session) -> dict[str, int]:
+    """Create the catalogue courses and keep their metadata (outline, skills, library) in sync. Idempotent.
+
+    Lessons are only written when a course has none, so a teacher's edits are never overwritten. A course that was
+    "Coming soon" gets its lessons once its Markdown file exists. Old demo courses are unpublished, not deleted.
+    """
+    from app.catalog import CATALOG, EXTRA_META, RETIRED_DEMO_SLUGS
+
+    stats = {"created": 0, "filled": 0, "retired": 0}
+    for i, c in enumerate(CATALOG):
+        course = db.scalar(select(Course).where(Course.slug == c["slug"]))
+        if course is None:
+            course = Course(slug=c["slug"], title=c["title"], description=c["description"], level=c["level"],
+                            category=c["category"], estimated_hours=c["hours"], is_published=True, is_demo=False, order_index=i)
+            db.add(course)
+            stats["created"] += 1
+        course.skills, course.resources = c.get("skills", []), c.get("resources", [])
+        has_file = (CONTENT_DIR / f"{c['slug']}.md").exists()
+        if has_file and not course.lessons:
+            _lessons_from_file(course)
+            stats["filled"] += 1
+        course.outline = None if course.lessons or has_file else c.get("outline")
+    for slug, meta in EXTRA_META.items():
+        if course := db.scalar(select(Course).where(Course.slug == slug)):
+            course.skills, course.resources = meta["skills"], meta["resources"]
+    for course in db.scalars(select(Course).where(Course.slug.in_(RETIRED_DEMO_SLUGS), Course.is_published.is_(True))):
+        course.is_published = False
+        stats["retired"] += 1
+    db.commit()
+    return stats
+
+
 def seed_full_courses(db: Session) -> int:
     created = 0
     for i, c in enumerate(FULL_COURSES):
@@ -94,9 +132,7 @@ def seed_full_courses(db: Session) -> int:
             slug=c["slug"], title=c["title"], description=c["description"], level=c["level"], category=c["category"],
             estimated_hours=c["hours"], is_published=True, is_demo=False, order_index=ORDER_OFFSET + i,
         )
-        for j, lesson in enumerate(load_lessons(c["slug"])):
-            course.lessons.append(Lesson(title=lesson.title, module=lesson.module, content_md=lesson.content_md,
-                                         order_index=j, duration_min=lesson.minutes))
+        _lessons_from_file(course)
         db.add(course)
         created += 1
     db.commit()

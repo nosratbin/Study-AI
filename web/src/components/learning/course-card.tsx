@@ -15,9 +15,15 @@ export function CourseCard({ course: c, showLevel = false }: { course: Course; s
         <div className="flex shrink-0 gap-1">
           {showLevel && <Badge tone="brand">{levelLabel(c.level)}</Badge>}
           {c.is_demo && <Badge>Demo</Badge>}
+          {c.coming_soon && <Badge>Coming soon</Badge>}
         </div>
       </div>
       <p className="mt-1.5 line-clamp-2 flex-1 text-sm text-muted">{c.description}</p>
+      {c.coming_soon ? (
+        <p className="mt-4 inline-flex items-center gap-1 text-xs text-muted">
+          <Clock className="size-3.5" aria-hidden /> About {c.estimated_hours}h · outline and reading list ready
+        </p>
+      ) : (
       <div className="mt-4 space-y-1.5">
         <div className="flex justify-between text-xs text-muted">
           <span className="inline-flex items-center gap-1">
@@ -27,6 +33,7 @@ export function CourseCard({ course: c, showLevel = false }: { course: Course; s
         </div>
         <Progress value={c.percent} label={`${c.title} progress`} />
       </div>
+      )}
     </Card>
   );
 }

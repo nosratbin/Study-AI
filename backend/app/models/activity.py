@@ -89,6 +89,8 @@ class Opportunity(IdMixin, TimestampMixin, Base):
     verified_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
     verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     source_note: Mapped[str | None] = mapped_column(Text)  # where the verifier confirmed the details
+    # Lower-case skill tags (same vocabulary as Course.skills), used to link opportunities to courses.
+    tags: Mapped[list[str]] = mapped_column(JSON, default=list, server_default="[]")
 
 
 class SavedOpportunity(IdMixin, TimestampMixin, Base):

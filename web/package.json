@@ -11,6 +11,8 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@astryxdesign/core": "^0.7.16",
+    "@astryxdesign/theme-neutral": "^0.7.16",
     "@gsap/react": "^2.1.2",
     "@paper-design/shaders-react": "^0.0.82",
     "@phosphor-icons/react": "^2.1.10",
@@ -39,6 +41,7 @@
     "@radix-ui/react-toggle-group": "^1.2.1",
     "@radix-ui/react-tooltip": "^1.4.1",
     "@react-three/fiber": "^9.8.2",
+    "@stylexjs/stylex": "^0.19.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",

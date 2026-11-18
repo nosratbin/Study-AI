@@ -127,14 +127,17 @@ Do not upload anything you don't have the right to share.""",
 
 
 def seed_challenges(db: Session) -> int:
+    """Demo challenges plus the Learning Center's practical projects (seed_projects.py, not demo). Idempotent."""
+    from app.seed_projects import PROJECTS
+
     created = 0
-    for i, c in enumerate(CHALLENGES):
+    for i, (c, demo) in enumerate([*((c, True) for c in CHALLENGES), *((p, False) for p in PROJECTS)]):
         if db.scalar(select(ProjectChallenge).where(ProjectChallenge.slug == c["slug"])):
             continue
         db.add(ProjectChallenge(
             slug=c["slug"], title=c["title"], level=c["level"], summary=c["summary"], brief_md=c["brief"],
-            skills=c["skills"], estimated_hours=c["hours"], starter_url=NEW_COLAB, order_index=i,
-            is_published=True, is_demo=True,
+            skills=c["skills"], estimated_hours=c["hours"], starter_url=c.get("starter", NEW_COLAB), order_index=i,
+            is_published=True, is_demo=demo,
         ))
         created += 1
     db.commit()

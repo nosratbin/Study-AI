@@ -9,7 +9,7 @@ The last open item of Phase 5 is the Expo Android app. Its exit criterion is "An
 | App name | IccheGhuri |
 | Package / applicationId | `com.iccheghuri.study.app` (approved 2026-11-14) |
 | Icon | kite symbol from `brand/logo/` |
-| Backend | live API at `https://iccheghuri.up.railway.app/api` |
+| Backend | live API at `https://iccheghuri.tech/api` |
 | Folder | `mobile/` (Expo, TypeScript, Expo Router, NativeWind) |
 
 ## First version

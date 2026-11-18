@@ -25,6 +25,7 @@ from app.schemas.growth import (
     SupportResourceIn,
     SupportStatusIn,
 )
+from app.services.guest import audience
 from app.services.notify import notify
 from app.services.opportunities import aware
 from app.services.passport import record_out
@@ -43,7 +44,7 @@ def _audit(db, request: Request, actor: User, action: str, target_type: str, tar
 @router.get("/skill-records", response_model=list[SkillRecordAdminOut])
 def skill_records(admin: AdminUser, db: DbSession, status: VerificationStatus = Query(default=VerificationStatus.unverified)):
     rows = db.execute(select(SkillRecord, User.full_name).join(User, User.id == SkillRecord.user_id)
-                      .where(SkillRecord.verification_status == status).order_by(SkillRecord.updated_at).limit(200)).all()
+                      .where(SkillRecord.verification_status == status, audience(admin)).order_by(SkillRecord.updated_at).limit(200)).all()
     return [SkillRecordAdminOut(**record_out(r).model_dump(), owner_name=name, review_note=r.review_note) for r, name in rows]
 
 
@@ -150,12 +151,13 @@ def _request_out(r: SupportRequest, u: User) -> SupportRequestAdminOut:
 
 @router.get("/support-requests", response_model=list[SupportRequestAdminOut])
 def support_requests(request: Request, admin: AdminUser, db: DbSession, include_closed: bool = Query(default=False)):
-    q = select(SupportRequest, User).join(User, User.id == SupportRequest.user_id).order_by(SupportRequest.created_at)
+    q = select(SupportRequest, User).join(User, User.id == SupportRequest.user_id).where(audience(admin)).order_by(SupportRequest.created_at)
     if not include_closed:
         q = q.where(SupportRequest.status != SupportRequestStatus.closed)
     rows = db.execute(q.limit(200)).all()
-    _audit(db, request, admin, "support_request.view_inbox", "support_request", None, {"count": len(rows)})
-    db.commit()
+    if not admin.is_guest:
+        _audit(db, request, admin, "support_request.view_inbox", "support_request", None, {"count": len(rows)})
+        db.commit()
     return [_request_out(r, u) for r, u in rows]
 
 

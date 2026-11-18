@@ -164,6 +164,7 @@ def _result_out(db: Session, user: User, a: Assessment, r: AssessmentResult) -> 
         candidates.sort(key=lambda c: c.level != level)
     progress = load_progress(db, user.id)
     counts = lesson_counts(db)
+    candidates = sorted(candidates, key=lambda c: counts.get(c.id, 0) == 0)  # courses you can start now before "Coming soon"
     answers = r.answers or {}
     return ResultOut(
         result_id=str(r.id), assessment_id=str(a.id), title=a.title, is_placement=a.is_placement,

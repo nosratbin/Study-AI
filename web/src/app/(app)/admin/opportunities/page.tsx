@@ -258,6 +258,7 @@ function Editor({ initial, onCancel, onSaved }: { initial: AdminOpportunity | nu
     time: dl.time || "23:59",
     documents: (initial?.required_documents ?? []).join("\n"),
     official_url: initial?.official_url ?? "",
+    tags: (initial?.tags ?? []).join(", "),
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
@@ -273,6 +274,8 @@ function Editor({ initial, onCancel, onSaved }: { initial: AdminOpportunity | nu
     if (f.description.trim().length < 20) errs.description = "At least 20 characters.";
     if (f.eligibility.trim().length < 5) errs.eligibility = "Describe who can apply.";
     if (!/^https:\/\/[^\s@/]+\.[^\s@]+$/.test(f.official_url.trim())) errs.official_url = "Use the full official https:// link.";
+    if (f.tags.split(",").some((t) => t.trim() && !/^[a-z0-9]+(-[a-z0-9]+)*$/.test(t.trim().toLowerCase().replace(/\s+/g, "-"))))
+      errs.tags = "Letters, numbers and hyphens only, e.g. machine-learning.";
     setErrors(errs);
     if (Object.keys(errs).length) return;
 
@@ -289,6 +292,7 @@ function Editor({ initial, onCancel, onSaved }: { initial: AdminOpportunity | nu
         .map((d) => d.trim())
         .filter(Boolean),
       official_url: f.official_url.trim(),
+      tags: [...new Set(f.tags.split(",").map((t) => t.trim().toLowerCase().replace(/\s+/g, "-")).filter(Boolean))],
     };
     setBusy(true);
     setError(null);
@@ -402,6 +406,11 @@ function Editor({ initial, onCancel, onSaved }: { initial: AdminOpportunity | nu
               placeholder="https://"
               invalid={!!errors.official_url}
             />
+          </Field>
+        </div>
+        <div className="sm:col-span-2">
+          <Field label="Skill tags" htmlFor="o-tags" optional hint="Comma-separated, e.g. machine-learning, python. Links this to courses with the same skills." error={errors.tags}>
+            <Input id="o-tags" value={f.tags} onChange={(e) => set("tags", e.target.value)} maxLength={400} invalid={!!errors.tags} />
           </Field>
         </div>
         <div className="flex flex-wrap gap-2 sm:col-span-2">

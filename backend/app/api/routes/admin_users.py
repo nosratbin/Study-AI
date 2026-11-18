@@ -20,6 +20,7 @@ from app.schemas.phase5 import (
     UserAdminUpdate,
     UserPage,
 )
+from app.services.guest import audience
 from app.services.opportunities import aware
 from app.services.staff_dashboard import audit_out, build_admin_dashboard, escape_like
 
@@ -43,13 +44,13 @@ def _user_out(u: User) -> UserAdminOut:
 
 @router.get("/dashboard", response_model=AdminDashboardOut)
 def dashboard(admin: AdminUser, db: DbSession):
-    return build_admin_dashboard(db)
+    return build_admin_dashboard(db, admin)
 
 
 @router.get("/users", response_model=UserPage)
 def users(admin: AdminUser, db: DbSession, q: str | None = Query(default=None, max_length=100), role: Role | None = Query(default=None),
           active: bool | None = Query(default=None), limit: int = Query(default=50, ge=1, le=200), offset: int = Query(default=0, ge=0)):
-    stmt = select(User)
+    stmt = select(User).where(audience(admin))
     if q and q.strip():
         like = f"%{escape_like(q.strip())}%"
         stmt = stmt.where(User.full_name.ilike(like, escape="\\") | User.email.ilike(like, escape="\\"))
@@ -105,6 +106,8 @@ def update_user(user_id: uuid.UUID, body: UserAdminUpdate, request: Request, adm
 @router.get("/audit", response_model=list[AuditOut])
 def audit(admin: AdminUser, db: DbSession, action: str | None = Query(default=None, max_length=80),
           limit: int = Query(default=100, ge=1, le=500), offset: int = Query(default=0, ge=0)):
+    if admin.is_guest:  # read-only guests don't see real staff actions
+        return []
     stmt = select(AuditLog)
     if action:
         stmt = stmt.where(AuditLog.action.like(f"{escape_like(action.strip())}%", escape="\\"))

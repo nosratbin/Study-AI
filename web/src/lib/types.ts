@@ -9,6 +9,8 @@ export interface User {
   role: Role;
   avatar_url: string | null;
   onboarding_completed: boolean;
+  /** A one-click competition guest. Teacher and admin guests are read-only. */
+  is_guest?: boolean;
   created_at: string;
 }
 
@@ -38,6 +40,8 @@ export interface CourseCard {
   completed_lessons: number;
   percent: number;
   is_demo: boolean;
+  /** No lessons yet, only an outline. */
+  coming_soon?: boolean;
 }
 
 export interface Dashboard {
@@ -84,9 +88,36 @@ export interface LessonSummary {
   status: ProgressStatus;
 }
 
+export interface OutlineModule {
+  module: string;
+  lessons: string[];
+}
+
+export type LibraryKind = "course" | "docs" | "book" | "video" | "tool" | "data" | "activity" | "article";
+
+export interface LibraryItem {
+  title: string;
+  url: string;
+  source: string;
+  kind: LibraryKind | string;
+}
+
+export interface RelatedLink {
+  id: string;
+  slug: string | null;
+  title: string;
+  detail: string | null;
+}
+
 export interface CourseDetail extends CourseCard {
   category: string;
   lessons: LessonSummary[];
+  outline: OutlineModule[];
+  skills: string[];
+  resources: LibraryItem[];
+  related_projects: RelatedLink[];
+  related_careers: RelatedLink[];
+  related_opportunities: RelatedLink[];
 }
 
 export interface Lesson {
@@ -321,6 +352,7 @@ export interface Opportunity {
   is_closed: boolean;
   required_documents: string[];
   official_url: string;
+  tags: string[];
   verified_at: string | null;
   saved: boolean;
   application: TrackedApplicationInfo | null;
@@ -349,6 +381,7 @@ export interface AdminOpportunity {
   deadline: string | null;
   required_documents: string[];
   official_url: string;
+  tags: string[];
   verification_status: VerificationStatus;
   verified_by_name: string | null;
   verified_at: string | null;

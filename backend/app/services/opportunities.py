@@ -90,7 +90,7 @@ def opportunity_out(o: Opportunity, state: StudentState, now: datetime | None = 
         category_label=CATEGORY_LABELS[o.category], provider=o.provider, eligibility=o.eligibility,
         education_levels=[EducationLevel(x) for x in (o.education_levels or [])],
         deadline=deadline, days_left=_days_left(deadline, now), is_closed=bool(deadline and deadline < now),
-        required_documents=list(o.required_documents or []), official_url=o.official_url,
+        required_documents=list(o.required_documents or []), official_url=o.official_url, tags=list(o.tags or []),
         verified_at=aware(o.verified_at), saved=o.id in state.saved,
         application=application_out(app) if app else None,
     )
@@ -144,7 +144,8 @@ def match(db: Session, user: User, limit: int = 12) -> list[MatchOut]:
             score += 10
             reasons.append("Open to all education levels")
 
-        text = f"{o.title} {o.description} {o.eligibility}".lower()
+        tags = " ".join(t.replace("-", " ") for t in o.tags or [])
+        text = f"{o.title} {o.description} {o.eligibility} {tags}".lower()
         matched: list[str] = []
         for interest in interests:
             key = interest.lower()

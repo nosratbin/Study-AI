@@ -58,7 +58,7 @@ def dashboard(staff: TeacherUser, db: DbSession):
 def students(staff: VerifiedTeacherUser, db: DbSession, response: Response,
              q: str | None = Query(default=None, max_length=100), level: EducationLevel | None = Query(default=None),
              limit: int = Query(default=50, ge=1, le=200), offset: int = Query(default=0, ge=0)):
-    rows, total = list_students(db, q, level, limit, offset)
+    rows, total = list_students(db, staff, q, level, limit, offset)
     response.headers["X-Total-Count"] = str(total)
     return rows
 
@@ -66,7 +66,7 @@ def students(staff: VerifiedTeacherUser, db: DbSession, response: Response,
 @router.get("/students/{student_id}", response_model=StudentDetail)
 def student(student_id: uuid.UUID, staff: VerifiedTeacherUser, db: DbSession):
     u = db.get(User, student_id)
-    if not u or u.role != Role.student or not u.is_active:
+    if not u or u.role != Role.student or not u.is_active or u.is_guest != staff.is_guest:
         raise ApiError(404, "student_not_found", "Student not found.")
     return student_detail(db, u)
 

@@ -13,9 +13,10 @@ from app.core.rate_limit import rate_limit
 from app.core.security import create_token, decode_token, hash_password, is_revoked, revoke, verify_password
 from app.models import Role, StudentProfile, User
 from app.schemas.auth import (
-    AuthOut, GoogleIn, LoginIn, RefreshIn, RegisterIn, ResendIn, UserOut, VerificationOut, VerifyCodeIn, VerifyLinkIn, reject_alias,
+    AuthOut, GoogleIn, GuestIn, LoginIn, RefreshIn, RegisterIn, ResendIn, UserOut, VerificationOut, VerifyCodeIn, VerifyLinkIn, reject_alias,
 )
 from app.services import email as mailer
+from app.services import guest as guest_mode
 from app.services import verification
 from app.services.firebase import verify_firebase_id_token
 
@@ -160,6 +161,17 @@ def login(body: LoginIn, request: Request, response: Response, tasks: Background
         pending = _send_check(db, user, tasks)
         raise ApiError(403, "email_unverified", "Verify your email to sign in. We sent you a new code.",
                        details=[{"email": pending.email, "resend_after": pending.resend_after}], background=tasks)
+    user.last_login_at = datetime.now(UTC)
+    db.commit()
+    return issue_session(request, response, user)
+
+
+@router.post("/guest", response_model=AuthOut, dependencies=[Depends(rate_limit("guest", 20))])
+def guest(body: GuestIn, request: Request, response: Response, db: DbSession):
+    """Competition guest mode: sign in as a throwaway student, or the shared read-only teacher/admin (services/guest.py)."""
+    if not get_settings().guest_access_enabled:
+        raise ApiError(404, "guest_disabled", "Guest access is turned off.")
+    user = guest_mode.create_student(db, body.level) if body.role == Role.student else guest_mode.ensure_staff(db, body.role)
     user.last_login_at = datetime.now(UTC)
     db.commit()
     return issue_session(request, response, user)

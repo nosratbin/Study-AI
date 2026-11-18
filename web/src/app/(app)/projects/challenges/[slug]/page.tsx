@@ -60,10 +60,18 @@ export default function ChallengePage() {
         <Button onClick={start} loading={busy}>Start this project</Button>
         {ch.starter_url && (
           <a href={ch.starter_url} target="_blank" rel="noopener noreferrer" className="inline-flex h-11 items-center gap-2 rounded-xl border border-line bg-card px-5 text-sm font-semibold hover:bg-surface">
-            Open a new Colab notebook <ExternalLink className="size-4" aria-hidden />
+            {starterLabel(ch.starter_url)} <ExternalLink className="size-4" aria-hidden />
           </a>
         )}
       </div>
     </div>
   );
+}
+
+/** Starter links point at Colab, Wokwi, Webots, SUMO or a repo; name the destination instead of always saying Colab. */
+function starterLabel(url: string) {
+  const host = URL.canParse(url) ? new URL(url).hostname : "";
+  if (host === "colab.research.google.com") return url.includes("#create=true") || url.endsWith("/notebook") ? "Open a new Colab notebook" : "Open the starter notebook";
+  if (host.endsWith("wokwi.com")) return "Open the Wokwi simulator";
+  return "Open the starter resource";
 }

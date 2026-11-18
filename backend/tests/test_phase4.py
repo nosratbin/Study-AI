@@ -49,7 +49,8 @@ def test_project_lifecycle_submit_lock_review(client, db_session):
     seed_challenges(db_session)
     student(client)
     chs = client.get("/api/projects/challenges?level=college").json()
-    assert chs and all(c["level"] == "college" and c["is_demo"] for c in chs)
+    assert chs and all(c["level"] == "college" for c in chs)
+    assert any(c["is_demo"] for c in chs) and any(not c["is_demo"] for c in chs)  # demo challenges + practical projects
     detail = client.get(f"/api/projects/challenges/{chs[0]['slug']}").json()
     assert "## Goal" in detail["brief_md"]
 

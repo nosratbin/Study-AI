@@ -14,6 +14,7 @@ from app.models import Course, LearningProgress, Lesson
 from app.models.enums import EducationLevel, ProgressStatus
 from app.schemas.learning import CourseDetail, LessonOut, LessonSummary, ProgressIn, ProgressOut, RoadmapOut
 from app.schemas.student import CourseCard
+from app.services import course_links
 from app.services.learning import course_card, course_percent, lesson_counts, load_progress
 from app.services.passport import issue_certificate_if_complete
 from app.services.roadmap import build_roadmap
@@ -54,6 +55,9 @@ def get_course(slug: str, user: CurrentUser, db: DbSession):
     card = course_card(course, lesson_counts(db), progress)
     return CourseDetail(
         **card.model_dump(), category=course.category,
+        outline=course.outline or [] if not course.lessons else [], skills=course.skills or [], resources=course.resources or [],
+        related_projects=course_links.related_projects(db, course), related_careers=course_links.related_careers(db, course),
+        related_opportunities=course_links.related_opportunities(db, course),
         lessons=[
             LessonSummary(id=str(l.id), title=l.title, module=l.module, order_index=l.order_index, duration_min=l.duration_min,
                           status=progress.status_by_lesson.get(l.id, ProgressStatus.not_started))

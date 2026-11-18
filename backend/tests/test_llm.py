@@ -59,3 +59,30 @@ def test_all_models_busy_is_503_and_bad_request_does_not_fall_back():
     with pytest.raises(ApiError) as e:
         provider(bad).generate("s", [ChatTurn("user", "q")])
     assert e.value.status == 502 and len(calls) == 1
+
+
+def test_falls_back_when_primary_hangs():
+    calls = []
+
+    def handler(req):
+        model = req.url.path.rsplit("/", 1)[-1].split(":")[0]
+        calls.append((model, req.extensions["timeout"]["read"]))
+        if model == "gemini-3.5-flash":
+            raise httpx.ReadTimeout("hung", request=req)
+        return ok("from fallback")
+
+    p = provider(handler)
+    p.timeout = 45
+    r = p.generate("sys", [ChatTurn("user", "q")])
+    assert r.text == "from fallback"
+    # The attempt with a fallback left is cut short; the last model gets the full timeout.
+    assert calls == [("gemini-3.5-flash", 15.0), ("gemini-flash-latest", 45)]
+
+
+def test_last_model_timeout_is_504():
+    def handler(req):
+        raise httpx.ReadTimeout("hung", request=req)
+
+    with pytest.raises(ApiError) as e:
+        provider(handler).generate("sys", [ChatTurn("user", "q")])
+    assert e.value.status == 504
