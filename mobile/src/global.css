@@ -1,0 +1,140 @@
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@import "tailwindcss/utilities.css";
+@import "nativewind/theme";
+
+/*
+ * Design tokens (see mobile/DESIGN.md). Astryx foundations adapted to native: neutral flat surfaces, hierarchy from
+ * weight and colour (not boxes), a 4 px grid (metro inlineRem = 16), radii 8 / 12 / 16, Figtree. Brand orange is the
+ * one accent: a solid fill for the primary action, a tint for selection. Keep src/theme/colors.ts in sync.
+ *
+ * Native gotchas (react-native-css): light-dark() in :root does not resolve, so dark values live in the media query;
+ * spacing-based `leading-N` is read as a font-size multiplier, so line heights are always px (`leading-[22px]`).
+ */
+:root {
+  --brand-50: #fff4eb;
+  --brand-100: #ffe6d2;
+  --brand-200: #ffd0aa;
+  --brand-700: #c2410c;
+  --ink: #111110;
+  --muted: #5f5f5b;
+  --subtle: #8c8c87;
+  --surface: #f5f5f4;
+  --card: #ffffff;
+  --muted-bg: #ededeb;
+  --raised: #ffffff;
+  --line: #e7e7e4;
+  --input: #d6d6d2;
+  --success: #15803d;
+  --success-50: #ecfdf3;
+  --danger: #dc2626;
+  --danger-50: #fef2f2;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --brand-50: #2a1a0e;
+    --brand-100: #3b2210;
+    --brand-200: #5a3314;
+    --brand-700: #fdba74;
+    --ink: #f2f2f1;
+    --muted: #a3a3a0;
+    --subtle: #6f6f6c;
+    --surface: #0e0e0e;
+    --card: #1a1a19;
+    --muted-bg: #242423;
+    --raised: #343432;
+    --line: #2a2a29;
+    --input: #3a3a38;
+    --success: #4ade80;
+    --success-50: #0f2a1a;
+    --danger: #f87171;
+    --danger-50: #2c1215;
+  }
+}
+
+@media android {
+  :root {
+    --font-sans: Figtree;
+    --font-mono: monospace;
+  }
+}
+
+@media ios {
+  :root {
+    --font-sans: Figtree;
+  }
+}
+
+@layer theme {
+  @theme {
+    --color-brand-50: var(--brand-50);
+    --color-brand-100: var(--brand-100);
+    --color-brand-200: var(--brand-200);
+    --color-brand-500: #f97316;
+    --color-brand-600: #ea580c;
+    --color-brand-700: var(--brand-700);
+    --color-ink: var(--ink);
+    --color-muted: var(--muted);
+    --color-subtle: var(--subtle);
+    --color-surface: var(--surface);
+    --color-card: var(--card);
+    --color-muted-bg: var(--muted-bg);
+    --color-raised: var(--raised);
+    --color-line: var(--line);
+    --color-input: var(--input);
+    --color-success: var(--success);
+    --color-success-50: var(--success-50);
+    --color-danger: var(--danger);
+    --color-danger-50: var(--danger-50);
+    /* Fills behind white text or icons: AA contrast (>= 4.5:1) with white in both themes. */
+    --color-brand-solid: #c2410c;
+    --color-brand-solid-pressed: #9a3412;
+    --color-success-solid: #15803d;
+    --color-danger-solid: #b91c1c;
+
+    /* Astryx radii: inner 8, element 12, container 16. */
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 12px;
+    --radius-2xl: 16px;
+    --radius-3xl: 20px;
+  }
+}
+
+/* Type scale: px sizes and line heights only. One family (Figtree), weights 400 / 500 / 600 / 700. */
+@utility type-display {
+  font-size: 28px;
+  line-height: 34px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+@utility type-title {
+  font-size: 22px;
+  line-height: 28px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+}
+@utility type-heading {
+  font-size: 17px;
+  line-height: 22px;
+  font-weight: 600;
+}
+@utility type-body {
+  font-size: 15px;
+  line-height: 22px;
+}
+@utility type-callout {
+  font-size: 14px;
+  line-height: 20px;
+}
+@utility type-label {
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 500;
+}
+@utility type-caption {
+  font-size: 12px;
+  line-height: 16px;
+}
