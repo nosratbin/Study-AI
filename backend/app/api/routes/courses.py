@@ -55,7 +55,7 @@ def get_course(slug: str, user: CurrentUser, db: DbSession):
     return CourseDetail(
         **card.model_dump(), category=course.category,
         lessons=[
-            LessonSummary(id=str(l.id), title=l.title, order_index=l.order_index, duration_min=l.duration_min,
+            LessonSummary(id=str(l.id), title=l.title, module=l.module, order_index=l.order_index, duration_min=l.duration_min,
                           status=progress.status_by_lesson.get(l.id, ProgressStatus.not_started))
             for l in course.lessons
         ],
@@ -72,7 +72,7 @@ def get_lesson(lesson_id: uuid.UUID, user: CurrentUser, db: DbSession):
         select(LearningProgress.status).where(LearningProgress.user_id == user.id, LearningProgress.lesson_id == lesson.id)
     )
     return LessonOut(
-        id=str(lesson.id), title=lesson.title, content_md=lesson.content_md, order_index=lesson.order_index,
+        id=str(lesson.id), title=lesson.title, module=lesson.module, content_md=lesson.content_md, order_index=lesson.order_index,
         duration_min=lesson.duration_min, colab_url=lesson.colab_url, status=status or ProgressStatus.not_started,
         course_id=str(course.id), course_slug=course.slug, course_title=course.title, course_level=course.level,
         is_demo=course.is_demo, lesson_number=i + 1, lesson_count=len(ordered),

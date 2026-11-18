@@ -78,6 +78,7 @@ export type ProgressStatus = "not_started" | "in_progress" | "completed";
 export interface LessonSummary {
   id: string;
   title: string;
+  module: string | null;
   order_index: number;
   duration_min: number;
   status: ProgressStatus;
@@ -91,6 +92,7 @@ export interface CourseDetail extends CourseCard {
 export interface Lesson {
   id: string;
   title: string;
+  module: string | null;
   content_md: string;
   order_index: number;
   duration_min: number;

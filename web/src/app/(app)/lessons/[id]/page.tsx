@@ -62,6 +62,12 @@ export default function LessonPage() {
 
       <header>
         <div className="flex flex-wrap items-center gap-2 text-sm text-muted">
+          {lesson.module && (
+            <>
+              <span>{lesson.module}</span>
+              <span aria-hidden>·</span>
+            </>
+          )}
           <span>
             Lesson {lesson.lesson_number} of {lesson.lesson_count}
           </span>

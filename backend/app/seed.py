@@ -3,7 +3,8 @@
     python -m app.seed                  # demo courses, lessons, assessments and project challenges (idempotent)
     python -m app.seed --demo-users     # also create demo admin/teacher/student
 
-All seeded courses are flagged is_demo=True and shown with a "Demo" label.
+Demo courses are flagged is_demo=True and shown with a "Demo" label. Full courses (seed_full_courses.py,
+lesson text in app/content/courses/*.md) are real content and are not flagged.
 No opportunities are seeded: scholarship/competition data must be entered and
 verified by an admin from official sources (Phase 3).
 Demo account passwords come from SEED_DEMO_PASSWORD or are generated and printed once.
@@ -25,6 +26,7 @@ from app.models import Course, EducationLevel, Lesson, Role, StudentProfile, Tea
 from app.seed_assessments import seed_assessments
 from app.seed_careers import seed_careers
 from app.seed_challenges import seed_challenges
+from app.seed_full_courses import seed_full_courses
 
 L = EducationLevel
 
@@ -145,6 +147,7 @@ def main() -> None:
         raise SystemExit("Refusing to create demo accounts in production.")
     with SessionLocal() as db:
         print(f"courses created: {seed_courses(db)}")
+        print(f"full courses created: {seed_full_courses(db)}")
         print(f"assessments created: {seed_assessments(db)}")
         print(f"project challenges created: {seed_challenges(db)}")
         print(f"demo careers created: {seed_careers(db)}")

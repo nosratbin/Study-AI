@@ -32,6 +32,7 @@ class Lesson(IdMixin, TimestampMixin, Base):
 
     course_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("courses.id", ondelete="CASCADE"))
     title: Mapped[str] = mapped_column(String(200))
+    module: Mapped[str | None] = mapped_column(String(120))  # optional section heading; consecutive lessons share it
     content_md: Mapped[str] = mapped_column(Text, default="")
     order_index: Mapped[int] = mapped_column(Integer, default=0)
     duration_min: Mapped[int] = mapped_column(Integer, default=10)

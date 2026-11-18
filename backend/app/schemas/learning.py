@@ -15,6 +15,7 @@ from app.schemas.student import CourseCard, NextLesson
 class LessonSummary(BaseModel):
     id: str
     title: str
+    module: str | None = None
     order_index: int
     duration_min: int
     status: ProgressStatus
@@ -28,6 +29,7 @@ class CourseDetail(CourseCard):
 class LessonOut(BaseModel):
     id: str
     title: str
+    module: str | None = None
     content_md: str
     order_index: int
     duration_min: int
