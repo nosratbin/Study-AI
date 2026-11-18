@@ -9,8 +9,10 @@ import { AlertCircle, CheckCircle2, Info, Loader2 } from "lucide-react";
 type Variant = "primary" | "secondary" | "ghost" | "danger";
 type Size = "sm" | "md" | "lg";
 
+// Press feedback: a small, immediate scale on :active (160ms strong ease-out), dropped for reduced motion.
 const base =
-  "inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed select-none";
+  "inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-[color,background-color,border-color,box-shadow,scale] duration-160 ease-(--ease-out) " +
+  "active:not-disabled:scale-[0.97] motion-reduce:active:scale-100 disabled:opacity-60 disabled:cursor-not-allowed select-none";
 const variants: Record<Variant, string> = {
   primary: "bg-brand-500 text-white hover:bg-brand-600 active:bg-brand-700 shadow-sm",
   secondary: "bg-card text-ink border border-line hover:bg-surface",

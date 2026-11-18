@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Divider, GoogleButton } from "@/components/auth/google-button";
+import { GuestAccess } from "@/components/auth/guest-access";
 import type { ButtonState } from "@/components/beui/button/stateful";
 import { SignUpForm, type SignUpErrors, type SignUpValues } from "@/components/beui/signup-form";
 import { Alert, Card } from "@/components/ui";
@@ -69,6 +70,7 @@ export default function RegisterPage() {
           Sign in
         </Link>
       </p>
+      <GuestAccess />
     </Card>
   );
 }

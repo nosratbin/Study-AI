@@ -31,7 +31,8 @@
   /* Motion: one strong ease-out for anything entering, one ease-in-out for on-screen movement (Emil Kowalski's curves). */
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
-  --animate-fade-up: fade-up 0.35s cubic-bezier(0.23, 1, 0.32, 1) both;
+  /* App pages run this on every navigation (tens of times a day), so it stays short with a few pixels of travel. */
+  --animate-fade-up: fade-up 0.2s cubic-bezier(0.23, 1, 0.32, 1) both;
   --animate-rise: rise 0.7s cubic-bezier(0.23, 1, 0.32, 1) both;
   --animate-kite-launch: kite-launch 1.1s cubic-bezier(0.23, 1, 0.32, 1) both;
   --animate-drift: drift var(--drift-duration, 90s) linear infinite;
@@ -45,7 +46,7 @@
     to { transform: rotate(var(--sway, 4deg)) translateY(-6px); }
   }
   @keyframes fade-up {
-    from { opacity: 0; transform: translateY(6px); }
+    from { opacity: 0; transform: translateY(4px); }
     to { opacity: 1; transform: none; }
   }
   @keyframes rise {
@@ -202,10 +203,22 @@ body {
   outline-offset: 2px;
 }
 
+/* Reduced motion is a designed state, not "no feedback": state changes are instant, entrances keep a short opacity
+   fade, and anything that travels, tilts, scales or loops is removed. */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+  }
+  .animate-fade-up, .animate-rise, .animate-kite-launch {
+    animation: fade-in 0.2s ease-out both !important;
+  }
+  .animate-drift, .animate-sway {
+    animation: none !important;
   }
 }
 

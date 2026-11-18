@@ -14,6 +14,11 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Vendored VengeanceUI registry components (kept as published; not linted).
     "src/components/vengeance/**",
+    // Vendored BeUI chat kit (agents + the motion parts it needs), kept as published.
+    "src/components/beui/agents/**",
+    "src/components/beui/animated-sidebar.tsx",
+    "src/components/beui/popover-morph.tsx",
+    "src/components/beui/select.tsx",
   ]),
 ]);
 
