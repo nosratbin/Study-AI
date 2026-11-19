@@ -121,6 +121,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   const nav = forRole(NAV, user?.role);
   const bottom = forRole(BOTTOM, user?.role);
   const inMore = !bottom.some((i) => isActive(pathname, i.href));
+  // App pages are client components, so they can't export `metadata`; React hoists this <title> into <head>.
+  // Longest match wins, so /projects/review is "Project reviews", not "Project Lab".
+  const section = NAV.filter((i) => isActive(pathname, i.href)).sort((a, b) => b.href.length - a.href.length)[0];
 
   // The sheet is mobile-only; close it if the viewport grows to desktop (tablet rotation) so no invisible overlay is left behind.
   useEffect(() => {
@@ -137,6 +140,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-screen">
+      {section && <title>{`${section.label} · IccheGhuri`}</title>}
       <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-line bg-card lg:flex">
         <div className="flex items-center justify-between py-4 pl-5 pr-3">
           <Link href="/dashboard" aria-label="Dashboard">
