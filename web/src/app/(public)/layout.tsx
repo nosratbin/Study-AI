@@ -14,6 +14,8 @@ const PLATFORM = [
 const PROJECT = [
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
+  { href: "/privacy", label: "Privacy policy" },
+  { href: "/terms", label: "Terms of service" },
 ];
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
