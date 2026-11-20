@@ -86,7 +86,7 @@ function CareerView({ slug }: { slug: string }) {
         </ul>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
         <div className="space-y-6">
           <Card as="section">
             <h2 className="font-semibold">About this career</h2>

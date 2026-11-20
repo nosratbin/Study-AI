@@ -108,7 +108,7 @@ export function AdminDashboard() {
         ))}
       </section>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
         <Card as="section">
           <h2 className="font-semibold">Activity</h2>
           <Tabs defaultValue="signups" className="mt-3">
@@ -143,7 +143,7 @@ export function AdminDashboard() {
         </Card>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[340px_1fr]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[340px_minmax(0,1fr)]">
         <Card as="section">
           <h2 className="font-semibold">Content</h2>
           <dl className="mt-3 divide-y divide-line">

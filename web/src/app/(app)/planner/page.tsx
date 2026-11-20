@@ -76,7 +76,7 @@ export default function PlannerPage() {
 
       {adding && <TaskForm key={JSON.stringify(adding)} initial={adding} onCancel={() => setAdding(null)} onSaved={() => { setAdding(null); refresh(); }} />}
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <section aria-label="Week" className="space-y-3">
           <div className="flex items-center justify-between gap-2">
             <Button size="sm" variant="ghost" onClick={() => setWeekStart(addDays(weekStart, -7))} aria-label="Previous week"><ChevronLeft className="size-4" aria-hidden /></Button>

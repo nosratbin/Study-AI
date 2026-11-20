@@ -69,7 +69,7 @@ export function TeacherDashboard() {
         <StatTile label="Projects waiting for review" value={stats.review_queue} icon={ClipboardList} hint={`You reviewed ${stats.my_reviews}`} />
       </section>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
         <Card as="section">
           <h2 className="font-semibold">Lessons completed, last 14 days</h2>
           <div className="mt-4">
